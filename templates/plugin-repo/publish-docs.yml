@@ -1,0 +1,94 @@
+# A COPIER DANS CHAQUE REPO DE PLUGIN (prive), sous
+#   .github/workflows/publish-docs.yml
+#
+# Ce workflow recopie le dossier docs/ du plugin, tel quel, dans le repo public
+# superdcat/JeedomDocs, qui le publie sur GitHub Pages. Aucun fichier n'est
+# renomme ni transforme : le site sait lire l'arborescence Jeedom telle quelle.
+# Seul le contenu de docs/ quitte le repo prive, le code ne sort jamais.
+#
+# PREREQUIS
+#   1. Creer un jeton fine-grained (https://github.com/settings/personal-access-tokens)
+#      - Repository access : uniquement superdcat/JeedomDocs
+#      - Permission        : Contents = Read and write
+#   2. L'enregistrer dans CE repo (prive) : Settings > Secrets and variables >
+#      Actions > New repository secret, nomme DOCS_PUSH_TOKEN
+#   3. Adapter PLUGIN_SLUG et PLUGIN_NAME ci-dessous.
+#
+# ARBORESCENCE ATTENDUE dans le repo du plugin (convention Jeedom) :
+#   docs/fr_FR/index.md
+#   docs/fr_FR/changelog.md
+#   docs/fr_FR/images/...
+#   docs/en_US/index.md
+#   docs/de_DE/index.md
+#   docs/es_ES/index.md
+# Toutes les pages sont reprises, pas seulement index et changelog. Une langue
+# absente retombe automatiquement sur le francais sur le site.
+
+name: Publier la documentation
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "docs/**"
+      - ".github/workflows/publish-docs.yml"
+  workflow_dispatch:
+
+env:
+  # Nom technique : sert de dossier et d'URL (.../JeedomDocs/<slug>/).
+  PLUGIN_SLUG: mon-plugin
+  # Libelle affiche dans la navigation du site.
+  PLUGIN_NAME: Mon Plugin
+  DOCS_REPO: superdcat/JeedomDocs
+
+jobs:
+  publish:
+    name: Pousser la doc vers JeedomDocs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recuperer le plugin
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - name: Recuperer le site de documentation
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.DOCS_REPO }}
+          token: ${{ secrets.DOCS_PUSH_TOKEN }}
+          path: docs-site
+
+      - name: Copier la documentation telle quelle
+        run: |
+          if [ -z "$(find plugin/docs -name '*.md' -print -quit 2>/dev/null)" ]; then
+            echo "::error::Aucun fichier markdown dans docs/ : rien a publier."
+            exit 1
+          fi
+          target="docs-site/docs/$PLUGIN_SLUG"
+          # On repart du vide : une page supprimee cote plugin disparait du site.
+          rm -rf "$target"
+          mkdir -p "$target"
+          cp -R plugin/docs/. "$target"/
+          # Libelle de la rubrique dans la navigation du site.
+          printf '%s\n' "$PLUGIN_NAME" > "$target/.title"
+          find "$target" -type f | sort
+
+      - name: Commiter et pousser
+        working-directory: docs-site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all "docs/$PLUGIN_SLUG"
+          if git diff --cached --quiet; then
+            echo "Documentation deja a jour, rien a pousser."
+            exit 0
+          fi
+          git commit -m "docs($PLUGIN_SLUG): mise a jour depuis ${{ github.repository }}@${{ github.sha }}"
+          # Le site recoit les pushs de plusieurs plugins : on rejoue par-dessus.
+          branch="$(git rev-parse --abbrev-ref HEAD)"
+          for attempt in 1 2 3; do
+            git pull --rebase --autostash origin "$branch" && git push && exit 0
+            echo "Push en conflit, nouvelle tentative ($attempt)."
+            sleep 5
+          done
+          exit 1

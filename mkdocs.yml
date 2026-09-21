@@ -1,0 +1,127 @@
+# Configuration du site de documentation des plugins Jeedom.
+# Les sources vivent dans docs/<plugin>/ : une rubrique par plugin,
+# toutes les langues d'un plugin dans le meme dossier (suffixe .fr / .en / .de / .es).
+
+site_name: Documentation des plugins Jeedom
+site_description: Documentation et changelogs des plugins Jeedom de superdcat
+site_author: superdcat
+site_url: https://superdcat.github.io/JeedomDocs/
+
+repo_url: https://github.com/superdcat/JeedomDocs
+repo_name: superdcat/JeedomDocs
+edit_uri: edit/main/docs/
+
+copyright: Documentation des plugins Jeedom
+
+theme:
+  name: material
+  language: fr
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Passer au thème sombre
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Passer au thème clair
+  features:
+    - navigation.tracking
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.action.edit
+
+plugins:
+  - search
+  # i18n : structure par suffixe -> docs/<plugin>/index.fr.md, index.en.md, ...
+  # Une page non traduite retombe automatiquement sur le francais.
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: fr
+          name: Français
+          default: true
+          build: true
+          site_name: Documentation des plugins Jeedom
+        - locale: en
+          name: English
+          build: true
+          site_name: Jeedom plugins documentation
+          nav_translations:
+            Accueil: Home
+        - locale: de
+          name: Deutsch
+          build: true
+          site_name: Dokumentation der Jeedom-Plugins
+          nav_translations:
+            Accueil: Startseite
+        - locale: es
+          name: Español
+          build: true
+          site_name: Documentación de los plugins Jeedom
+          nav_translations:
+            Accueil: Inicio
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.keys
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/superdcat
+      name: GitHub
+
+# La navigation est deduite de l'arborescence de docs/ : ajouter un plugin,
+# c'est ajouter un dossier, sans toucher a ce fichier. Le hook applique le
+# libelle facultatif declare dans docs/<plugin>/.title
+hooks:
+  # Traduit l'arborescence Jeedom (<plugin>/fr_FR/index.md) vers la forme
+  # attendue par i18n. Doit rester en premier.
+  - hooks/jeedom_locales.py
+  - hooks/nav_titles.py
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
