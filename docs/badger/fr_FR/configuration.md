@@ -9,7 +9,7 @@ Les lecteurs de badge doivent supporter au moins un des protocoles wiegand 8,26 
 Exemple : <https://www.zkteco.eu/index.php/categories-11/access-control-systems/rfid-external-readers>
 Ces lecteurs sont disponibles dans différents designs à bas prix sur les sites chinois ou eBay (Rechercher "wiegand").
 
-![](../images/Screen3.png)
+![](images/Screen3.png)
 
 Des exemples de sketch Arduino sont fourni (voir la page de configuration du plug-in)
 
@@ -22,11 +22,11 @@ Vous pouvez paramétrer le nombre de secondes au bout duquel le lecteur oublie l
 
 Enfin, vous pouvez également utiliser 5 entrées analogiques (A1 à A5) pour y connecter des boutons de type poussoir (5 actions différentes). Dans ce cas vous pouvez régler la valeur du threshold (seuil de déclenchement). Le maximum est 1022, mais si vous avez une petite perte de signal liée à la longeur du cable et que le bouton ne déclenche pas toujours l'évènement dans jeedom, vous pouvez réduire un peu cette valeur.
 
-![](../images/inosettings_enc28j60.png)
+![](images/inosettings_enc28j60.png)
 
 Câblage :
 
-![](../images/arduinowiring_enc28j60.png)
+![](images/arduinowiring_enc28j60.png)
 
 Si vous souhaitez utiliser les entrées analogiques il faudra les cabler avec le 5v. Vous pouvez par exemple utiliser le bouton sonnette d'un digicode. Vous devez également connecter le A0 au ground pour que le système n'ai pas de parasites.
 Si vous ne souhaitez pas utiliser les entrées analogiques vous pouvez les laisser toutes (A0 à A5) débranchées.
@@ -43,11 +43,11 @@ Vous pouvez paramétrer le nombre de secondes au bout duquel le lecteur oublie l
 
 Enfin, vous pouvez également utiliser 5 entrées analogiques (A1 à A5) pour y connecter des boutons de type poussoir (5 actions différentes). Dans ce cas vous pouvez régler la valeur du threshold (seuil de déclenchement). Le maximum est 1022, mais si vous avez une petite perte de signal liée à la longeur du cable et que le bouton ne déclenche pas toujours l'évènement dans jeedom, vous pouvez réduire un peu cette valeur.
 
-![](../images/inosettings_w5100.png)
+![](images/inosettings_w5100.png)
 
 Câblage :
 
-![](../images/arduinowiring_w5100.png)
+![](images/arduinowiring_w5100.png)
 
 Si vous souhaitez utiliser les entrées analogiques il faudra les cabler avec le 5v. Vous pouvez par exemple utiliser le bouton sonnette d'un digicode. Vous devez également connecter le A0 au ground pour que le système n'ai pas de parasites.
 Si vous ne souhaitez pas utiliser les entrées analogiques vous pouvez les laisser toutes (A0 à A5) débranchées.
@@ -65,7 +65,7 @@ Un sketch d'exemple est disponible dans la page de configuration du plugin, mais
 
 La configuration des équipements Badger est divisée en 4 sections : Configuration générale, Lecteurs, Badges et Codes.
 
-![](../images/Screen1.png)
+![](images/Screen1.png)
 
 ### Configuration générale
 
@@ -84,7 +84,7 @@ Sélectionnez ce nouveau lecteur pour le configurer (cf. chapitre suivant)
 
 La configuration des lecteurs permet d'ajuster certains paramètres du lecteur. Elle doit être effectuée et sauvegardé après chaque ajout de nouveau lecteur.
 
-![](../images/Screen2.png)
+![](images/Screen2.png)
 
 - Le nom de l'équipement dans jeedom.
 - L'objet parent jeedom (optionnel).
@@ -104,7 +104,7 @@ La configuration des lecteurs permet d'ajuster certains paramètres du lecteur. 
 La configuration des badges permet d'ajuster certains paramètres. Elle doit être effectuée et sauvegardé après chaque ajout de nouveau badge.
 Les entrées analogiques apparaissent comme des badges.
 
-![](../images/Screen4.png)
+![](images/Screen4.png)
 
 - Le nom de l'équipement dans jeedom.
 - L'objet parent jeedom (optionnel).
@@ -117,7 +117,7 @@ Les entrées analogiques apparaissent comme des badges.
 
 La configuration des codes permet d'ajuster certains paramètres. Elle doit être effectuée et sauvegardé après chaque ajout de nouveau code.
 
-![](../images/Screen5.png)
+![](images/Screen5.png)
 
 - Le nom de l'équipement dans jeedom.
 - L'objet parent jeedom (optionnel).

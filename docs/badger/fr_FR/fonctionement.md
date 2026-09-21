@@ -20,21 +20,21 @@ La commande "BadgerID" (type info-string) est aussi mise à jour avec le nom du 
 Ces commandes peuvent être utilisées dans un scenario pour déclencher une action (ouverture de porte, désactivation d'alarme ...)
 Voici un premier exemple simple :
 
-![](../images/Screen6.png)
+![](images/Screen6.png)
 
 Ce scenario simple est déclenché par la présentation d'un code ou d'un badge. On peut ajouter d'autres codes ou badge comme déclencheurs.
 
-![](../images/Screen7.png)
+![](images/Screen7.png)
 
 Ici le scenario test sur quel lecteur le code ou badge a été présenté. Et dans ce cas il pourrait déclencher l'ouverture d'une porte associée à ce lecteur.  Ici je mets juste à jours une variable debug pour la démo.
 
 Un deuxième exemple plus complexe, nous voulons une double authentification badge + code :
 
-![](../images/Screen8.png)
+![](images/Screen8.png)
 
 Ce scenario simple est déclenché uniquement par la présentation d'un badge précis.
 
-![](../images/Screen9.png)
+![](images/Screen9.png)
 
 Ici le scenario test sur quel lecteur le code ou badge a été présenté puis attend 20 secondes que le code défini soit entré. Si le bon code n'est pas entré dans les 20 secondes, le scenario est annulé et le badge doit être a nouveau présenté.
 
@@ -42,7 +42,7 @@ Ici le scenario test sur quel lecteur le code ou badge a été présenté puis a
 
 En associant le plug-in agenda, on peut définir une plage horaire pendant laquelle un badge ou code sera actif. En utilisant la fonction activer / désactiver du scenario.
 
-![](../images/Screen10.png)
+![](images/Screen10.png)
 
 ### Génération d'un code temporaire
 

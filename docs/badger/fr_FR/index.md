@@ -9,11 +9,11 @@ Ce plugin permet de connecter des lecteurs de badges (RFID/NFC) utilisant le pro
 Dans jeedom, allez dans "Plugins" > "Gestion des plugins"
 cliquez ensuite sur le bouton
 
-![](../images/install0.png)
+![](images/install0.png)
 
 Enfin paramétrez la fenêtre de cette sorte :
 
-![](../images/install.png)
+![](images/install.png)
 
 ## Configuration
 
