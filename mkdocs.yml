@@ -42,7 +42,8 @@ theme:
         name: Passer au thème clair
   features:
     - navigation.tracking
-    - navigation.sections
+    # Pas de 'navigation.sections' : les rubriques restent repliables, et les
+    # pages d'un plugin n'apparaissent que lorsqu'on est dedans.
     # 'navigation.indexes' est incompatible avec 'toc.integrate' : le theme
     # ne range le sommaire dans la colonne de gauche que pour la page
     # courante, et une page d'index de rubrique n'en est pas une.

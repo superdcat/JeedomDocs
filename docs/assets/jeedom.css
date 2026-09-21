@@ -210,7 +210,53 @@
 }
 
 /* ------------------------------------------------------------------ *
- * 5. Details
+ * 5. Navigation : les rubriques de plugin au premier plan
+ *
+ * Le premier niveau de la colonne de gauche est une rubrique de plugin
+ * (ou la page d'accueil). Il porte un libelle plus grand et plus contraste
+ * que les pages qu'il contient, qui restent repliees tant qu'on n'est pas
+ * dans la rubrique.
+ * ------------------------------------------------------------------ */
+
+.md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link {
+  color: var(--md-default-fg-color);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding-bottom: 0.3rem;
+  padding-top: 0.3rem;
+}
+
+/* Un peu d'air entre deux rubriques. */
+.md-nav--primary > .md-nav__list > .md-nav__item {
+  margin-top: 0.3rem;
+}
+
+/* Rubrique ouverte : son titre passe au vert Jeedom. */
+.md-nav--primary
+  > .md-nav__list
+  > .md-nav__item
+  > .md-nav__toggle:checked
+  + .md-nav__link {
+  color: var(--jeedom-vert-titre);
+}
+
+[data-md-color-scheme="slate"]
+  .md-nav--primary
+  > .md-nav__list
+  > .md-nav__item
+  > .md-nav__toggle:checked
+  + .md-nav__link {
+  color: var(--jeedom-vert-clair);
+}
+
+/* Le chevron de depliage suit la taille du libelle. */
+.md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link .md-nav__icon {
+  height: 0.8rem;
+  width: 0.8rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * 6. Details
  * ------------------------------------------------------------------ */
 
 /* Titre du sommaire integre a la colonne de gauche, facon Jeedom. */
