@@ -26,6 +26,10 @@ log = logging.getLogger("mkdocs.hooks.plugin_index")
 
 MARKER = "<!-- liste-des-plugins -->"
 
+# Dossiers de docs/ qui appartiennent au site et non a un plugin : ils n'ont
+# pas de page index et ne doivent pas etre signales comme rubrique incomplete.
+SITE_DIRS = {"assets"}
+
 # En-tetes et textes du tableau, par langue.
 LABELS = {
     "fr": ("Plugin", "Documentation", "Changelog", "Aucun plugin documenté pour le moment."),
@@ -46,7 +50,7 @@ def _plugins(config, source_docs: Path) -> list[tuple[str, str, bool]]:
     staging = Path(config["docs_dir"])
     found = []
     for directory in sorted(staging.iterdir()):
-        if not directory.is_dir():
+        if not directory.is_dir() or directory.name in SITE_DIRS:
             continue
         if not list(directory.glob("index.*.md")):
             log.warning("%s : pas de page index, rubrique ignoree dans le tableau",

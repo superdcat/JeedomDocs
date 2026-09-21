@@ -1,0 +1,13 @@
+{#-
+  Point d'entree des pages. Le theme n'est pas modifie : on se contente de
+  neutraliser, page par page, la numerotation automatique des titres quand la
+  documentation numerote deja les siens (detection dans hooks/heading_numbers.py).
+-#}
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {{ super() }}
+  {% if page and page.meta and page.meta.jeedom_numerotation is sameas false %}
+    <style>:root { --jeedom-numerotation: none; }</style>
+  {% endif %}
+{% endblock %}

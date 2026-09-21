@@ -16,29 +16,42 @@ copyright: Documentation des plugins Jeedom
 theme:
   name: material
   language: fr
+  # Habillage Jeedom : barre du haut et numerotation des titres.
+  # Le detail est dans overrides/ et docs/assets/jeedom.css.
+  custom_dir: overrides
+  logo: assets/logo.png
+  favicon: assets/logo.png
   icon:
     repo: fontawesome/brands/github
+  # Barre du haut blanche comme sur doc.jeedom.com ; le vert Jeedom est
+  # defini en accent dans docs/assets/jeedom.css.
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: indigo
-      accent: indigo
+      primary: white
+      accent: custom
       toggle:
         icon: material/weather-night
         name: Passer au thème sombre
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
-      accent: indigo
+      primary: black
+      accent: custom
       toggle:
         icon: material/weather-sunny
         name: Passer au thème clair
   features:
     - navigation.tracking
     - navigation.sections
-    - navigation.indexes
+    # 'navigation.indexes' est incompatible avec 'toc.integrate' : le theme
+    # ne range le sommaire dans la colonne de gauche que pour la page
+    # courante, et une page d'index de rubrique n'en est pas une.
+    # La documentation d'un plugin apparait donc comme une entree de sa
+    # rubrique, au meme titre que son changelog.
     - navigation.top
     - toc.follow
+    # Sommaire de la page range dans la colonne de gauche, comme chez Jeedom.
+    - toc.integrate
     - search.suggest
     - search.highlight
     - search.share
@@ -106,7 +119,22 @@ markdown_extensions:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
+extra_css:
+  - assets/jeedom.css
+
 extra:
+  # Liens de la barre du haut, repris de la documentation Jeedom officielle.
+  jeedom_links:
+    - name: Site
+      link: https://www.jeedom.com
+    - name: Blog
+      link: https://blog.jeedom.com
+    - name: Community
+      link: https://community.jeedom.com
+    - name: Market
+      link: https://market.jeedom.com
+    - name: Doc
+      link: https://doc.jeedom.com
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/superdcat
@@ -120,6 +148,8 @@ hooks:
   # attendue par i18n. Doit rester en premier.
   - hooks/jeedom_locales.py
   - hooks/nav_titles.py
+  # Ecarte de la numerotation automatique les pages deja numerotees.
+  - hooks/heading_numbers.py
   # Tableau des plugins des pages d'accueil.
   - hooks/plugin_index.py
 

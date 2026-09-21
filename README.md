@@ -88,6 +88,39 @@ Le script crée `docs/mon-plugin/{fr_FR,en_US,de_DE,es_ES}/{index,changelog}.md`
 à partir de `templates/plugin/`. Rien d'autre à faire : navigation et tableau
 d'accueil suivent tout seuls.
 
+## Habillage Jeedom
+
+Le site reprend l'identité de la documentation officielle (`doc.jeedom.com`) :
+barre du haut blanche avec le logo et les liens Jeedom, vert `#95C12B`, titres
+numérotés, sommaire de la page dans la colonne de gauche. Le thème reste
+MkDocs Material : recherche, quatre langues, navigation par plugin, mode sombre
+et lien « éditer cette page » sont conservés.
+
+```
+overrides/partials/header.html   barre du haut (liens déclarés dans mkdocs.yml)
+overrides/main.html              interrupteur de la numérotation, page par page
+docs/assets/jeedom.css           couleurs, titres, numérotation
+docs/assets/logo.png             logo et favicon
+hooks/heading_numbers.py         repère les pages à ne pas numéroter
+```
+
+La numérotation (`1)`, `1.1)`) est **uniquement visuelle** : le markdown n'est
+pas modifié et les ancres restent stables, un lien vers `#configuration`
+continue de fonctionner. Elle s'applique aux titres de niveau 2 et 3, sauf sur
+les pages qui numérotent déjà les leurs, les changelogs et les pages à section
+unique — `hooks/heading_numbers.py` les détecte. Une page peut trancher
+elle-même dans son en-tête YAML :
+
+```yaml
+---
+jeedom_numerotation: false
+---
+```
+
+Pour revenir au thème d'origine : retirer `custom_dir`, `extra_css` et
+`extra.jeedom_links` de `mkdocs.yml`. Aucune documentation de plugin n'est
+concernée.
+
 ## Prévisualiser en local
 
 ```bash
