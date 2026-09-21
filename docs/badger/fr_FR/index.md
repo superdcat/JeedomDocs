@@ -1,29 +1,34 @@
-:icons:
-== Badger
+# Badger
 
-=== Description
+## Description
+
 Ce plugin permet de connecter des lecteurs de badges (RFID/NFC) utilisant le protocole Wiegand (8/26/34). Ce plug-in nécessite un composant tiers (Arduino) comme interface entre le lecteur et le réseau local.
 
-=== Installation
+## Installation
 
 Dans jeedom, allez dans "Plugins" > "Gestion des plugins"
 cliquez ensuite sur le bouton
 
-image::../images/install0.png[]
+![](../images/install0.png)
 
 Enfin paramétrez la fenêtre de cette sorte :
 
-image::../images/install.png[]
+![](../images/install.png)
 
-=== Configuration
-'''
-include::configuration.asciidoc[]
+## Configuration
 
-=== Fonctionnement
-'''
-include::fonctionement.asciidoc[]
+---
 
-=== Infos techniques
-'''
-include::techtips.asciidoc[]
+[Configuration du plugin](configuration.md)
 
+## Fonctionnement
+
+---
+
+[Fonctionnement et utilisation des equipements](fonctionement.md)
+
+## Infos techniques
+
+---
+
+[Infos techniques](techtips.md)
