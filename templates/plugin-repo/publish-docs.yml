@@ -60,8 +60,12 @@ jobs:
 
       - name: Copier la documentation telle quelle
         run: |
-          if [ -z "$(find plugin/docs -name '*.md' -print -quit 2>/dev/null)" ]; then
-            echo "::error::Aucun fichier markdown dans docs/ : rien a publier."
+          if [ ! -d plugin/docs ]; then
+            echo "::notice::Pas encore de dossier docs/ dans ce plugin : rien a publier."
+            exit 0
+          fi
+          if [ -z "$(find plugin/docs -name '*.md' -print -quit)" ]; then
+            echo "::error::docs/ existe mais ne contient aucun markdown."
             exit 1
           fi
           target="docs-site/docs/$PLUGIN_SLUG"
