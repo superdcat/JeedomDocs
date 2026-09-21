@@ -12,9 +12,7 @@ Jedes Plugin hat einen eigenen Bereich mit seiner Dokumentation und seinem
 
 ## Plugins
 
-| Plugin | Dokumentation | Changelog |
-| ------ | ------------- | --------- |
-| [Exemple](exemple/index.md) | [Dokumentation](exemple/index.md) | [Changelog](exemple/changelog.md) |
+<!-- liste-des-plugins -->
 
 !!! info "Verfügbare Sprachen"
     Diese Dokumentation ist auf Französisch, Englisch, Deutsch und Spanisch

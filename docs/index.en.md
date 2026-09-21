@@ -10,9 +10,7 @@ Each plugin has its own section, with its documentation and its changelog.
 
 ## Plugins
 
-| Plugin | Documentation | Changelog |
-| ------ | ------------- | --------- |
-| [Exemple](exemple/index.md) | [Documentation](exemple/index.md) | [Changelog](exemple/changelog.md) |
+<!-- liste-des-plugins -->
 
 !!! info "Available languages"
     This documentation is available in French, English, German and Spanish.

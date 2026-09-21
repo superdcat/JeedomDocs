@@ -43,7 +43,9 @@ Points qui en découlent :
 - **Une page non traduite s'affiche en français.** Aucune obligation de tout
   traduire dans les quatre langues.
 - **Ajouter un plugin = ajouter un dossier.** `mkdocs.yml` n'est jamais à
-  modifier : la navigation est déduite de l'arborescence.
+  modifier : la navigation est déduite de l'arborescence, et le tableau des
+  pages d'accueil est généré au build (marqueur `<!-- liste-des-plugins -->`
+  dans `docs/index.*.md`, rempli par `hooks/plugin_index.py`).
 - Le lien « éditer cette page » pointe vers le vrai fichier du dépôt
   (`docs/imou/fr_FR/index.md`), pas vers la copie de build.
 
@@ -83,8 +85,8 @@ python scripts/new_plugin.py mon-plugin --name "Mon Plugin"
 ```
 
 Le script crée `docs/mon-plugin/{fr_FR,en_US,de_DE,es_ES}/{index,changelog}.md`
-à partir de `templates/plugin/`. Il reste à ajouter le plugin au tableau des
-pages d'accueil (`docs/index.*.md`).
+à partir de `templates/plugin/`. Rien d'autre à faire : navigation et tableau
+d'accueil suivent tout seuls.
 
 ## Prévisualiser en local
 
@@ -108,5 +110,7 @@ non « Deploy from a branch » : sinon GitHub lance son workflow Jekyll historiq
 (« pages build and deployment ») qui publie la racine du dépôt et écrase le
 déploiement de `deploy.yml`.
 
-Le domaine personnalisé est `jeedomdocs.decastro.fr` (fichier `CNAME` à la
-racine, recopié dans l'artefact publié par le workflow).
+Le domaine personnalisé est `jeedomdocs.decastro.fr`. Le fichier `CNAME` vit
+**à la racine du dépôt** (c'est là que l'interface GitHub le gère) et
+`deploy.yml` le recopie dans l'artefact publié. Ne pas en créer un second dans
+`docs/` : il serait écrasé par celui de la racine, donc sans effet.

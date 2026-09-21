@@ -56,7 +56,7 @@ def main() -> int:
     else:
         print(f"Rubrique deja presente dans {plugin_dir.relative_to(DOCS_DIR.parent)}.")
     print()
-    print("Pensez a ajouter le plugin au tableau de la page d'accueil (docs/index.*.md).")
+    print("Le tableau des pages d'accueil se met a jour tout seul au prochain build.")
     return 0
 
 

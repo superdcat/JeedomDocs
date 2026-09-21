@@ -11,9 +11,7 @@ journal des modifications.
 
 ## Plugins
 
-| Plugin | Documentation | Changelog |
-| ------ | ------------- | --------- |
-| [Exemple](exemple/index.md) | [Documentation](exemple/index.md) | [Changelog](exemple/changelog.md) |
+<!-- liste-des-plugins -->
 
 !!! info "Langues disponibles"
     Cette documentation est disponible en français, anglais, allemand et

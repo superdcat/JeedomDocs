@@ -120,6 +120,8 @@ hooks:
   # attendue par i18n. Doit rester en premier.
   - hooks/jeedom_locales.py
   - hooks/nav_titles.py
+  # Tableau des plugins des pages d'accueil.
+  - hooks/plugin_index.py
 
 validation:
   omitted_files: warn

@@ -12,9 +12,7 @@ cambios.
 
 ## Plugins
 
-| Plugin | Documentación | Changelog |
-| ------ | ------------- | --------- |
-| [Exemple](exemple/index.md) | [Documentación](exemple/index.md) | [Changelog](exemple/changelog.md) |
+<!-- liste-des-plugins -->
 
 !!! info "Idiomas disponibles"
     Esta documentación está disponible en francés, inglés, alemán y español.
