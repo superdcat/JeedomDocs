@@ -5,7 +5,7 @@
 site_name: Documentation des plugins Jeedom
 site_description: Documentation et changelogs des plugins Jeedom de superdcat
 site_author: superdcat
-site_url: https://superdcat.github.io/JeedomDocs/
+site_url: https://jeedomdocs.decastro.fr/
 
 repo_url: https://github.com/superdcat/JeedomDocs
 repo_name: superdcat/JeedomDocs

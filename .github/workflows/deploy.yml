@@ -39,6 +39,9 @@ jobs:
       - name: Construire la documentation
         run: mkdocs build --strict
 
+      - name: Conserver le domaine personnalise
+        run: cp CNAME site/CNAME
+
       - uses: actions/configure-pages@v5
         if: github.event_name != 'pull_request'
 

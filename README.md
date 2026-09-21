@@ -1,7 +1,7 @@
 # JeedomDocs
 
 Site public de documentation des plugins Jeedom de **superdcat**, publié sur
-GitHub Pages : <https://superdcat.github.io/JeedomDocs/>
+GitHub Pages : <https://jeedomdocs.decastro.fr/>
 
 Le code des plugins reste dans leurs dépôts privés. Seule la documentation
 markdown est poussée ici, **telle quelle**, puis construite avec
@@ -103,6 +103,10 @@ Le build de production tourne en `--strict` : un lien cassé fait échouer la CI
 
 ## Mise en service de GitHub Pages
 
-Dans **Settings → Pages** du dépôt, choisir la source **GitHub Actions**. Le
-workflow `.github/workflows/deploy.yml` construit et publie à chaque push sur
-`main`, et vérifie le build sur les pull requests.
+Dans **Settings → Pages** du dépôt, la source doit être **GitHub Actions**, et
+non « Deploy from a branch » : sinon GitHub lance son workflow Jekyll historique
+(« pages build and deployment ») qui publie la racine du dépôt et écrase le
+déploiement de `deploy.yml`.
+
+Le domaine personnalisé est `jeedomdocs.decastro.fr` (fichier `CNAME` à la
+racine, recopié dans l'artefact publié par le workflow).
