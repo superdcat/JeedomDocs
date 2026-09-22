@@ -12,6 +12,7 @@
 - Correctif : page de configuration : tant que l'ancien plugin Badger est installé, le bouton d'URL de compatibilité reste en mode « Ajouter » et grisé, au lieu de proposer à tort de la retirer
 - Correctif : les librairies Arduino (EtherCard et Wiegand) sont désormais téléchargeables depuis le site de documentation : les liens de la page de configuration fonctionnent de nouveau
 - Correctif : import de la configuration Badger : le bouton renvoyait une erreur 500 sans aucun message. La cause du blocage est maintenant affichée et journalisée, et un équipement en échec n'interrompt plus l'import des autres.
+- Correctif : import de la configuration Badger : l'import échouait sur tous les équipements tant que le plugin Badger était installé (Jeedom interdit deux équipements de même nom dans le même objet). Les équipements sont maintenant importés sans objet parent, et y sont replacés automatiquement dès la désinstallation de Badger.
 
 # 01/06/2022
 
