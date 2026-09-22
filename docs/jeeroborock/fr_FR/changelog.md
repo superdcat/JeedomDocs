@@ -63,6 +63,11 @@ Journal des nettoyages, statistiques cumulées, lecture des programmations, tran
 passer par le cloud), page de diagnostic, mise à jour du firmware, et documentation utilisateur
 détaillée.
 
+# 22/09/2026
+
+- Évolution : sur la page de configuration du plugin, le code de connexion se saisit maintenant juste sous l'adresse e-mail, avant l'état du compte, dans l'ordre où la procédure se déroule. <!-- UC04 -->
+- Évolution : un rappel indique qu'il faut enregistrer la configuration après avoir saisi l'e-mail, avant de demander un code. <!-- UC04 -->
+
 # 21/09/2026
 
 **Documentation**
