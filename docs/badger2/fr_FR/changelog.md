@@ -10,6 +10,7 @@
 - Correctif : les liens de documentation et de changelog pointent vers le site publie jeedomdocs.decastro.fr
 - Nouveauté : publication du plugin sur le Market, avec import des équipements et rétro-compatibilité de l'ancien plugin Badger
 - Correctif : page de configuration : tant que l'ancien plugin Badger est installé, le bouton d'URL de compatibilité reste en mode « Ajouter » et grisé, au lieu de proposer à tort de la retirer
+- Correctif : les librairies Arduino (EtherCard et Wiegand) sont désormais téléchargeables depuis le site de documentation : les liens de la page de configuration fonctionnent de nouveau
 
 # 01/06/2022
 

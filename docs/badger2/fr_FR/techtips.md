@@ -23,4 +23,7 @@ Les sketch Arduino utilise les librairies :
 Ethercard (ENC28J60)   	: <https://github.com/jcw/ethercard>
 Wiegand 				: <https://github.com/monkeyboard/Wiegand-Protocol-Library-for-Arduino>
 
-La version utilisée dans les sketchs fourni est disponible avec le plug-in (Liens sur la Page Configuration)
+La version utilisée dans les sketchs fourni est téléchargeable ici (ces liens sont aussi repris sur la page de configuration du plug-in) :
+
+- [EtherCard pour ENC28J60](arduino/ethercard.zip)
+- [Wiegand](arduino/Wiegand.zip)
