@@ -67,6 +67,7 @@ détaillée.
 
 - Évolution : sur la page de configuration du plugin, le code de connexion se saisit maintenant juste sous l'adresse e-mail, avant l'état du compte, dans l'ordre où la procédure se déroule. <!-- UC04 -->
 - Évolution : un rappel indique qu'il faut enregistrer la configuration après avoir saisi l'e-mail, avant de demander un code. <!-- UC04 -->
+- Documentation : page d'aide complète du plugin — installation, liaison du compte Roborock par code e-mail, équipements et commandes, usages, tuile de tableau de bord, carte et pièces, pilotage fin, temps réel, ré-authentification, quotas Roborock et guide de dépannage. <!-- UC49 -->
 
 # 21/09/2026
 
