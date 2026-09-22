@@ -2,6 +2,10 @@
 
 Après téléchargement du plugin il vous faut l'activer, aucune configuration n'est nécessaire. Vous pouvez vous rendre immédiatement sur la page du plug-in après activation pour gérer les équipements.
 
+La page de configuration du plugin donne aussi accès aux sketches Arduino, aux librairies, et à la
+section **Migration depuis Badger** si vous arrivez de l'ancien plugin : voir la
+[procédure de migration](migration.md).
+
 ## Configuration du matériel
 
 Ce plug-in s'interface avec des Arduino / ESP connectés en réseau exécutants un sketch spécifique. Sur ces Arduino on connecte le lecteur de badge wiegand. Le protocole wiegand permet une longue distance de câble entre l’Arduino et le lecteur.

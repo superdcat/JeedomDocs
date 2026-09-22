@@ -6,14 +6,23 @@ Ce plugin permet de connecter des lecteurs de badges (RFID/NFC) utilisant le pro
 
 ## Installation
 
-Dans jeedom, allez dans "Plugins" > "Gestion des plugins"
-cliquez ensuite sur le bouton
+Le plugin s'installe **depuis le Market Jeedom**.
 
-![](images/install0.png)
+1. Dans Jeedom, allez dans **Plugins > Gestion des plugins**.
+2. Cliquez sur **Market**, en haut à gauche.
+3. Recherchez **Badger Fork**, ouvrez sa fiche, puis cliquez sur **Installer** (version stable ou bêta).
+4. Ouvrez la page de configuration du plugin et **activez-le**.
 
-Enfin paramétrez la fenêtre de cette sorte :
+Il n'y a **ni dépendance ni démon** à installer : le plugin est entièrement en PHP.
 
-![](images/install.png)
+> **Vous utilisez déjà l'ancien plugin Badger ?** Ne le désinstallez pas tout de suite : suivez d'abord
+> la [procédure de migration](migration.md).
+
+## Migration depuis Badger
+
+---
+
+[Migration depuis le plugin Badger](migration.md)
 
 ## Configuration
 
