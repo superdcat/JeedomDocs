@@ -69,6 +69,11 @@ détaillée.
 - Évolution : sur la page de configuration du plugin, le code de connexion se saisit maintenant juste sous l'adresse e-mail, avant l'état du compte, dans l'ordre où la procédure se déroule. <!-- UC04 -->
 - Évolution : un rappel indique qu'il faut enregistrer la configuration après avoir saisi l'e-mail, avant de demander un code. <!-- UC04 -->
 - Documentation : page d'aide complète du plugin — installation, liaison du compte Roborock par code e-mail, équipements et commandes, usages, tuile de tableau de bord, carte et pièces, pilotage fin, temps réel, ré-authentification, quotas Roborock et guide de dépannage. <!-- UC49 -->
+- Ajout : le dernier nettoyage (début, durée, surface, motif de fin et erreur éventuelle) est désormais remonté sur l'équipement, avec un historique des 10 derniers nettoyages consultable depuis la page du robot et un bouton pour le rafraîchir. <!-- UC26 -->
+- Documentation : la documentation du plugin décrit le journal des nettoyages : les informations remontées, le panneau d'historique et la règle du bouton de rafraîchissement. <!-- UC26 -->
+- Ajout : quatre statistiques cumulées par robot (durée totale de nettoyage, surface totale nettoyée, nombre de nettoyages, nombre de vidages du bac), historisées par défaut pour en suivre l'évolution dans le temps. <!-- UC27 -->
+- Documentation : la documentation du plugin décrit les statistiques cumulées : les quatre compteurs, leur historisation par défaut et le comportement après une remise à zéro depuis l'application Roborock. <!-- UC27 -->
+- Ajout : les programmations de nettoyage définies dans l'application Roborock sont consultables depuis Jeedom, en lecture seule : récurrence et état actif ou inactif de chacune. <!-- UC28 -->
 
 # 21/09/2026
 

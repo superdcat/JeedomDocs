@@ -115,6 +115,98 @@ L'usure des consommables détectés par votre robot (brosse principale, brosse l
 rouleau de serpillière) est publiée en pourcentage restant, chacune avec une action « Réinitialiser… » à
 utiliser après un remplacement physique. Cette action demande une confirmation avant de s'exécuter.
 
+### Journal des nettoyages
+
+Sept commandes en lecture seule renseignent le **dernier nettoyage** connu :
+
+| Commande | Ce qu'elle indique |
+|---|---|
+| Dernier nettoyage | Synthèse en une ligne, par exemple « Terminé — 42 min, 31,5 m² » ; vaut « Aucun nettoyage connu » tant qu'aucun nettoyage n'a été rapporté |
+| Début du dernier nettoyage | Horodatage du début (masquée par défaut) — c'est la seule des sept qui se compare arithmétiquement, à utiliser dans un scénario du type « le robot n'est pas passé depuis trois jours » |
+| Durée du dernier nettoyage | En minutes, arrondie à la minute la plus proche (écart possible de ±30 s avec l'application mobile) |
+| Surface du dernier nettoyage | En m², arrondie à 0,1 m² |
+| Motif de fin du dernier nettoyage | Par exemple « Terminé » ou « Nettoyage interrompu » |
+| Clé de motif de fin du dernier nettoyage | Valeur technique stable associée au motif (masquée par défaut) — à préférer au libellé pour tester une condition dans un scénario |
+| Erreur du dernier nettoyage | Libellé de l'erreur associée à ce nettoyage, « Aucune » si tout s'est bien passé |
+
+L'onglet « Équipement » propose aussi un panneau **« Journal des nettoyages »** qui liste les 10 derniers
+nettoyages connus (début, fin, durée, surface, motif de fin, erreur), avec la date de la dernière
+synchronisation. Un bouton **« Rafraîchir le journal »** relit cet historique auprès de Roborock :
+
+- il est protégé par la même garde anti-rafale d'une minute que les autres boutons de resynchronisation du
+  plugin — recliquer trop tôt affiche « Le journal vient d'être rafraîchi : patientez une minute avant de
+  relancer. » ;
+- le premier rafraîchissement peut ne ramener que quelques enregistrements et se compléter au clic
+  suivant : c'est un fonctionnement normal, pas une panne, la récupération étant bornée dans le temps ;
+- le journal se met aussi à jour tout seul à la fin de chaque nettoyage, sans action de votre part.
+
+Si le cloud Roborock est injoignable au moment de la consultation, les valeurs déjà connues du dernier
+nettoyage et de l'historique restent affichées telles quelles — elles ne sont jamais remises à zéro. C'est
+la date de dernière synchronisation du panneau qui indique si la donnée est encore fraîche.
+
+### Statistiques cumulées
+
+Quatre commandes en lecture seule renseignent l'usage **global** de votre robot depuis sa mise en
+service :
+
+| Commande | Ce qu'elle indique |
+|---|---|
+| Durée totale de nettoyage | En heures, arrondie au dixième |
+| Surface totale nettoyée | En m², arrondie au dixième |
+| Nombre total de nettoyages | Nombre entier |
+| Nombre total de vidages du bac | Nombre entier ; n'apparaît que si votre station sait vider le bac |
+
+Ce sont des compteurs **cumulés** tenus par le robot lui-même, pas un calcul fait par Jeedom : ils
+correspondent à ce qu'affiche l'application mobile Roborock. Contrairement à la plupart des autres
+commandes du plugin, elles sont **historisées par défaut**, pour que vous puissiez suivre une courbe
+d'usage dans le temps sans réglage préalable.
+
+Leur mise à jour est automatique : à la fin de chaque nettoyage, et au plus une fois par heure sinon.
+Il n'y a aucun bouton à cliquer, et aucune conséquence sur les quotas Roborock — la donnée arrive par
+le même canal que le journal des nettoyages ci-dessus.
+
+Si vous remettez ces compteurs à zéro depuis l'application Roborock (ou après un reset usine), les
+commandes Jeedom suivront cette baisse : elles recopient fidèlement le robot, elles ne mémorisent pas
+un maximum. Une chute visible dans l'historique après une telle remise à zéro est donc normale, pas une
+anomalie. Si une valeur n'est pas exploitable au moment du relevé (robot injoignable, donnée
+aberrante), la commande garde simplement sa valeur précédente plutôt que de retomber à zéro.
+
+### Programmations de l'application
+
+L'onglet « Équipement » propose un panneau **« Programmations de l'application »**, sous forme de
+tableau (Récurrence / Répétition / État). Cette liste ne se remplit pas toute seule : cliquez sur
+**« Lire les programmations »** pour la peupler. Un horodatage sous le tableau indique la date de la
+dernière lecture ; sans clic préalable, le tableau invite à cliquer sur le bouton.
+
+Chaque ligne correspond à une programmation créée dans l'application mobile Roborock et indique :
+
+- sa **récurrence**, affichée **telle que le cloud la renvoie**, sans traduction en jours de semaine
+  ni en heure lisible. Ce n'est pas un défaut d'affichage : la forme exacte de cette information n'est
+  pas garantie identique selon les modèles de robot, le plugin la restitue donc brute plutôt que de
+  risquer une interprétation fausse ;
+- si elle est **répétée** ou non (Oui / Non) ;
+- si elle est **Active** ou **Désactivée**.
+
+Cette lecture est **seule** : aucune création, modification ni suppression de programmation n'est
+possible depuis Jeedom. Tout se gère dans l'application Roborock, qui reste la seule source de vérité.
+Après une modification faite dans l'application mobile (désactivation, changement d'horaire...),
+recliquez sur « Lire les programmations » pour voir l'état à jour côté Jeedom — il ne se met pas à jour
+tout seul.
+
+Deux lectures à moins d'une minute d'intervalle affichent un message invitant à patienter une minute :
+ce n'est pas une erreur, c'est la même protection anti-rafale que les autres boutons de resynchronisation
+du plugin.
+
+Si le panneau affiche **« Programmations non disponibles pour ce robot »**, c'est un résultat normal, pas
+une panne : tous les modèles de robot ne fournissent pas cette information au cloud Roborock. Le reste du
+plugin continue de fonctionner normalement dans ce cas.
+
+Ne confondez pas ces programmations avec les **routines (« usages »)** décrites ci-dessous : les routines
+sont des scénarios de nettoyage exécutables à la demande depuis Jeedom, les programmations sont des
+déclenchements horaires gérés par l'application mobile et seulement consultables ici. Ces programmations
+ne créent aucune commande et ne peuvent donc pas être utilisées dans un scénario Jeedom — c'est un
+affichage pour information, un choix assumé plutôt qu'un oubli.
+
 ## Routines (« usages »)
 
 Les « usages » sont les routines de nettoyage que vous avez créées dans l'application mobile Roborock.
@@ -266,6 +358,7 @@ automatiquement une tentative après un refus de quota.
 | « Ces coordonnées sortent des limites de la carte connue » | La zone ou le point saisi dépasse la carte actuellement connue du robot | Vérifiez les coordonnées dans le bloc « Zone et point » de l'onglet Équipement, ou rafraîchissez l'image de la carte |
 | « Ce consommable n'est pas suivi pour ce robot » | La commande de réinitialisation a été utilisée avant que l'usure de ce consommable ait été remontée au moins une fois | Rafraîchissez l'état du robot avant de réinitialiser ce consommable |
 | « Une synchronisation vient d'être effectuée, patientez » (usages ou pièces) | Une resynchronisation a déjà eu lieu il y a moins d'une minute | Patientez une minute avant de relancer la même resynchronisation |
+| « Le journal vient d'être rafraîchi : patientez une minute avant de relancer. » | Le bouton « Rafraîchir le journal » a déjà été utilisé il y a moins d'une minute | Patientez une minute avant de recliquer |
 
 Pour tout autre message, le texte affiché par le plugin donne directement la cause et, le cas échéant,
 le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniques pour le comprendre.
@@ -281,6 +374,5 @@ le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniqu
   uniquement depuis l'application mobile peut rester affiché comme périmé jusqu'à la synchronisation
   suivante, même si l'image, elle, se met à jour automatiquement.
 
-D'autres fonctionnalités figurent sur la feuille de route du plugin (journal des nettoyages,
-statistiques, programmations, entre autres) et seront documentées ici au fur et à mesure de leur
-livraison.
+D'autres fonctionnalités figurent sur la feuille de route du plugin (statistiques cumulées,
+programmations, entre autres) et seront documentées ici au fur et à mesure de leur livraison.
