@@ -339,6 +339,8 @@ automatiquement une tentative après un refus de quota.
 | L'indicateur de dépendances reste bloqué / rouge | Installation de la dépendance Python non terminée ou en échec | Patientez la durée d'installation indiquée par Jeedom ; en cas d'échec persistant, vérifiez l'accès Internet du serveur et relancez l'installation depuis la page « Plugins » |
 | « Le démon ne répond pas » | Le démon n'est pas démarré, ou vient d'être arrêté | Démarrez (ou redémarrez) le démon depuis la configuration du plugin |
 | « Le robot est hors ligne : il ne répond pas au cloud Roborock » | Le robot est éteint, hors réseau, ou n'a pas de connexion au cloud Roborock | Vérifiez que le robot est allumé et connecté à votre réseau Wi-Fi, comme depuis l'application mobile |
+| « Le compte Roborock n'est pas lié » | Une action a été demandée alors qu'aucun compte n'a encore été lié | Suivez la procédure de liaison du compte, section « Lier votre compte Roborock » |
+| « L'adresse e-mail du compte Roborock est invalide » ou « Aucun compte Roborock ne correspond à cette adresse e-mail » | L'adresse saisie comporte une faute, ou n'est pas celle du compte Roborock | Saisissez l'adresse exacte utilisée dans l'application mobile Roborock, enregistrez la configuration, puis redemandez un code |
 | Code de connexion jamais reçu par e-mail | Adresse e-mail incorrecte, ou message filtré par votre messagerie | Vérifiez l'adresse enregistrée, vérifiez vos courriers indésirables, réessayez « Envoyer un code » après quelques minutes |
 | « Code de connexion invalide ou expiré » | Le code a été mal recopié ou a expiré | Redemandez un nouveau code et validez-le rapidement |
 | « Trop de demandes de code de connexion » | Trop de demandes de code rapprochées | Patientez quelques minutes avant de redemander un code |
@@ -346,18 +348,25 @@ automatiquement une tentative après un refus de quota.
 | « Quota d'appels Roborock atteint » | Le quota, partagé avec l'application mobile, est temporairement épuisé | Patientez avant de réessayer ; ne relancez pas l'action en boucle |
 | Une commande attendue n'apparaît pas sur l'équipement | Le robot n'annonce pas la capacité correspondante | C'est normal : la liste des commandes dépend de ce que le robot déclare savoir faire, pas un bug |
 | « Cette carte n'existe pas (ou plus) sur ce robot » | La liste des cartes affichée est périmée | Cliquez sur « Rafraîchir la liste des cartes » puis réessayez |
+| « Un changement de carte vient d'être effectué : patientez deux minutes avant d'en relancer un autre » | Le changement de carte est une opération lente, protégée par une garde de deux minutes | Patientez deux minutes avant de relancer un changement de carte |
 | « La carte du robot n'a pas pu être décodée » | La donnée reçue de la station est illisible (incident ponctuel côté robot ou cloud) | Réessayez plus tard ; consultez le journal du démon si le problème persiste |
+| « L'image de la carte est trop volumineuse pour être transférée » | La carte produite par le robot dépasse la taille que le plugin accepte de stocker | Réessayez plus tard ; si le problème persiste, ce robot n'est pas compatible avec cette fonction |
 | « Le robot doit être à la base pour lancer cette opération » | Une action d'entretien de la station a été demandée alors que le robot n'est pas à sa base | Attendez que le robot retourne à sa base, ou lancez « Retour à la base » d'abord |
+| « Cette opération d'entretien n'est pas disponible sur la station de ce robot » | La station de ce robot ne prend pas en charge cette action | C'est normal : la commande ne devrait pas apparaître si la station ne le permet pas ; rafraîchissez l'état du robot |
 | « Cet usage a été supprimé dans l'application Roborock » | La routine correspondante n'existe plus côté Roborock | Supprimez la commande devenue obsolète, ou lancez « Synchroniser les usages » |
 | « Les conditions d'utilisation Roborock n'ont pas été acceptées » (ou « ont changé ») | Roborock demande de valider (ou revalider) ses conditions d'utilisation | Ouvrez l'application mobile Roborock, acceptez les conditions proposées, puis réessayez depuis Jeedom |
 | « Robot inconnu du démon » | L'équipement Jeedom n'est plus reconnu par le démon (redémarrage, robot retiré du compte…) | Relancez « Synchroniser les équipements » |
 | « Le cloud Roborock est injoignable » | Jeedom n'arrive pas à joindre les serveurs Roborock | Vérifiez l'accès à Internet du serveur Jeedom |
+| Un message évoquant un **délai imparti** dépassé, une **connexion échouée** ou « plusieurs tentatives de communication ont échoué » | Le robot ou le cloud Roborock a mis trop de temps à répondre : incident réseau passager, ou robot très sollicité | Réessayez après une minute ; si cela se répète, vérifiez la connexion Wi-Fi du robot et l'accès à Internet du serveur Jeedom |
+| « Le robot est occupé », « Le robot a refusé l'action dans son état actuel » ou « Le robot a signalé une erreur » | Le robot ne peut pas exécuter cette demande dans son état du moment (nettoyage en cours, bac plein, incident mécanique…) | Vérifiez l'état du robot (commande « État », ou application mobile), traitez l'incident signalé puis relancez l'action |
+| « Cette fonction n'est pas disponible sur ce modèle de robot » ou « Le robot ne reconnaît pas cette commande » | Le robot n'implémente pas cette fonction, bien que la commande existe dans Jeedom | Aucune manipulation ne débloquera la situation : cette fonction n'existe pas sur ce matériel, masquez la commande si elle vous gêne |
 | « Aucune demande de code en cours » | Le démon a redémarré entre l'envoi et la validation du code | Cliquez de nouveau sur « Envoyer un code », puis validez le nouveau code reçu |
 | Un réglage (aspiration, débit d'eau, itinéraire, mode de nettoyage) n'est pas appliqué | Le robot refuse ce réglage dans son état actuel (en général : pas au repos) | Réessayez une fois le robot au repos ou à sa base |
+| « Cette puissance d'aspiration / ce débit d'eau / cet itinéraire / ce mode de nettoyage n'est pas disponible sur ce robot » | La liste des paliers connue par Jeedom est périmée (le robot n'annonce plus cette valeur) | Rafraîchissez l'état du robot puis réessayez |
 | « Pièce inconnue », « aucune pièce connue » ou « plusieurs pièces portent ce nom » | Le nom saisi ne correspond à aucune pièce détectée, aucune pièce n'a encore été synchronisée, ou le nom est ambigu | Resynchronisez les pièces depuis l'onglet Équipement, utilisez le nom exact de l'application Roborock, ou la commande dédiée à cette pièce plutôt que la commande générique |
 | « Ces coordonnées sortent des limites de la carte connue » | La zone ou le point saisi dépasse la carte actuellement connue du robot | Vérifiez les coordonnées dans le bloc « Zone et point » de l'onglet Équipement, ou rafraîchissez l'image de la carte |
 | « Ce consommable n'est pas suivi pour ce robot » | La commande de réinitialisation a été utilisée avant que l'usure de ce consommable ait été remontée au moins une fois | Rafraîchissez l'état du robot avant de réinitialiser ce consommable |
-| « Une synchronisation vient d'être effectuée, patientez » (usages ou pièces) | Une resynchronisation a déjà eu lieu il y a moins d'une minute | Patientez une minute avant de relancer la même resynchronisation |
+| « Une synchronisation (ou une lecture) vient d'être effectuée, patientez » (usages, pièces ou programmations) | Une resynchronisation a déjà eu lieu il y a moins d'une minute | Patientez une minute avant de relancer la même resynchronisation |
 | « Le journal vient d'être rafraîchi : patientez une minute avant de relancer. » | Le bouton « Rafraîchir le journal » a déjà été utilisé il y a moins d'une minute | Patientez une minute avant de recliquer |
 
 Pour tout autre message, le texte affiché par le plugin donne directement la cause et, le cas échéant,
@@ -374,5 +383,4 @@ le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniqu
   uniquement depuis l'application mobile peut rester affiché comme périmé jusqu'à la synchronisation
   suivante, même si l'image, elle, se met à jour automatiquement.
 
-D'autres fonctionnalités figurent sur la feuille de route du plugin (statistiques cumulées,
-programmations, entre autres) et seront documentées ici au fur et à mesure de leur livraison.
+Cette page est mise à jour à chaque nouvelle fonctionnalité livrée par le plugin.

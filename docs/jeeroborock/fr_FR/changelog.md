@@ -58,11 +58,23 @@ aucune tentative de connexion n'est rejouée automatiquement.
   image de la carte, date de la dernière mise à jour, légende des pièces, rafraîchissement
   automatique.
 
+**Journal, statistiques et programmations**
+
+- Dernier nettoyage (début, durée, surface, motif de fin, erreur) et panneau d'historique des
+  10 derniers nettoyages, avec bouton de rafraîchissement.
+- Quatre compteurs cumulés historisés par défaut : durée totale, surface totale, nombre de
+  nettoyages, nombre de vidages du bac.
+- Programmations créées dans l'application mobile, consultables en lecture seule depuis l'onglet
+  Équipement.
+
+**Documentation**
+
+- Page d'aide complète du plugin : installation, liaison du compte, équipements et commandes,
+  usages, carte, pilotage fin, ré-authentification, quotas et guide de dépannage.
+
 ## Ce qui n'est pas encore disponible
 
-Journal des nettoyages, statistiques cumulées, lecture des programmations, transport local (sans
-passer par le cloud), page de diagnostic, mise à jour du firmware, et documentation utilisateur
-détaillée.
+Transport local (sans passer par le cloud), page de diagnostic et mise à jour du firmware.
 
 # 22/09/2026
 
@@ -74,6 +86,7 @@ détaillée.
 - Ajout : quatre statistiques cumulées par robot (durée totale de nettoyage, surface totale nettoyée, nombre de nettoyages, nombre de vidages du bac), historisées par défaut pour en suivre l'évolution dans le temps. <!-- UC27 -->
 - Documentation : la documentation du plugin décrit les statistiques cumulées : les quatre compteurs, leur historisation par défaut et le comportement après une remise à zéro depuis l'application Roborock. <!-- UC27 -->
 - Ajout : les programmations de nettoyage définies dans l'application Roborock sont consultables depuis Jeedom, en lecture seule : récurrence et état actif ou inactif de chacune. <!-- UC28 -->
+- Documentation : le guide de dépannage de la page d'aide couvre désormais tous les messages qui demandent une action de votre part : compte non lié, adresse e-mail rejetée, délai dépassé, robot occupé, réglage indisponible sur le robot et changement de carte trop rapproché. <!-- UC49 -->
 
 # 21/09/2026
 
