@@ -13,6 +13,7 @@
 - Correctif : les librairies Arduino (EtherCard et Wiegand) sont désormais téléchargeables depuis le site de documentation : les liens de la page de configuration fonctionnent de nouveau
 - Correctif : import de la configuration Badger : le bouton renvoyait une erreur 500 sans aucun message. La cause du blocage est maintenant affichée et journalisée, et un équipement en échec n'interrompt plus l'import des autres.
 - Correctif : import de la configuration Badger : l'import échouait sur tous les équipements tant que le plugin Badger était installé (Jeedom interdit deux équipements de même nom dans le même objet). Les équipements sont maintenant importés sans objet parent, et y sont replacés automatiquement dès la désinstallation de Badger.
+- Ajout : migration depuis Badger : une case à cocher (activée par défaut) reporte automatiquement, partout dans Jeedom, les références aux commandes de Badger sur celles de Badger Fork — scénarios, vues, design, interactions et droits utilisateur. Sans elle, ces éléments pointeraient vers des commandes supprimées à la désinstallation de Badger.
 
 # 01/06/2022
 
