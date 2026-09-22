@@ -76,6 +76,10 @@ aucune tentative de connexion n'est rejouée automatiquement.
 
 Transport local (sans passer par le cloud), page de diagnostic et mise à jour du firmware.
 
+# 23/09/2026
+
+- Correctif : le bouton « Démarrer » reprend désormais un nettoyage mis en pause au lieu de relancer un cycle complet, y compris pour un nettoyage par pièce ou par zone.
+
 # 22/09/2026
 
 - Évolution : sur la page de configuration du plugin, le code de connexion se saisit maintenant juste sous l'adresse e-mail, avant l'état du compte, dans l'ordre où la procédure se déroule. <!-- UC04 -->

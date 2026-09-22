@@ -96,7 +96,7 @@ informations viennent du compte Roborock et sont mises à jour par la synchronis
 | Avancement | En %, pour le nettoyage en cours |
 | En ligne / Connecté | Joignabilité du robot côté cloud, et fraîcheur de la donnée côté plugin |
 | Dernière mise à jour | Date et heure de la dernière donnée reçue |
-| Démarrer / Mettre en pause / Arrêter | Pilotage du nettoyage |
+| Démarrer / Mettre en pause / Arrêter | Pilotage du nettoyage. « Démarrer » **reprend** un nettoyage mis en pause ou interrompu (y compris un nettoyage par pièce ou par zone) plutôt que d'en relancer un nouveau ; sans nettoyage en cours, il lance un nettoyage complet |
 | Retour à la base | Envoie le robot se recharger |
 | Localiser | Fait émettre un signal sonore au robot |
 | Rafraîchir | Relit immédiatement l'état du robot |
