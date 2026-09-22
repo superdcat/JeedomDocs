@@ -17,7 +17,7 @@ Certains ont aussi une touche sonnette que vous pouvez mapper sur une entrée an
 
 ## Sources
 
-Ce plug-in est disponible sur GitHub : <https://github.com/superdcat/JeedomBadger>
+Ce plug-in est disponible sur GitHub : <https://github.com/superdcat/JeedomBadger2>
 
 Les sketch Arduino utilise les librairies :
 Ethercard (ENC28J60)   	: <https://github.com/jcw/ethercard>
