@@ -172,12 +172,17 @@ Le même onglet propose deux blocs distincts, chacun avec son propre bouton :
   l'équipement**, pas des champs de ce panneau. Sans image de carte récupérée, seules des bornes
   générales sont connues.
 
-### Page « Carte »
+### Panneau « Carte » (Accueil > JeeRoborock)
 
-Le menu **Plugins > JeeRoborock > Carte** ouvre une page dédiée, accessible à tout utilisateur ayant les
-droits de lecture sur au moins un robot (pas seulement les administrateurs). Elle affiche la carte active
-du robot sélectionné, son horodatage et la légende des pièces détectées (numéro de segment / nom), et se
-rafraîchit d'elle-même toutes les 30 secondes tant que la page reste ouverte.
+La carte est un **panneau**, pas une page du menu Plugins : elle s'ouvre depuis le menu
+**Accueil > JeeRoborock**, et elle est accessible à tout utilisateur ayant les droits de lecture sur au
+moins un robot (pas seulement les administrateurs). Elle affiche la carte active du robot sélectionné,
+son horodatage et la légende des pièces détectées (numéro de segment / nom), et se rafraîchit d'elle-même
+toutes les 30 secondes tant que la page reste ouverte.
+
+Si l'entrée n'apparaît pas dans **Accueil**, vérifiez que la case **Afficher le panneau desktop** est
+cochée sur la page de gestion du plugin (**Plugins > Gestion des plugins > JeeRoborock**) : elle est
+cochée automatiquement à l'installation, mais reste modifiable.
 
 ## Pilotage fin
 

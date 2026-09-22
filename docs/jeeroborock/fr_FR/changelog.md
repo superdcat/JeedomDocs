@@ -54,8 +54,9 @@ aucune tentative de connexion n'est rejouée automatiquement.
 
 - Inventaire des pièces nommées et des cartes mémorisées (étages), changement de carte active,
   depuis l'onglet Équipement.
-- Page « Carte » accessible aux utilisateurs non administrateurs : image de la carte, date de la
-  dernière mise à jour, légende des pièces, rafraîchissement automatique.
+- Panneau « Carte » (menu **Accueil**) accessible aux utilisateurs non administrateurs :
+  image de la carte, date de la dernière mise à jour, légende des pièces, rafraîchissement
+  automatique.
 
 ## Ce qui n'est pas encore disponible
 
@@ -84,7 +85,7 @@ détaillée.
 - **Cartes multiples (étages)** : liste des cartes mémorisées, carte active et changement de
   carte. Un changement de carte invalide la liste des pièces et l'image, qui sont resynchronisées.
 - **Image de la carte** récupérée et rafraîchie automatiquement par le démon.
-- Nouvelle page **« Carte »** (menu Plugins), première surface du plugin accessible aux
+- Nouveau panneau **« Carte »** (menu Accueil), première surface du plugin accessible aux
   utilisateurs non administrateurs : image de la carte, horodatage, légende des pièces et
   rafraîchissement toutes les 30 secondes. L'image n'est plus servie par URL directe : chaque
   accès vérifie les droits de l'utilisateur sur l'équipement.
