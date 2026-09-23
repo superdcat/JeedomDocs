@@ -26,7 +26,8 @@ aucune tentative de connexion n'est rejouée automatiquement.
 **Équipements et états**
 
 - Découverte des robots du compte et création d'un équipement par robot, illustré par la photo du
-  modèle.
+  modèle. Un robot ne correspond jamais qu'à un seul équipement Jeedom : toute tentative de
+  duplication est refusée avec un message explicite.
 - Informations remontées : état, batterie, en nettoyage, erreur (libellé et code), surface
   nettoyée, durée de nettoyage, avancement, en ligne, connecté, dernière mise à jour.
 - Station d'accueil : vidage poussière, lavage serpillière, séchage serpillière, erreur station,
@@ -43,7 +44,9 @@ aucune tentative de connexion n'est rejouée automatiquement.
 **Pilotage**
 
 - Actions de base : Démarrer, Mettre en pause, Arrêter, Retour à la base, Localiser, Rafraîchir.
-- Routines (« usages ») définies dans l'application mobile : une commande d'action par usage.
+- Routines (« usages ») définies dans l'application mobile : une commande d'action par usage,
+  gérées depuis le panneau « Usages » de l'onglet Équipement (liste des usages connus,
+  synchronisation à la demande).
 - Réglages : puissance d'aspiration, débit d'eau, itinéraire de serpillère, mode de nettoyage.
 - Entretien à la station : laver la serpillière, la sécher, arrêter le séchage, vider le bac.
 - Nettoyage par pièce (une commande par pièce, plus une commande générique par noms), nettoyage
@@ -53,7 +56,8 @@ aucune tentative de connexion n'est rejouée automatiquement.
 **Carte**
 
 - Inventaire des pièces nommées et des cartes mémorisées (étages), changement de carte active,
-  depuis l'onglet Équipement.
+  depuis l'onglet Équipement. Un changement d'étage fait depuis l'application mobile est aussi
+  suivi automatiquement, sans action de votre part.
 - Panneau « Carte » (menu **Accueil**) accessible aux utilisateurs non administrateurs :
   image de la carte, date de la dernière mise à jour, légende des pièces, rafraîchissement
   automatique.
@@ -71,16 +75,18 @@ aucune tentative de connexion n'est rejouée automatiquement.
 
 - Page d'aide complète du plugin : installation, liaison du compte, équipements et commandes,
   usages, carte, pilotage fin, ré-authentification, quotas et guide de dépannage.
+  Disponible en français, anglais, allemand et espagnol.
 
 **Diagnostic et support**
 
 - Rapport de diagnostic généré en un clic depuis la configuration du plugin, sans aucune donnée
   sensible, à copier ou télécharger pour une demande d'assistance.
 
-## Ce qui n'est pas encore disponible
+## Ce qui n'est pas prévu
 
-Affichage du canal utilisé pour joindre chaque robot (connexion locale ou cloud), et suivi/mise à jour
-du micrologiciel.
+Le plugin n'affiche pas le canal utilisé pour joindre chaque robot (connexion locale ou cloud), et
+ne suit ni ne met à jour le micrologiciel : ces deux fonctions ont été écartées. La mise à jour du
+micrologiciel se fait depuis l'application Roborock.
 
 # 23/09/2026
 
@@ -93,6 +99,18 @@ du micrologiciel.
 - Correctif : un nom d'usage personnalisé dans Jeedom n'est plus écrasé par le nom de l'application Roborock à la deuxième synchronisation. <!-- UC35 -->
 - Documentation : section des usages réécrite (panneau « Usages », règle de synchronisation, cas où rien n'est supprimé). <!-- UC35 -->
 - Documentation des usages complétée : quand lancer leur synchronisation, ce qu'elle coûte (aucun quota), ce qui se passe en cas d'échec, et rappel que le bouton de synchronisation des équipements ne synchronise pas les usages. <!-- UC89 -->
+- Correctif : un changement d'étage fait depuis l'application mobile Roborock est désormais détecté par Jeedom dans la minute : la carte active est mise à jour, et la liste des pièces, l'image et le repère de coordonnées de l'ancien étage sont invalidés comme lors d'un changement fait depuis Jeedom. <!-- UC38 -->
+- Documentation : la documentation décrit le suivi automatique d'un changement d'étage fait depuis l'application mobile et ses limites restantes. <!-- UC38 -->
+- Correctif : le nom d'une commande de pièce contenant une apostrophe, une esperluette, un dièse ou un pourcentage suit désormais les renommages faits dans l'application Roborock, tout en conservant un nom personnalisé dans Jeedom. <!-- UC39 -->
+- Correctif : un robot ne peut plus être associé à deux équipements Jeedom : le bouton « Dupliquer » est retiré et toute tentative est refusée avec un message qui nomme l'équipement existant. <!-- UC39 -->
+- Correctif : les noms longs et accentués de pièces, d'usages, de cartes et de robots ne sont plus coupés au milieu d'un caractère. <!-- UC39 -->
+- Documentation : la documentation précise qu'un robot correspond à un seul équipement Jeedom et que le nom des commandes de pièce suit les renommages faits dans l'application. <!-- UC39 -->
+- Correctif : l'indicateur « En ligne » suit désormais réellement la perte et le retour de connexion du robot, une erreur de station inconnue s'affiche comme « Erreur de station non reconnue » au lieu de « Aucune », et les champs non poussés par le robot (station, surface, avancement) ne restent plus figés quand le robot envoie beaucoup de mises à jour. <!-- UC40 -->
+- Documentation : la documentation distingue désormais les indicateurs « En ligne » et « Connecté » et mentionne le libellé « Erreur de station non reconnue ». <!-- UC40 -->
+- Évolution : durcissement interne : le plugin refuse une mise à jour anormalement volumineuse venant de son démon, le fichier source du formulaire de configuration n'est plus accessible par le web, le démon signale au démarrage une version non validée de la bibliothèque de rendu de carte ou un journal non bridé de la bibliothèque Roborock, et la fenêtre d'exemple héritée du modèle de plugin est retirée. <!-- UC41 -->
+- Correctif : deux clics rapprochés (ou deux onglets) sur un même bouton de synchronisation — usages, pièces, cartes, image de carte, journal, programmations — ne passent plus tous les deux : le second est refusé avec le message habituel de demande trop rapprochée. <!-- UC42 -->
+- Documentation : les limites connues sont complétées (carte illisible en connexion locale seule, pièces lisibles uniquement robot en ligne, vue carte non rafraîchie au repos, pas de vue carte sur mobile, commandes de la tuile réaffichées jamais re-masquées, historisation de l'erreur réactivée après une ancienne mise à jour), le dépannage couvre l'échec partiel d'une synchronisation d'usages, et le résumé des fonctionnalités cite le panneau « Usages » et le suivi d'un changement d'étage fait sur mobile. <!-- UC99 -->
+- Documentation : la page d'aide et le changelog sont désormais disponibles en anglais, en allemand et en espagnol. <!-- UC99 -->
 
 # 22/09/2026
 

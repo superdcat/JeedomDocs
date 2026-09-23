@@ -80,6 +80,13 @@ Ce bouton ne synchronise **pas** les usages : un robot fraîchement découvert n
 usages se synchronisent robot par robot, depuis le panneau **« Usages »** de l'onglet « Équipement »
 (bouton « Synchroniser les usages », voir « Routines (« usages ») » ci-dessous).
 
+Un robot ne correspond jamais qu'à **un seul équipement Jeedom** : la page de configuration d'un
+équipement JeeRoborock ne propose pas le bouton natif « Dupliquer », et toute tentative de créer un
+second équipement pour un robot déjà connu (y compris par une autre voie que l'interface, comme l'API)
+est refusée, avec un message qui nomme l'équipement existant. Si un doublon a été créé avant cette
+protection, il n'est pas supprimé automatiquement : c'est à vous de supprimer celui des deux qui ne sert
+plus, un avertissement étant écrit dans le journal du plugin pour vous aider à le repérer.
+
 ## Ce que contient un équipement
 
 Chaque robot devient un équipement Jeedom. La liste des commandes qu'il porte **dépend des capacités que
@@ -104,7 +111,7 @@ informations viennent du compte Roborock et sont mises à jour par la synchronis
 | Surface nettoyée | En m², pour le nettoyage en cours |
 | Durée de nettoyage | En minutes, pour le nettoyage en cours |
 | Avancement | En %, pour le nettoyage en cours |
-| En ligne / Connecté | Joignabilité du robot côté cloud, et fraîcheur de la donnée côté plugin |
+| En ligne / Connecté | « En ligne » : le robot a répondu à la dernière relecture (bascule à « hors ligne » dès qu'une relecture échoue faute de réponse du robot). « Connecté » : fraîcheur de la donnée côté plugin (canal avec le démon) |
 | Dernière mise à jour | Date et heure de la dernière donnée reçue |
 | Démarrer / Mettre en pause / Arrêter | Pilotage du nettoyage. « Démarrer » **reprend** un nettoyage mis en pause ou interrompu (y compris un nettoyage par pièce ou par zone) plutôt que d'en relancer un nouveau ; sans nettoyage en cours, il lance un nettoyage complet |
 | Retour à la base | Envoie le robot se recharger |
@@ -116,7 +123,9 @@ informations viennent du compte Roborock et sont mises à jour par la synchronis
 Ces commandes n'apparaissent **que si votre station le permet** :
 
 - état de vidage de la poussière, de lavage et de séchage de la serpillière, erreur station, manque
-  d'eau ;
+  d'eau. Si le code d'erreur remonté par la station n'est pas reconnu, le libellé affiché est
+  « Erreur de station non reconnue » (le code brut reste visible dans la commande de code d'erreur
+  station) ;
 - actions correspondantes : laver la serpillière, sécher la serpillière, arrêter le séchage, vider le
   bac — disponibles uniquement quand le robot est **à sa base** (chargement compris) ; en dehors de cet
   état, le plugin refuse l'action avec un message explicite.
@@ -354,7 +363,10 @@ Selon les capacités détectées sur votre robot, les commandes suivantes peuven
   lavage) — même principe : information + liste déroulante d'action.
 - **Nettoyer des pièces** — une commande par pièce détectée (« Nettoyer <nom de la pièce> »), plus une
   commande générique « Nettoyer des pièces (noms séparés par des virgules) » qui accepte une liste de
-  noms en texte libre.
+  noms en texte libre. Comme pour les usages, le nom de la commande suit les renommages faits dans
+  l'application Roborock à la synchronisation suivante — y compris quand le nom de la pièce contient une
+  apostrophe, une esperluette, un dièse ou un pourcentage (« Salle d'eau », par exemple) — sauf si vous
+  avez personnalisé ce nom à la main dans Jeedom, auquel cas votre nom personnalisé est conservé.
 - **Nettoyer une zone** — reçoit quatre coordonnées `x1,y1,x2,y2` en millimètres et nettoie le
   rectangle correspondant.
 - **Se déplacer vers un point** — reçoit deux coordonnées `x,y` en millimètres.
@@ -368,10 +380,20 @@ Une fois un robot synchronisé, son état se met à jour automatiquement, sans a
 - toutes les **30 secondes** pendant un nettoyage ;
 - toutes les **60 secondes** au repos.
 
-La commande **« Dernière mise à jour »** indique l'horodatage de la donnée la plus récente reçue. Si
-aucune donnée n'a pu être obtenue depuis plus de **3 minutes**, le plugin bascule les indicateurs
-« En ligne » / « Connecté » sur **déconnecté** : c'est un signal de robot injoignable (hors tension, hors
-réseau, ou cloud Roborock indisponible), pas une erreur du plugin lui-même.
+La commande **« Dernière mise à jour »** indique l'horodatage de la donnée la plus récente reçue.
+
+L'indicateur **« En ligne »** réagit vite : il bascule sur **hors ligne** dès qu'une relecture périodique
+échoue faute de réponse du robot (au repos, une relecture a lieu environ toutes les minutes ; environ
+toutes les 40 secondes en nettoyage), et revient **en ligne** dès qu'une lecture réussit, qu'une mise à
+jour est reçue spontanément du robot, ou qu'une action lui est confirmée. Le retour « en ligne » peut
+prendre quelques secondes seulement (le robot envoie une mise à jour) ou, dans le pire cas où le robot
+est resté injoignable longtemps, jusqu'à une dizaine de minutes (les relectures s'espacent
+progressivement après plusieurs échecs).
+
+Indépendamment de ce mécanisme, si **aucune** donnée n'a pu être obtenue depuis plus de **3 minutes**, le
+plugin bascule les deux indicateurs « En ligne » **et** « Connecté » sur **déconnecté** : c'est un signal
+de robot injoignable (hors tension, hors réseau, ou cloud Roborock indisponible), pas une erreur du
+plugin lui-même.
 
 ## Ré-authentification requise
 
@@ -482,6 +504,7 @@ quel (voir ci-dessus).
 | « Une synchronisation (ou une lecture) vient d'être effectuée, patientez » (usages, pièces ou programmations) | Une resynchronisation a déjà eu lieu il y a moins d'une minute | Patientez une minute avant de relancer la même resynchronisation |
 | « Le journal vient d'être rafraîchi : patientez une minute avant de relancer. » | Le bouton « Rafraîchir le journal » a déjà été utilisé il y a moins d'une minute | Patientez une minute avant de recliquer |
 | « La génération du rapport a échoué. » | La requête vers Jeedom n'a pas abouti : délai de 20 secondes dépassé, connexion interrompue ou erreur du serveur Jeedom (un démon arrêté, lui, donne un rapport partiel, pas cet échec) | Rechargez la page de configuration et réessayez ; si cela persiste, consultez le log `jeeroborock` (menu « Analyse » > « Logs ») |
+| « … usage(s) n'ont pas pu être enregistrés dans Jeedom. Consultez le log du plugin. » (dans le compte rendu du panneau « Usages ») | Un usage particulier n'a pas pu être créé ou mis à jour côté Jeedom pendant la synchronisation, alors que le reste s'est déroulé normalement | Consultez le log `jeeroborock` (menu « Analyse » > « Logs ») pour identifier l'usage concerné, puis relancez une synchronisation |
 | « 401 - Accès non autorisé » au clic sur « Générer un rapport de diagnostic » | Votre session Jeedom a expiré, ou votre compte n'a pas les droits administrateur | Reconnectez-vous à Jeedom avec un compte administrateur puis réessayez |
 | « Diagnostic du démon indisponible : rapport partiel » | Le démon est démarré, mais n'a pas pu fournir la partie technique du rapport (incident ponctuel) | Le reste du rapport reste exploitable ; réessayez plus tard pour obtenir la section technique complète |
 
@@ -494,10 +517,11 @@ le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniqu
   robots plus anciens (protocole A01) ne sont pas pris en charge.
 - Les libellés produits par le robot lui-même (état, erreur, état de la station, noms de consommables)
   restent **toujours en français**, quelle que soit la langue choisie pour l'interface Jeedom.
-- La carte active affichée dans la configuration d'un équipement ne se met à jour que lors d'un
-  changement fait depuis Jeedom, ou détecté au prochain contrôle : un changement de carte fait
-  uniquement depuis l'application mobile peut rester affiché comme périmé jusqu'à la synchronisation
-  suivante, même si l'image, elle, se met à jour automatiquement.
+- Un changement de carte fait depuis l'application mobile est désormais détecté automatiquement, en
+  tâche de fond, dans la minute environ : la carte active, l'image et le repère de la carte se mettent
+  à jour sans action de votre part (la liste des pièces, elle, est vidée et attend un clic sur
+  « Resynchroniser les pièces »). Pendant ce court délai, la configuration peut encore afficher
+  l'ancien étage, et une page Équipement déjà ouverte ne se rafraîchit pas seule : rechargez-la.
 - La connexion locale évoquée plus haut (« Ce que le plugin fait, et ce qu'il ne fait pas ») ne peut pas
   être désactivée depuis Jeedom.
 - Le plugin affiche la version du **micrologiciel** du robot (onglet « Équipement », mise à jour à la
@@ -505,5 +529,22 @@ le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniqu
   déclenche pas : la mise à jour du micrologiciel se fait depuis l'application mobile Roborock.
 - Au-delà de **64 usages** enregistrés pour un même robot, la synchronisation des usages continue
   d'ajouter et de renommer, mais ne supprime plus automatiquement les usages disparus de l'application.
+- L'image de la carte peut rester **illisible** quand le robot n'est joignable que par la connexion
+  locale évoquée plus haut, sans passer par le canal MQTT du cloud (message « La carte du robot n'a
+  pas pu être décodée »).
+- La lecture des noms de pièces (panneau « Pièces » de l'onglet Équipement) exige que le robot soit
+  **en ligne** : elle échoue si le robot est injoignable au moment du clic.
+- La vue carte (panneau « Accueil > JeeRoborock ») ne déclenche elle-même aucune mise à jour : elle se
+  contente d'afficher, toutes les 30 secondes, la dernière image déjà connue. Cette image n'est
+  reconstruite que pendant les nettoyages ; au repos, elle peut donc dater du dernier passage du
+  robot.
+- Il n'existe pas de vue carte sur l'application mobile de Jeedom : le panneau carte n'est disponible
+  que sur l'interface desktop.
+- Les commandes reprises par la tuile de tableau de bord (batterie, en nettoyage, erreur, connecté,
+  en ligne et les cinq actions de pilotage) sont masquées une seule fois, à la création de la tuile.
+  Si vous en réaffichez une manuellement, le plugin ne la re-masque jamais : votre choix est conservé.
+- Sur une installation mise à jour depuis une version ancienne du plugin, une migration technique
+  ponctuelle a pu réactiver l'historisation de la commande « Erreur » : si vous ne souhaitez pas
+  historiser cette commande, désactivez-le manuellement sur sa configuration.
 
 Cette page est mise à jour à chaque nouvelle fonctionnalité livrée par le plugin.
