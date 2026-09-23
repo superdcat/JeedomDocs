@@ -138,6 +138,7 @@ from the Roborock app.
   update), troubleshooting now covers a partial usage synchronization failure, and the feature summary
   mentions the "Routines" panel and tracking of a floor change made on mobile. <!-- UC99 -->
 - Documentation: the help page and changelog are now available in English, German and Spanish. <!-- UC99 -->
+- Fix: robot tile: the notice of a consumable to replace now states which one (main brush, filter, sensors…). <!-- UC15 -->
 
 # 09/22/2026
 

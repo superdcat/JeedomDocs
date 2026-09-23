@@ -111,6 +111,7 @@ se hace desde la aplicación Roborock.
 - Corrección: dos clics seguidos (o dos pestañas) en un mismo botón de sincronización — usos, habitaciones, mapas, imagen de mapa, registro, programaciones — ya no pasan ambos: el segundo se rechaza con el mensaje habitual de solicitud demasiado próxima. <!-- UC42 -->
 - Documentación: se completan las limitaciones conocidas (mapa ilegible solo con conexión local, habitaciones legibles únicamente con el robot en línea, vista de mapa no actualizada en reposo, sin vista de mapa en móvil, órdenes del mosaico vueltas a mostrar nunca vueltas a ocultar, historización del error reactivada tras una actualización antigua), la resolución de problemas cubre el fallo parcial de una sincronización de usos, y el resumen de funcionalidades cita el panel « Rutinas » y el seguimiento de un cambio de planta hecho en móvil. <!-- UC99 -->
 - Documentación: la página de ayuda y el changelog ahora están disponibles en inglés, en alemán y en español. <!-- UC99 -->
+- Corrección: mosaico del robot: el aviso de un consumible que hay que sustituir indica ahora cuál (cepillo principal, filtro, sensores…). <!-- UC15 -->
 
 # 22/09/2026
 

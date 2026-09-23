@@ -154,6 +154,7 @@ zurückgestellt. Die Firmware-Aktualisierung erfolgt über die Roborock-App.
   vorgenommenen Etagenwechsels. <!-- UC99 -->
 - Dokumentation: Die Hilfeseite und der Changelog sind nun auch auf Englisch, Deutsch und Spanisch
   verfügbar. <!-- UC99 -->
+- Korrektur: Roboter-Kachel: Der Hinweis auf ein zu ersetzendes Verbrauchsmaterial gibt nun an, welches (Hauptbürste, Filter, Sensoren…). <!-- UC15 -->
 
 # 22.09.2026
 

@@ -111,6 +111,7 @@ micrologiciel se fait depuis l'application Roborock.
 - Correctif : deux clics rapprochés (ou deux onglets) sur un même bouton de synchronisation — usages, pièces, cartes, image de carte, journal, programmations — ne passent plus tous les deux : le second est refusé avec le message habituel de demande trop rapprochée. <!-- UC42 -->
 - Documentation : les limites connues sont complétées (carte illisible en connexion locale seule, pièces lisibles uniquement robot en ligne, vue carte non rafraîchie au repos, pas de vue carte sur mobile, commandes de la tuile réaffichées jamais re-masquées, historisation de l'erreur réactivée après une ancienne mise à jour), le dépannage couvre l'échec partiel d'une synchronisation d'usages, et le résumé des fonctionnalités cite le panneau « Usages » et le suivi d'un changement d'étage fait sur mobile. <!-- UC99 -->
 - Documentation : la page d'aide et le changelog sont désormais disponibles en anglais, en allemand et en espagnol. <!-- UC99 -->
+- Correctif : tuile du robot : la mention d'un consommable à remplacer indique désormais lequel (brosse principale, filtre, capteurs…). <!-- UC15 -->
 
 # 22/09/2026
 
