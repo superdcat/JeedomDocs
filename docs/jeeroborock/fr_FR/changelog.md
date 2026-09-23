@@ -72,13 +72,27 @@ aucune tentative de connexion n'est rejouée automatiquement.
 - Page d'aide complète du plugin : installation, liaison du compte, équipements et commandes,
   usages, carte, pilotage fin, ré-authentification, quotas et guide de dépannage.
 
+**Diagnostic et support**
+
+- Rapport de diagnostic généré en un clic depuis la configuration du plugin, sans aucune donnée
+  sensible, à copier ou télécharger pour une demande d'assistance.
+
 ## Ce qui n'est pas encore disponible
 
-Transport local (sans passer par le cloud), page de diagnostic et mise à jour du firmware.
+Affichage du canal utilisé pour joindre chaque robot (connexion locale ou cloud), et suivi/mise à jour
+du micrologiciel.
 
 # 23/09/2026
 
 - Correctif : le bouton « Démarrer » reprend désormais un nettoyage mis en pause au lieu de relancer un cycle complet, y compris pour un nettoyage par pièce ou par zone.
+- Correctif : une session Roborock expirée est désormais reconnue aussi lors de la synchronisation des usages, de leur exécution, de la lecture des pièces et du test de connexion : le plugin affiche « ré-authentification requise » au lieu d'une erreur générique. <!-- UC36 -->
+- Ajout : nouveau rapport de diagnostic dans la configuration du plugin : état du démon, du compte et des robots, version de python-roborock et erreurs récentes, sans aucun identifiant, jeton, numéro de série ni adresse e-mail, à copier ou télécharger en un clic. <!-- UC30 -->
+- Documentation : la documentation du plugin explique comment générer et transmettre un rapport de diagnostic pour une demande d'assistance. <!-- UC30 -->
+- Documentation : la documentation précise que le plugin reste dépendant du cloud Roborock même quand une connexion locale au robot est tentée, indique ce qu'il faut joindre à une demande d'aide et ce qu'il ne faut jamais publier, et complète le guide de dépannage du rapport de diagnostic. <!-- UC59 -->
+- Évolution : les usages ont leur panneau « Usages » dans l'onglet Équipement du robot : liste des usages connus, bouton de synchronisation et règle affichée avant le clic ; un usage supprimé dans l'application Roborock est désormais supprimé de Jeedom au lieu d'être marqué obsolète, et le compte rendu le nomme. <!-- UC35 -->
+- Correctif : un nom d'usage personnalisé dans Jeedom n'est plus écrasé par le nom de l'application Roborock à la deuxième synchronisation. <!-- UC35 -->
+- Documentation : section des usages réécrite (panneau « Usages », règle de synchronisation, cas où rien n'est supprimé). <!-- UC35 -->
+- Documentation des usages complétée : quand lancer leur synchronisation, ce qu'elle coûte (aucun quota), ce qui se passe en cas d'échec, et rappel que le bouton de synchronisation des équipements ne synchronise pas les usages. <!-- UC89 -->
 
 # 22/09/2026
 

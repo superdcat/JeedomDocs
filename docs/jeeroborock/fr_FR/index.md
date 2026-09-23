@@ -7,8 +7,14 @@ définies dans l'application mobile Roborock.
 
 ## Ce que le plugin fait, et ce qu'il ne fait pas
 
-- Le pilotage passe **uniquement par le cloud Roborock**. Il n'y a pas de mode local : Jeedom doit avoir
-  accès à Internet, et votre robot doit être connecté à votre réseau et au cloud Roborock pour répondre.
+- Le pilotage passe par le **cloud Roborock** : Jeedom doit avoir accès à Internet, et votre robot doit
+  être connecté à votre réseau et au cloud Roborock pour répondre. Certaines opérations dépendent
+  strictement du cloud et **ne fonctionnent pas sans Internet** : la connexion au compte, l'inventaire des
+  robots, l'exécution des usages, la lecture des programmations et la récupération de la photo du robot.
+- La bibliothèque utilisée par le plugin **peut**, quand votre robot est sur le même réseau local que
+  Jeedom, tenter une connexion directe à l'appareil pour accélérer certains échanges. Ce comportement
+  n'est ni réglable ni désactivable depuis Jeedom, et il ne change rien aux points ci-dessus : le plugin
+  reste dépendant du cloud Roborock pour fonctionner.
 - Le plugin s'adresse aux robots compatibles avec le protocole **V1** de Roborock. Le matériel de
   référence, sur lequel tout est testé, est le **Roborock Qrevo Curv**. D'autres robots V1 peuvent
   fonctionner, mais leurs commandes disponibles varient selon les capacités que le robot annonce
@@ -69,6 +75,10 @@ l'état d'un robot déjà connu — cet état se met à jour tout seul (voir « 
 
 Un robot partagé par un autre compte est repéré par une étiquette **« Robot partagé »** sur sa carte, dans
 la liste des équipements.
+
+Ce bouton ne synchronise **pas** les usages : un robot fraîchement découvert n'en a encore aucun. Les
+usages se synchronisent robot par robot, depuis le panneau **« Usages »** de l'onglet « Équipement »
+(bouton « Synchroniser les usages », voir « Routines (« usages ») » ci-dessous).
 
 ## Ce que contient un équipement
 
@@ -213,16 +223,73 @@ Les « usages » sont les routines de nettoyage que vous avez créées dans l'ap
 Une fois synchronisées, chacune devient une commande d'action sur l'équipement, exécutable depuis Jeedom
 comme n'importe quelle autre commande, ou depuis un scénario.
 
-Le bouton **« Synchroniser les usages »**, sur la page de l'équipement, relit la liste des routines de ce
-robot. Ces routines s'exécutent en passant par le cloud Roborock et fonctionnent donc **même si le canal
-direct avec le robot est indisponible** — seule une connexion Internet côté Jeedom et un robot connu de
-votre compte sont nécessaires.
+Ces routines s'exécutent en passant par le cloud Roborock et fonctionnent donc **même si le canal direct
+avec le robot est indisponible** — seule une connexion Internet côté Jeedom et un robot connu de votre
+compte sont nécessaires.
 
-Si une routine est **renommée** dans l'application mobile, son nom se met à jour à la prochaine
-synchronisation des usages — sauf si vous avez vous-même renommé la commande côté Jeedom, auquel cas
-votre nom est conservé. Si une routine **disparaît** de l'application mobile, sa commande Jeedom n'est pas
-supprimée automatiquement : elle est marquée obsolète, et son exécution est refusée avec un message
-l'indiquant.
+### Le panneau « Usages »
+
+L'onglet « Équipement » d'un robot comporte une section **« Usages »**, sous le bloc « Inventaire
+Roborock ». Elle affiche :
+
+- la **liste des usages que Jeedom connaît** pour ce robot, un par ligne ; quand le nom de la commande a
+  été personnalisé dans Jeedom, le nom d'origine dans l'application Roborock est rappelé dans une
+  seconde colonne, pour faire le rapprochement ;
+- le bouton **« Synchroniser les usages »** — c'est le **seul** endroit où il se trouve, il n'est plus
+  dans la barre d'outils de la page ;
+- la **règle de synchronisation**, rappelée en clair avant tout clic : elle conserve les usages encore
+  présents dans l'application (mêmes commandes, mêmes scénarios), supprime ceux qui n'y sont plus, et
+  ajoute les nouveaux.
+
+Si aucun usage n'est encore connu, le panneau l'indique explicitement plutôt que d'afficher une liste
+vide : lancez une synchronisation, ou créez d'abord un usage dans l'application Roborock.
+
+Afficher ce panneau ne déclenche aucun appel au démon ni au cloud Roborock : la liste vient de ce que
+Jeedom sait déjà, sans consommer de quota.
+
+### Ce que fait une synchronisation
+
+- **Usage encore présent dans l'application** → rien n'est touché : même commande, même identifiant,
+  utilisable à l'identique dans un scénario. Seul le nom suit celui de l'application s'il a changé — et
+  uniquement si vous ne l'avez pas personnalisé dans Jeedom, auquel cas votre nom est conservé.
+- **Usage disparu de l'application** (supprimé côté mobile) → sa commande Jeedom est **supprimée**.
+  ⚠️ Un scénario qui la référençait perd sa référence, sans avertissement de Jeedom au moment où cela se
+  produit : c'est pourquoi le compte rendu affiché après la synchronisation **nomme** chaque usage
+  supprimé, pour que vous sachiez quoi corriger.
+- **Usage nouveau dans l'application** → une commande est ajoutée, sans toucher aux autres.
+
+Une commande d'usage ne se supprime **pas à la main** depuis Jeedom : masquez-la si elle vous gêne, ou
+supprimez l'usage correspondant dans l'application puis relancez une synchronisation.
+
+Deux synchronisations à moins d'une minute d'intervalle affichent un message invitant à patienter : ce
+n'est pas une erreur, c'est la même protection anti-rafale que les autres boutons de resynchronisation du
+plugin. Une synchronisation sans aucun changement côté application est une opération neutre, et le dit
+(« Aucun changement : vos usages sont déjà à jour. »).
+
+Si la liste reçue du cloud Roborock est **incomplète** (réponse tronquée, ou plus de 64 usages sur ce
+robot), la synchronisation applique quand même les ajouts et les renommages, mais **ne supprime rien** :
+par précaution, une liste incomplète n'est jamais interprétée comme « ces usages ont disparu ».
+
+Si vous mettez à jour le plugin depuis une version antérieure qui marquait certains usages
+« obsolètes », la première synchronisation qui suit les supprime, comme n'importe quel usage absent de
+l'application — plus aucun usage ne peut rester durablement dans cet état.
+
+### Quand la lancer, et ce qu'elle coûte
+
+Il n'y a **aucune synchronisation automatique** : un usage créé, renommé ou supprimé dans l'application
+Roborock n'apparaît (ou ne disparaît) côté Jeedom qu'après un clic sur « Synchroniser les usages ».
+Lancez-la donc chaque fois que vous modifiez vos usages dans l'application.
+
+Elle ne consomme **ni** le quota de connexion **ni** celui d'inventaire des appareils (voir « Quotas
+Roborock » plus bas) — mais deux clics à moins d'une minute d'intervalle sont refusés, avec une invitation
+à patienter.
+
+Conseil préventif : avant de supprimer un usage dans l'application, repérez les scénarios Jeedom qui
+utilisent sa commande. Ils perdront leur référence dès la synchronisation suivante.
+
+Si le compte n'est pas lié, si le démon est arrêté ou si une ré-authentification est requise, le panneau
+continue d'afficher la liste des usages déjà connus, et le bouton affiche un message explicite : dans tous
+ces cas, **aucun usage n'est supprimé**.
 
 ## Tuile de tableau de bord
 
@@ -332,7 +399,53 @@ retenter aussitôt ne fait qu'aggraver la situation — vous pénaliseriez aussi
 mobile sur ce même compte, le temps que le compteur se réinitialise. Le plugin ne relance jamais
 automatiquement une tentative après un refus de quota.
 
+La synchronisation et l'exécution des usages n'entrent pas dans ces quotas.
+
 ## Dépannage
+
+### Rapport de diagnostic
+
+Avant de demander de l'aide, générez un rapport de diagnostic : depuis la **configuration du plugin**,
+bloc **« Diagnostic et support »**, cliquez sur **« Générer un rapport de diagnostic »**. Le rapport
+apparaît dans une zone de texte, prêt à transmettre.
+
+Il rassemble l'état de l'environnement (versions du plugin, de Jeedom et du démon, y compris la version
+de la bibliothèque Roborock utilisée), l'état de la connexion au compte, la liste des robots — chacun
+identifié par son numéro d'équipement Jeedom et un identifiant d'appareil partiellement masqué —, les
+erreurs récentes remontées par Jeedom et le démon, et une annexe technique. Il ne contient **jamais**
+d'identifiant de connexion, de jeton, de clé de robot, de numéro de série ni d'adresse e-mail, quel que
+soit le contenu ; les noms que vous avez donnés à vos robots ou à vos pièces n'y figurent pas non plus.
+
+Deux boutons permettent de le récupérer : **« Copier le rapport »** (presse-papiers) et
+**« Télécharger le rapport »** (fichier texte). Si la copie automatique ne fonctionne pas — c'est le cas
+le plus courant quand Jeedom est servi en HTTP plutôt qu'en HTTPS — le texte reste sélectionné : copiez-le
+avec Ctrl+C. Si un forum de support limite la longueur d'un message, joignez plutôt le fichier téléchargé.
+
+Si le démon est arrêté au moment de la génération, le rapport le signale en tête (« Démon injoignable :
+rapport partiel ») et reste malgré tout utilisable : les informations encore connues côté Jeedom (dernier
+état, horodatage de dernière communication) y figurent quand même. S'il est démarré mais que la section
+technique n'a pas pu être produite, le rapport l'indique par un bandeau différent (« Diagnostic du démon
+indisponible : rapport partiel ») ; là aussi, le reste du rapport reste exploitable.
+
+Cette action est réservée aux administrateurs de Jeedom.
+
+### Ce qu'il faut joindre à une demande d'aide
+
+En plus du rapport, décrivez dans votre message : le **symptôme précis** (ce que vous observez, et sur
+quelle commande ou quel écran), **ce que vous avez déjà essayé**, et l'**heure approximative** à laquelle
+le problème est survenu. Ces trois informations permettent de retrouver l'incident dans un rapport ou un
+journal, le rapport seul ne suffit pas à deviner le contexte.
+
+**Ne publiez jamais tel quel**, sur un forum ou dans un ticket public :
+
+- votre **adresse e-mail** de compte Roborock ou le **code** reçu par e-mail ;
+- un **jeton**, un identifiant de session ou toute valeur qui ressemble à une clé technique ;
+- le **contenu brut** des journaux du plugin ou du démon (menu Jeedom « Analyse » > « Logs », ou fichiers
+  sous `log/`) : contrairement au rapport de diagnostic, ces journaux **ne sont pas expurgés** ;
+- une **capture d'écran** qui laisserait voir l'un de ces éléments.
+
+Le rapport de diagnostic généré depuis la page de configuration est, lui, conçu pour être transmis tel
+quel (voir ci-dessus).
 
 | Symptôme | Cause probable | Que faire |
 |---|---|---|
@@ -353,7 +466,7 @@ automatiquement une tentative après un refus de quota.
 | « L'image de la carte est trop volumineuse pour être transférée » | La carte produite par le robot dépasse la taille que le plugin accepte de stocker | Réessayez plus tard ; si le problème persiste, ce robot n'est pas compatible avec cette fonction |
 | « Le robot doit être à la base pour lancer cette opération » | Une action d'entretien de la station a été demandée alors que le robot n'est pas à sa base | Attendez que le robot retourne à sa base, ou lancez « Retour à la base » d'abord |
 | « Cette opération d'entretien n'est pas disponible sur la station de ce robot » | La station de ce robot ne prend pas en charge cette action | C'est normal : la commande ne devrait pas apparaître si la station ne le permet pas ; rafraîchissez l'état du robot |
-| « Cet usage a été supprimé dans l'application Roborock » | La routine correspondante n'existe plus côté Roborock | Supprimez la commande devenue obsolète, ou lancez « Synchroniser les usages » |
+| « La liste des usages reçue du cloud Roborock est incomplète : par précaution, aucun usage n'a été supprimé. » | La réponse du cloud a été tronquée, ou ce robot a plus de 64 usages | Relancez la synchronisation plus tard ; rien n'a été perdu entre-temps |
 | « Les conditions d'utilisation Roborock n'ont pas été acceptées » (ou « ont changé ») | Roborock demande de valider (ou revalider) ses conditions d'utilisation | Ouvrez l'application mobile Roborock, acceptez les conditions proposées, puis réessayez depuis Jeedom |
 | « Robot inconnu du démon » | L'équipement Jeedom n'est plus reconnu par le démon (redémarrage, robot retiré du compte…) | Relancez « Synchroniser les équipements » |
 | « Le cloud Roborock est injoignable » | Jeedom n'arrive pas à joindre les serveurs Roborock | Vérifiez l'accès à Internet du serveur Jeedom |
@@ -368,6 +481,9 @@ automatiquement une tentative après un refus de quota.
 | « Ce consommable n'est pas suivi pour ce robot » | La commande de réinitialisation a été utilisée avant que l'usure de ce consommable ait été remontée au moins une fois | Rafraîchissez l'état du robot avant de réinitialiser ce consommable |
 | « Une synchronisation (ou une lecture) vient d'être effectuée, patientez » (usages, pièces ou programmations) | Une resynchronisation a déjà eu lieu il y a moins d'une minute | Patientez une minute avant de relancer la même resynchronisation |
 | « Le journal vient d'être rafraîchi : patientez une minute avant de relancer. » | Le bouton « Rafraîchir le journal » a déjà été utilisé il y a moins d'une minute | Patientez une minute avant de recliquer |
+| « La génération du rapport a échoué. » | La requête vers Jeedom n'a pas abouti : délai de 20 secondes dépassé, connexion interrompue ou erreur du serveur Jeedom (un démon arrêté, lui, donne un rapport partiel, pas cet échec) | Rechargez la page de configuration et réessayez ; si cela persiste, consultez le log `jeeroborock` (menu « Analyse » > « Logs ») |
+| « 401 - Accès non autorisé » au clic sur « Générer un rapport de diagnostic » | Votre session Jeedom a expiré, ou votre compte n'a pas les droits administrateur | Reconnectez-vous à Jeedom avec un compte administrateur puis réessayez |
+| « Diagnostic du démon indisponible : rapport partiel » | Le démon est démarré, mais n'a pas pu fournir la partie technique du rapport (incident ponctuel) | Le reste du rapport reste exploitable ; réessayez plus tard pour obtenir la section technique complète |
 
 Pour tout autre message, le texte affiché par le plugin donne directement la cause et, le cas échéant,
 le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniques pour le comprendre.
@@ -382,5 +498,12 @@ le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniqu
   changement fait depuis Jeedom, ou détecté au prochain contrôle : un changement de carte fait
   uniquement depuis l'application mobile peut rester affiché comme périmé jusqu'à la synchronisation
   suivante, même si l'image, elle, se met à jour automatiquement.
+- La connexion locale évoquée plus haut (« Ce que le plugin fait, et ce qu'il ne fait pas ») ne peut pas
+  être désactivée depuis Jeedom.
+- Le plugin affiche la version du **micrologiciel** du robot (onglet « Équipement », mise à jour à la
+  synchronisation des équipements), mais ne signale pas qu'une mise à jour est disponible et ne la
+  déclenche pas : la mise à jour du micrologiciel se fait depuis l'application mobile Roborock.
+- Au-delà de **64 usages** enregistrés pour un même robot, la synchronisation des usages continue
+  d'ajouter et de renommer, mais ne supprime plus automatiquement les usages disparus de l'application.
 
 Cette page est mise à jour à chaque nouvelle fonctionnalité livrée par le plugin.
