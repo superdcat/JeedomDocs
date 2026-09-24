@@ -88,6 +88,10 @@ El plugin no muestra el canal utilizado para contactar con cada robot (conexión
 sigue ni actualiza el firmware: estas dos funciones se han descartado. La actualización del firmware
 se hace desde la aplicación Roborock.
 
+# 24/09/2026
+
+- Corrección: el informe de diagnóstico vuelve a incluir la parte técnica proporcionada por el demonio: ya no muestra «Diagnóstico del demonio no disponible: informe parcial» cuando el demonio funciona. El nivel de log y el historial de errores del robot también se indican correctamente. <!-- UC30 -->
+
 # 23/09/2026
 
 - Corrección: el botón « Iniciar » ahora reanuda una limpieza puesta en pausa en lugar de relanzar un ciclo completo, incluso en una limpieza por habitación o por zona.
