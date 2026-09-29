@@ -80,6 +80,10 @@ The plugin does not display the channel used to reach each robot (local connecti
 not track or update the firmware: these two features have been set aside. Firmware updates are done
 from the Roborock app.
 
+# 09/29/2026
+
+- Fix: cleaning a room (a room's "Clean" button or clean-by-name command) no longer ends with "Internal daemon error": it is sent to the robot again. If a requested room is not recognised, the plugin now suggests resynchronising the rooms. <!-- UC24 -->
+
 # 09/24/2026
 
 - Fix: the diagnostic report once again includes the technical section provided by the daemon: it no longer shows "Daemon diagnostics unavailable: partial report" when the daemon is running. The log level and the robot's error history are also correctly filled in. <!-- UC30 -->

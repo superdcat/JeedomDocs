@@ -88,6 +88,10 @@ El plugin no muestra el canal utilizado para contactar con cada robot (conexión
 sigue ni actualiza el firmware: estas dos funciones se han descartado. La actualización del firmware
 se hace desde la aplicación Roborock.
 
+# 29/09/2026
+
+- Corrección: la limpieza de una estancia (botón «Limpiar» de una estancia o comando por nombres) ya no termina con «Error interno del demonio»: vuelve a enviarse al robot. Si una estancia solicitada no se reconoce, el plugin aconseja ahora volver a sincronizar las estancias. <!-- UC24 -->
+
 # 24/09/2026
 
 - Corrección: el informe de diagnóstico vuelve a incluir la parte técnica proporcionada por el demonio: ya no muestra «Diagnóstico del demonio no disponible: informe parcial» cuando el demonio funciona. El nivel de log y el historial de errores del robot también se indican correctamente. <!-- UC30 -->

@@ -86,6 +86,10 @@ Das Plugin zeigt nicht den Kanal an, über den jeder Roboter erreicht wird (loka
 Cloud), und verfolgt oder aktualisiert die Firmware nicht: Diese beiden Funktionen wurden
 zurückgestellt. Die Firmware-Aktualisierung erfolgt über die Roborock-App.
 
+# 29.09.2026
+
+- Korrektur: Die Reinigung eines Raums (Schaltfläche „Reinigen“ eines Raums oder Befehl per Namen) endet nicht mehr mit „Interner Fehler des Dienstes“: Sie wird wieder an den Roboter übertragen. Wird ein angeforderter Raum nicht erkannt, empfiehlt das Plugin nun, die Räume neu zu synchronisieren. <!-- UC24 -->
+
 # 24.09.2026
 
 - Korrektur: Der Diagnosebericht enthält wieder den technischen Teil, den der Daemon liefert: Er zeigt nicht mehr „Daemon-Diagnose nicht verfügbar: unvollständiger Bericht“ an, wenn der Daemon läuft. Log-Level und Fehlerverlauf des Roboters werden ebenfalls korrekt angegeben. <!-- UC30 -->
