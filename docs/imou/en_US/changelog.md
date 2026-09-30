@@ -4,6 +4,11 @@
 >
 >If there is no information about the update, it only concerns documentation, translation or text updates.
 
+# 1.0.1
+
+- **Health**: disabled cameras are no longer taken into account on the Health page (an offline
+  disabled camera no longer puts the plugin in error).
+
 # 1.0
 
 First complete version, by functional domain:

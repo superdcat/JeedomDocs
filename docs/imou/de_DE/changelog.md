@@ -4,6 +4,11 @@
 >
 >Wenn es keine Information zur Aktualisierung gibt, betrifft diese ausschließlich Aktualisierungen der Dokumentation, der Übersetzung oder des Textes.
 
+# 1.0.1
+
+- **Gesundheit**: Deaktivierte Kameras werden auf der Gesundheitsseite nicht mehr berücksichtigt
+  (eine deaktivierte, offline befindliche Kamera versetzt das Plugin nicht mehr in einen Fehlerzustand).
+
 # 1.0
 
 Erste vollständige Version, nach Funktionsbereich:

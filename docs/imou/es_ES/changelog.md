@@ -4,6 +4,11 @@
 >
 >Si no hay información sobre la actualización, es que solo se refiere a una actualización de documentación, de traducción o de texto.
 
+# 1.0.1
+
+- **Salud**: las cámaras desactivadas ya no se tienen en cuenta en la página Salud (una cámara
+  desactivada fuera de línea ya no pone el plugin en error).
+
 # 1.0
 
 Primera versión completa, por dominio funcional:

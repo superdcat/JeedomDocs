@@ -4,6 +4,11 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 1.0.1
+
+- **Santé** : les caméras désactivées ne sont plus prises en compte dans la page Santé (une caméra
+  désactivée hors ligne ne fait plus passer le plugin en erreur).
+
 # 1.0
 
 Première version complète, par domaine fonctionnel :
