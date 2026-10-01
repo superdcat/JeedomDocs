@@ -86,6 +86,10 @@ Das Plugin zeigt nicht den Kanal an, über den jeder Roboter erreicht wird (loka
 Cloud), und verfolgt oder aktualisiert die Firmware nicht: Diese beiden Funktionen wurden
 zurückgestellt. Die Firmware-Aktualisierung erfolgt über die Roborock-App.
 
+# 01.10.2026
+
+- Korrektur: Die Schaltfläche „Routinen synchronisieren“ im Reiter „Gerät“ bleibt nicht mehr wirkungslos: Ein Klick startet die Synchronisierung wieder, und das Gerät wird anschließend von selbst neu angezeigt, wenn Routinen hinzugefügt oder entfernt wurden. <!-- UC35 -->
+
 # 29.09.2026
 
 - Korrektur: Die Reinigung eines Raums (Schaltfläche „Reinigen“ eines Raums oder Befehl per Namen) endet nicht mehr mit „Interner Fehler des Dienstes“: Sie wird wieder an den Roboter übertragen. Wird ein angeforderter Raum nicht erkannt, empfiehlt das Plugin nun, die Räume neu zu synchronisieren. <!-- UC24 -->

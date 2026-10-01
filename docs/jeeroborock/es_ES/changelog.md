@@ -88,6 +88,10 @@ El plugin no muestra el canal utilizado para contactar con cada robot (conexión
 sigue ni actualiza el firmware: estas dos funciones se han descartado. La actualización del firmware
 se hace desde la aplicación Roborock.
 
+# 01/10/2026
+
+- Corrección: el botón «Sincronizar rutinas» de la pestaña Equipo ya no se queda sin efecto: al pulsarlo se vuelve a lanzar la sincronización, y el equipo se vuelve a mostrar por sí solo cuando se han añadido o eliminado rutinas. <!-- UC35 -->
+
 # 29/09/2026
 
 - Corrección: la limpieza de una estancia (botón «Limpiar» de una estancia o comando por nombres) ya no termina con «Error interno del demonio»: vuelve a enviarse al robot. Si una estancia solicitada no se reconoce, el plugin aconseja ahora volver a sincronizar las estancias. <!-- UC24 -->

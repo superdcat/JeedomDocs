@@ -88,6 +88,10 @@ Le plugin n'affiche pas le canal utilisé pour joindre chaque robot (connexion l
 ne suit ni ne met à jour le micrologiciel : ces deux fonctions ont été écartées. La mise à jour du
 micrologiciel se fait depuis l'application Roborock.
 
+# 01/10/2026
+
+- Correctif : le bouton « Synchroniser les usages » de l'onglet Équipement n'est plus sans effet : la synchronisation est de nouveau lancée au clic, et l'équipement se réaffiche ensuite de lui-même quand des usages ont été ajoutés ou retirés. <!-- UC35 -->
+
 # 29/09/2026
 
 - Correctif : le nettoyage d'une pièce (bouton « Nettoyer » d'une pièce ou commande par noms) ne se termine plus par « Erreur interne du démon » : il est de nouveau transmis au robot. Si une pièce demandée n'est pas reconnue, le plugin conseille désormais de resynchroniser les pièces. <!-- UC24 -->

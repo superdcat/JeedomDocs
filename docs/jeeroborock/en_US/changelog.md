@@ -80,6 +80,10 @@ The plugin does not display the channel used to reach each robot (local connecti
 not track or update the firmware: these two features have been set aside. Firmware updates are done
 from the Roborock app.
 
+# 10/01/2026
+
+- Fix: the "Synchronize routines" button on the Device tab no longer does nothing: clicking it starts the synchronization again, and the device is then redisplayed on its own when routines have been added or removed. <!-- UC35 -->
+
 # 09/29/2026
 
 - Fix: cleaning a room (a room's "Clean" button or clean-by-name command) no longer ends with "Internal daemon error": it is sent to the robot again. If a requested room is not recognised, the plugin now suggests resynchronising the rooms. <!-- UC24 -->
