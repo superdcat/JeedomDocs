@@ -11,8 +11,8 @@ Jeedom  --HTTP-->  TeslaBleHttpProxy (Raspberry Pi)  --Bluetooth-->  Véhicule
 ## Prérequis
 
 - Jeedom 4.5 minimum, sur Debian 11 ou 12.
-- **TeslaBleHttpProxy 2.3.0 minimum**, installé, fonctionnel et joignable depuis Jeedom.
-- La **clé du proxy appairée avec le véhicule**. Cette étape se fait entièrement dans l'interface de TeslaBleHttpProxy (génération de la clé, puis validation avec votre carte-clé dans le véhicule) : reportez-vous à sa documentation.
+- **TeslaBleHttpProxy 2.3.0 minimum**, installé, fonctionnel et joignable depuis Jeedom. Procédure complète pas à pas, sur un Raspberry Pi Zero 2 W : [Installer le proxy BLE](installation-proxy.md).
+- La **clé du proxy appairée avec le véhicule**. Cette étape se fait entièrement dans l'interface de TeslaBleHttpProxy (génération de la clé, puis validation avec votre carte-clé dans le véhicule) : voir [Installer le proxy BLE](installation-proxy.md#8-générer-la-clé-et-lappairer-avec-le-véhicule).
 - Le **VIN** de chaque véhicule à piloter (visible en bas de l'écran principal de l'application Tesla).
 
 > **Astuce**
@@ -72,10 +72,10 @@ Le proxy doit être **à portée Bluetooth du véhicule** (5 à 10 m, donc en g�
 | Raspberry Pi Zero W (première génération) | Déconseillé : processeur ARMv6 qui n'est plus pris en charge par les versions récentes de Docker, et adaptateur Bluetooth qui a tendance à se figer au bout de quelques heures. |
 | Raspberry Pi 3, 4, 5 ou mini-PC avec Bluetooth | Convient, à condition d'être à portée du véhicule. |
 
-En résumé, l'installation consiste à :
+La procédure détaillée, avec les commandes, les réglages et le dépannage, est sur la page [Installer le proxy BLE](installation-proxy.md). En résumé, l'installation consiste à :
 
 1. Installer Raspberry Pi OS **64 bits Lite** et Docker.
-2. Lancer l'image `wimaha/tesla-ble-http-proxy` en suivant la [documentation d'installation du proxy](https://github.com/wimaha/TeslaBleHttpProxy/blob/main/docs/installation.md).
+2. Lancer l'image `wimaha/tesla-ble-http-proxy`.
 3. Ouvrir `http://<ip_du_pi>:8080/dashboard`, générer la clé, saisir le VIN, **réveiller le véhicule**, envoyer la clé puis poser la carte-clé sur la console centrale pour valider.
 4. Donner une **adresse IP fixe** au Raspberry Pi (réservation DHCP sur votre box), puisque son adresse est enregistrée dans le plugin.
 
@@ -91,11 +91,11 @@ Avec TeslaBleHttpProxy 2.3.0, la clé générée par défaut a le rôle **Chargi
 
 | Rôle de la clé | Commandes concernées (liste indicative) |
 |---|---|
-| **Charging Manager** : fonctionne | Lectures (présence, verrouillage, charge, climatisation), **Rafraîchir**, **Réveiller**, **Démarrer la charge**, **Arrêter la charge**, **Courant de charge**, **Limite de charge** |
+| **Charging Manager** : fonctionne | Lectures (présence, verrouillage, charge, climatisation), **Rafraîchir**, **Réveiller**, **Démarrer la charge**, **Arrêter la charge**, **Courant de charge** |
 | **Charging Manager** : refusé | **Verrouiller les portes**, **Déverrouiller les portes**, **Klaxonner**, **Faire clignoter les feux**, **Mode sentinelle** ; probablement aussi **Démarrer le climatiseur** et **Arrêter le climatiseur** |
 | **Owner** | Toutes les commandes |
 
-Cette liste est indicative : le véhicule décide. Le refus se reconnaît au message « Commande refusée par le véhicule (rôle de la clé du proxy insuffisant ?) ». Le comportement de l'ouverture et de la fermeture de la trappe de charge avec une clé Charging Manager n'est pas confirmé.
+Cette liste est indicative : le véhicule décide. Le refus se reconnaît au message « Commande refusée par le véhicule (rôle de la clé du proxy insuffisant ?) ». Le comportement de la **Limite de charge** et de l'ouverture et de la fermeture de la trappe de charge avec une clé Charging Manager n'est pas confirmé : la [documentation du proxy](https://github.com/wimaha/TeslaBleHttpProxy/blob/main/docs/installation.md#step-3-generate-key-for-vehicle) ne cite que le réveil, le démarrage et l'arrêt de la charge et le courant de charge.
 
 > **IMPORTANT**
 >

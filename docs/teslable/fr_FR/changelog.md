@@ -30,6 +30,7 @@
 - Évolution : une erreur interne du plugin lors de l'enregistrement d'un équipement ou de la configuration, ou pendant le test du proxy, affiche désormais un message lisible (le détail est écrit dans le log du plugin) au lieu de laisser la page sans réponse ; la fiche du plugin dispose aussi d'une description en anglais <!-- UC011 -->
 - Documentation : guide complet de la version 1.0 : installation du proxy et du Raspberry Pi, configuration de l'URL et du bouton Tester, VIN unique, rôle de la clé (Charging Manager ou Owner), tableaux des commandes avec leurs identifiants, types et unités, et dépannage message par message <!-- UC099 -->
 - Évolution : rappel pour la mise à jour : l'information « Heure départ programmée » passe du sous-type numérique au sous-type Autre (heure au format HH:MM) ; si elle était historisée, elle reste numérique et n'est plus mise à jour tant que vous ne changez pas son sous-type en Autre dans l'onglet Commandes de l'équipement <!-- UC099 -->
+- Documentation : nouvelle page « Installer le proxy BLE », pas à pas sur un Raspberry Pi Zero 2 W (préparation de la carte, Docker, appairage de la clé, entretien, sécurité, dépannage, références)
 
 # 23/09/2026
 
