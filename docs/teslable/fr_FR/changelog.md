@@ -31,6 +31,7 @@
 - Documentation : guide complet de la version 1.0 : installation du proxy et du Raspberry Pi, configuration de l'URL et du bouton Tester, VIN unique, rôle de la clé (Charging Manager ou Owner), tableaux des commandes avec leurs identifiants, types et unités, et dépannage message par message <!-- UC099 -->
 - Évolution : rappel pour la mise à jour : l'information « Heure départ programmée » passe du sous-type numérique au sous-type Autre (heure au format HH:MM) ; si elle était historisée, elle reste numérique et n'est plus mise à jour tant que vous ne changez pas son sous-type en Autre dans l'onglet Commandes de l'équipement <!-- UC099 -->
 - Documentation : nouvelle page « Installer le proxy BLE », pas à pas sur un Raspberry Pi Zero 2 W (préparation de la carte, Docker, appairage de la clé, entretien, sécurité, dépannage, références)
+- Correctif : un proxy éteint ou injoignable est de nouveau signalé comme « proxy injoignable », et non plus comme un simple délai dépassé
 
 # 23/09/2026
 
