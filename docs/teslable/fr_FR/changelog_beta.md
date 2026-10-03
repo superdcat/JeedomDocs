@@ -1,4 +1,4 @@
-# Changelog plugin Tesla BLE
+# Changelog plugin Tesla BLE - beta
 
 >**IMPORTANT**
 >
