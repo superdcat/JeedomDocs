@@ -183,6 +183,9 @@ Dans l'onglet **Equipement** :
 | **URL du proxy de ce véhicule** | Facultatif. L'adresse du proxy du garage de ce véhicule, avec son port (par exemple `http://192.168.1.51:8080/`). **Vide : le véhicule utilise l'URL de la configuration du plugin.** |
 | **Tester ce proxy** (bouton) | Affiche la version du proxy que ce véhicule utilise. Il teste la valeur saisie, **même non enregistrée** ; champ vide : c'est l'URL de la configuration du plugin qui est testée. |
 | **Intervalle de rafraîchissement** | Fréquence de lecture de ce véhicule : **1, 2, 5, 10, 15 ou 30 minutes**. Par défaut **5 minutes** (les véhicules existants gardent ce comportement après la mise à jour). Plus l'intervalle est court, plus les informations sont fraîches, mais plus le proxy est sollicité et, véhicule éveillé, plus sa mise en veille peut être retardée ; un intervalle long ménage le Raspberry Pi. **1 minute** convient à un ou deux véhicules par proxy (recommandé ; à ajuster selon votre installation) : au-delà, une lecture lente peut dépasser la minute. Une valeur inconnue est ramenée à 5 minutes. Un changement prend effet à la lecture suivante, sans redémarrage. Cette lecture ne réveille jamais le véhicule. |
+| **Laisser le véhicule s'endormir** (case **Activer**) | Coché par défaut (y compris sur les véhicules existants après la mise à jour). Quand le véhicule est éveillé mais inactif, le plugin cesse de lire les données de charge et de climatisation pendant une fenêtre, pour ne pas l'empêcher de s'endormir. Décoché : une lecture complète a lieu à chaque passage, comme avant. Voir [Laisser le véhicule s'endormir](#laisser-le-véhicule-sendormir). |
+| **Lectures inchangées avant la fenêtre** | Nombre de lectures successives sans aucun changement (hors charge, sans occupant) avant d'ouvrir la fenêtre : **1, 2, 3, 4, 5, 10 ou 15**. Par défaut **3** (15 minutes d'inactivité à l'intervalle de 5 minutes). |
+| **Durée de la fenêtre** | Durée pendant laquelle les données ne sont plus lues : **15, 20, 30, 45 minutes, 1 heure, 1 heure 30 ou 2 heures**. Par défaut **30 minutes**. Sans effet si elle ne dépasse pas l'intervalle de rafraîchissement : choisissez une durée supérieure à l'intervalle. |
 | **Description** | Texte libre, facultatif. |
 
 Les boutons en haut de page sont ceux de tout équipement Jeedom : **Configuration avancée**, **Dupliquer**, **Sauvegarder** et **Supprimer**. L'onglet **Commandes** liste les commandes du véhicule (voir [Commandes](#commandes)).
@@ -311,7 +314,7 @@ Si votre Jeedom est en version inférieure à 4.5, Jeedom refuse la mise à jour
 
 ### Ce qui est fait automatiquement
 
-À la mise à jour, puis à l'activation du plugin, une mise à niveau des équipements existants s'exécute automatiquement, par niveaux successifs. Chaque niveau n'est appliqué qu'une seule fois. Selon les versions, elle corrige ou complète certains équipements (VIN, commandes manquantes, heure de départ programmée, retrait de l'option « Aucun » du mode sentinelle…) sans toucher à vos réglages (nom, visibilité, historisation).
+À la mise à jour, puis à l'activation du plugin, une mise à niveau des équipements existants s'exécute automatiquement, par niveaux successifs. Chaque niveau n'est appliqué qu'une seule fois. Selon les versions, elle corrige ou complète certains équipements (VIN, commandes manquantes, heure de départ programmée, retrait de l'option « Aucun » du mode sentinelle, réglages de la fenêtre d'endormissement…) sans toucher à vos réglages (nom, visibilité, historisation). Les véhicules existants reçoivent la fenêtre d'endormissement **activée** (3 lectures inchangées, 30 minutes) ; décochez-la dans l'équipement si vous ne la souhaitez pas.
 
 Si la mise à niveau échoue sur un véhicule, elle est retentée automatiquement à la prochaine mise à jour ou activation du plugin.
 
@@ -357,6 +360,19 @@ Les véhicules d'un même proxy sont rafraîchis **l'un après l'autre** ; les p
 - Un cycle ne dépasse pas **4 minutes** : s'il y a beaucoup de véhicules ou si le proxy est lent, les véhicules restants sont lus au cycle suivant (avertissement nommant ces véhicules).
 - Pendant qu'une commande, un **Rafraîchir** ou une vérification d'appairage est en cours ou attend le même proxy, la lecture du cycle est sautée sans erreur ; la lecture suivante rattrape.
 - Avec plusieurs proxys, le cycle lit les proxys en parallèle : un proxy arrêté, éteint, figé ou lent ne retarde que ses propres véhicules (un proxy arrêté coûte quelques secondes, jusqu'à environ 5 s, par véhicule de ce proxy), jamais ceux des autres proxys. Le cycle dure autant que son proxy le plus lent. Deux proxys différents ne s'attendent jamais, y compris dans le cycle périodique ; les commandes et **Rafraîchir** des autres proxys ne sont pas retardés non plus.
+
+### Laisser le véhicule s'endormir
+
+Un véhicule éveillé s'endort de lui-même après une quinzaine de minutes sans sollicitation. Une lecture des données de charge et de climatisation toutes les quelques minutes peut l'en empêcher et consommer la batterie. Le plugin sait donc « se faire oublier » quand il n'y a rien de nouveau à lire :
+
+- **Ouverture.** Quand le véhicule est éveillé, **hors charge** (état de charge Débranché, Terminée, Arrêtée ou Sans alimentation), **sans occupant**, et que ses données et son état sont **inchangés** sur le nombre de lectures réglé (3 par défaut), le plugin ouvre une **fenêtre d'endormissement** (30 minutes par défaut).
+- **Pendant la fenêtre**, seule la lecture de l'état sans réveil est faite, à l'intervalle du véhicule (présence, verrouillage, veille, portières, coffres, trappe de charge, occupant). Les données de charge et de climatisation, la **Dernière lecture des données** et les durées de lecture des données ne sont plus mises à jour : elles gardent leur dernière valeur, comme pour un véhicule endormi. Le plugin ne réveille jamais le véhicule pour ces vérifications.
+- **Fin de la fenêtre**, avec reprise de la lecture complète dès le passage suivant (au même passage pour une activité) : activité constatée sur l'état sans réveil (déverrouillage, portière, coffre ou trappe de charge, occupant), commande envoyée au véhicule (réveil explicite compris), bouton **Rafraîchir**, véhicule endormi, véhicule hors de portée, case décochée, ou fin de la durée. À la fin de la durée, une **lecture de contrôle** a lieu : si rien n'a changé, la fenêtre est prolongée.
+- **Jamais en charge.** Un véhicule en charge, en démarrage de charge ou dans un état de charge inconnu n'ouvre jamais de fenêtre.
+
+Pour suivre le mécanisme, passez le log du plugin en niveau **Info** : une ligne indique l'ouverture (« fenêtre d'endormissement ouverte pour … min … jusqu'à HH:MM environ ») et une autre la fin (« fin de la fenêtre d'endormissement après … min : … »). En **Debug**, chaque passage suspendu est noté. Pour vérifier l'effet, observez **Véhicule réveillé** : il devrait passer à 0 au bout du délai habituel (une quinzaine de minutes), alors qu'il pouvait rester à 1 sans fenêtre. C'est un effet attendu, non garanti : il dépend du véhicule. Si le véhicule ne s'endort pas, comparez avec la case décochée.
+
+Limites : une charge démarrée sans aucun changement visible de l'état sans réveil (câble déjà branché, charge programmée ou lancée depuis l'application) n'est vue qu'à la lecture de contrôle, soit au plus la durée de la fenêtre plus un intervalle plus tard ; une climatisation lancée depuis l'application pendant la fenêtre, de même. Le brancher d'un câble depuis un état débranché est vu tout de suite (la trappe s'ouvre). Une clé téléphone proche qui garde l'occupant « présent » empêche l'ouverture de la fenêtre.
 
 ### Exécution des commandes
 
@@ -478,6 +494,7 @@ Le scénario est déclenché à chaque changement de la valeur, donc à la panne
 
 - **Après une commande**, seuls la limite de charge, le courant de charge et le verrouillage sont mis à jour tout de suite. Les autres informations de charge et de climatisation sont à jour à la lecture suivante du véhicule (5 minutes par défaut).
 - **Véhicule endormi** : les informations de charge et de climatisation ne sont lues que véhicule réveillé (le plugin ne le réveille jamais de lui-même). Utilisez **Réveiller** puis **Rafraîchir**.
+- **Fenêtre d'endormissement** : pendant la fenêtre, les informations de charge et de climatisation et la **Dernière lecture des données** sont figées (durée par défaut 30 minutes). Une charge ou une climatisation lancée depuis l'application sans changement visible de l'état sans réveil n'est vue qu'à la lecture de contrôle. Décochez **Laisser le véhicule s'endormir** dans l'équipement pour une lecture complète à chaque passage.
 - **Clé Charging Manager** : le verrouillage, le klaxon, les feux et le mode sentinelle sont refusés par le véhicule. Le plugin le détecte (information **Rôle de clé**) mais ne grise pas ces commandes sur le dashboard (voir [Rôle de la clé](#rôle-de-la-clé)).
 - **Un seul équipement par véhicule** (VIN unique).
 - **Heure de départ programmée historisée** : si elle était historisée avant la mise à jour, elle reste numérique et n'est plus mise à jour tant que son sous-type n'est pas changé en **Autre**.
@@ -597,6 +614,7 @@ Dans **Réglages > Système > Moteur de tâches**, la tâche **TeslaBLE::cycleRa
 - **« Verrou du proxy indisponible… »** ou **« Verrou du cycle de rafraîchissement indisponible… »** : le plugin ne peut pas écrire dans le dossier temporaire de Jeedom. Vérifiez les droits de ce dossier ; le plugin continue de fonctionner sans la protection contre les échanges simultanés.
 - **« Commandes : … le nom … est déjà pris… »** : le plugin n'a pas pu donner le libellé prévu à une commande parce qu'une autre commande de l'équipement le porte. Renommez l'une des deux, puis sauvegardez l'équipement.
 - **« Adaptateur Bluetooth du proxy probablement figé pour le véhicule … »** (avertissement) et **« Adaptateur Bluetooth du proxy de nouveau opérationnel pour le véhicule … »** (Info) : début et fin d'un épisode, voir [Alerte adaptateur Bluetooth figé](#alerte-adaptateur-bluetooth-figé).
+- **« Véhicule … : fenêtre d'endormissement ouverte pour … min après … lecture(s) inchangée(s), hors charge… »** (Info) : le plugin cesse de lire les données de charge et de climatisation jusqu'à l'heure indiquée ; voir [Laisser le véhicule s'endormir](#laisser-le-véhicule-sendormir). **« fin de la fenêtre d'endormissement après … min : … »** (Info) donne la raison de la reprise (activité constatée avec le champ modifié, commande, rafraîchissement demandé, réglage désactivé, durée écoulée, véhicule hors de portée) ; **« … : véhicule endormi après … min de fenêtre. »** signale que le véhicule s'est endormi. En Debug : « lecture des données suspendue », « lecture de contrôle », « prolongée ».
 - **« Migrations : … »** : voir [Constater la mise à niveau dans le log](#constater-la-mise-à-niveau-dans-le-log).
 
 ### Lecture lente du proxy
