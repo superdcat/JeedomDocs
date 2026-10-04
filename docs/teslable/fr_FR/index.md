@@ -112,18 +112,20 @@ Avec l'image du fork, le rôle de la clé active se lit aussi à la main : ouvre
 
 ## Configuration du plugin
 
-Après installation, activez le plugin puis ouvrez sa page de configuration (**Plugins > Gestion des plugins > Tesla BLE**). Elle ne comporte qu'un réglage.
+Après installation, activez le plugin puis ouvrez sa page de configuration (**Plugins > Gestion des plugins > Tesla BLE**). Elle comporte deux réglages : l'URL du proxy et le seuil d'alerte Bluetooth figé.
 
 | Champ | Valeur attendue |
 |---|---|
 | **URL du proxy** | L'adresse de TeslaBleHttpProxy avec son port, par exemple `http://192.168.1.50:8080/`. Elle doit commencer par `http://` ou `https://`. Un seul proxy est utilisé pour tous les véhicules. |
 | **Tester** (bouton) | Vérifie que le proxy répond et affiche sa version. Il teste la valeur saisie, **même non enregistrée**. |
 | **Ouvrir le tableau de bord du proxy (appairage des clés)** (lien) | Ouvre le tableau de bord du proxy dans un nouvel onglet, pour générer et appairer la clé. |
+| **Logs du proxy** (bouton, ligne **Diagnostic**) | Affiche les dernières lignes de logs du proxy dans une fenêtre, sans session SSH sur le Raspberry Pi. Utilise l'URL **enregistrée**. |
+| **Seuil d'alerte Bluetooth figé** | Nombre de lectures consécutives en délai dépassé, alors que le proxy répond, avant de vous prévenir que l'adaptateur Bluetooth du Raspberry Pi est probablement figé. Entier de 2 à 288 (une lecture toutes les 5 minutes) ; laissez vide pour la valeur par défaut, **3**, affichée en grisé. Voir [Alerte adaptateur Bluetooth figé](#alerte-adaptateur-bluetooth-figé). |
 | **Version minimale du proxy** | Information en lecture seule : la version minimale de TeslaBleHttpProxy prise en charge (2.3.0). |
 
 ### L'URL est normalisée à l'enregistrement
 
-Vous n'avez pas à vous soucier de la forme exacte de l'adresse : à l'enregistrement, le plugin retire les espaces autour de l'URL, met `http`/`https` en minuscules et **ajoute le `/` final** si besoin. Après l'enregistrement, le champ affiche l'adresse corrigée.
+Vous n'avez pas à vous soucier de la forme exacte de l'adresse : à l'enregistrement, le plugin retire les espaces autour de l'URL, met `http`/`https` en minuscules et **ajoute le `/` final** si besoin : le `/` final et la casse de `http://` n'ont donc aucune importance, `HTTP://192.168.1.50:8080` et `http://192.168.1.50:8080/` désignent le même proxy. Après l'enregistrement, le champ affiche l'adresse corrigée.
 
 L'URL est refusée, avec un message en rouge et sans que l'ancienne valeur soit modifiée, dans les cas suivants :
 
@@ -139,6 +141,30 @@ Cliquez sur **Tester** : le plugin interroge la version du proxy (10 secondes au
 
 Le lien apparaît dès qu'une URL valide est enregistrée (ou testée). Il pointe vers `<URL du proxy>dashboard`. Si vous avez déclaré le proxy par un **nom de service Docker** (par exemple `http://teslablehttpproxy:8080/`), Jeedom sait le joindre mais **votre navigateur non** : le lien ne s'ouvrira pas. Ouvrez alors le tableau de bord avec l'adresse IP du Raspberry Pi (`http://<ip_du_pi>:8080/dashboard`).
 
+### Consulter les logs du proxy
+
+Le bouton **Logs du proxy** ouvre une fenêtre qui affiche les **200 dernières lignes** de logs du proxy (la plus récente en bas), avec leur heure dans le fuseau de Jeedom et leur niveau (`[DEBUG]`, `[INFO]`, `[WARN]`, `[ERROR]`). Le bouton **Rafraîchir** relit les logs. La lecture ne sollicite pas le véhicule et répond en 10 secondes au plus, même pendant qu'une commande occupe le proxy.
+
+- La fonction demande le proxy **2.3.0** ou plus récent et utilise l'URL **enregistrée** : après avoir changé l'URL, sauvegardez avant d'ouvrir les logs.
+- Les lignes sont affichées **telles quelles**, en texte brut : un contenu comme `<script>` ou `&` apparaît littéralement, sans aucun effet. Chaque ligne est limitée à 1000 caractères.
+- Les VIN sont masquées (seuls les 4 derniers caractères restent visibles). Les lignes peuvent contenir l'adresse IP des clients du proxy et le contenu des commandes envoyées : relisez une capture avant de la publier sur un forum.
+- Le proxy conserve aussi ses lignes **Debug**, quel que soit son niveau de log : les 200 lignes couvrent donc souvent moins d'une heure d'activité. Ses logs sont effacés à chaque redémarrage du proxy.
+- Les lignes du proxy ne sont jamais recopiées dans le log du plugin. Fonction réservée aux administrateurs Jeedom.
+
+Voir [Messages de la fenêtre Logs du proxy](#messages-de-la-fenêtre-logs-du-proxy) en cas de message d'erreur.
+
+### Alerte adaptateur Bluetooth figé
+
+Sur certains Raspberry Pi (notamment le Zero W de première génération), l'adaptateur Bluetooth se fige au bout de quelques heures : le proxy répond toujours (le bouton **Tester** est vert, **Proxy joignable** vaut 1) mais chaque lecture du véhicule expire. Le plugin repère cette situation et vous prévient :
+
+- quand la lecture de l'état d'un véhicule dépasse son délai **3 fois de suite** (ou le seuil réglé) alors que le proxy répond, un message **« Adaptateur Bluetooth du proxy probablement figé — … »** apparaît dans le centre de messages de Jeedom, **une seule fois** tant que la situation dure ;
+- pendant ce temps, **Dernière erreur** affiche **« Adaptateur Bluetooth du proxy probablement figé : redémarrez le Raspberry Pi »** ;
+- dès qu'une lecture réussit à nouveau (y compris un véhicule endormi qui répond), le log note le retour à la normale (niveau **Info**) et l'alerte est réarmée : une nouvelle série déclenchera un nouveau message, qui remplace l'ancien.
+
+Un délai dépassé isolé, un véhicule hors de portée ou un proxy éteint ne déclenchent pas l'alerte. Le message reste dans le centre de messages après le retour à la normale : supprimez-le vous-même. Avec plusieurs véhicules sur le même proxy, chaque véhicule a son propre message. Les clics sur **Rafraîchir** comptent comme des lectures.
+
+Que faire : redémarrez le Raspberry Pi qui héberge le proxy. Si cela se répète, passez à un Raspberry Pi Zero 2 W et utilisez une alimentation de qualité (5 V, 2,5 A).
+
 ## Configuration des équipements
 
 Chaque véhicule est un équipement. Rendez-vous dans **Plugins > Communication des objets > Tesla BLE**, cliquez sur **Ajouter** et donnez un nom au véhicule.
@@ -153,6 +179,8 @@ Dans l'onglet **Equipement** :
 | **Activer** | Coché : le véhicule est rafraîchi toutes les 5 minutes. Décoché : il n'est plus lu. |
 | **Visible** | Coché : le widget du véhicule est affiché sur le dashboard. |
 | **VIN** | Le numéro de série du véhicule : **17 caractères**, chiffres et lettres **sauf I, O et Q** (exemple factice : `5YJ3E1EA7KF000000`). Il doit être celui déclaré dans TeslaBleHttpProxy. |
+| **URL du proxy de ce véhicule** | Facultatif. L'adresse du proxy du garage de ce véhicule, avec son port (par exemple `http://192.168.1.51:8080/`). **Vide : le véhicule utilise l'URL de la configuration du plugin.** |
+| **Tester ce proxy** (bouton) | Affiche la version du proxy que ce véhicule utilise. Il teste la valeur saisie, **même non enregistrée** ; champ vide : c'est l'URL de la configuration du plugin qui est testée. |
 | **Description** | Texte libre, facultatif. |
 
 Les boutons en haut de page sont ceux de tout équipement Jeedom : **Configuration avancée**, **Dupliquer**, **Sauvegarder** et **Supprimer**. L'onglet **Commandes** liste les commandes du véhicule (voir [Commandes](#commandes)).
@@ -163,6 +191,14 @@ Les boutons en haut de page sont ceux de tout équipement Jeedom : **Configurati
 - La VIN est **normalisée** : espaces retirés, lettres mises en majuscules. Elle peut être laissée vide, mais le véhicule n'est alors pas lu (voir [Dépannage](#dépannage)).
 - La VIN est **unique** : un véhicule ne peut avoir qu'un seul équipement. Une VIN invalide, ou déjà utilisée par un autre équipement, est refusée avec un message.
 - **Dupliquer** un véhicule est donc **refusé** : la copie porte la même VIN. Pour un second véhicule, utilisez **Ajouter**.
+- L'**URL du proxy de ce véhicule** est normalisée comme celle de la configuration du plugin (voir [L'URL est normalisée à l'enregistrement](#lurl-est-normalisée-à-lenregistrement)) ; une URL invalide est refusée avec le même message.
+
+### Un proxy par véhicule (plusieurs garages)
+
+Si vos véhicules sont garés à des endroits différents, chacun avec son Raspberry Pi, renseignez sur chaque équipement l'**URL du proxy de ce véhicule**. Toutes ses lectures et commandes passent alors par ce proxy, et le lien **Ouvrir le tableau de bord du proxy** de la section d'appairage pointe vers lui. Si un proxy s'arrête, seuls les véhicules qui l'utilisent passent en erreur. Vider le champ ramène le véhicule sur l'URL de la configuration du plugin au cycle suivant ; ses commandes et son historique ne changent pas.
+
+- Écrivez un même proxy **toujours avec la même URL** (même adresse IP ou même nom, même port) : le plugin reconnaît un proxy à son URL.
+- Le bouton **Logs du proxy** de la configuration du plugin affiche les logs du proxy de la **configuration du plugin** seulement.
 
 ### Appairer ma clé et vérifier l'appairage
 
@@ -176,7 +212,7 @@ Sous le champ **VIN**, la section **Appairer ma clé** rappelle les étapes de l
 | **Proxy sans clé : …** | Le proxy n'a aucune clé : générez-en une (**Generate**), puis envoyez-la au véhicule. |
 | **Clé non appairée avec ce véhicule : …** | Réveillez le véhicule, envoyez la clé (**Send key**), puis posez la carte-clé sur la console centrale. |
 | **Véhicule hors de portée Bluetooth du proxy : …** | Rapprochez le véhicule ou le Raspberry Pi, vérifiez la VIN. |
-| **Proxy injoignable : …** | Vérifiez l'adresse du proxy avec le bouton **Tester** de la configuration du plugin. |
+| **Proxy injoignable : …** | Vérifiez que le proxy est démarré, puis son adresse avec le bouton **Tester ce proxy** de l'équipement. |
 | **Proxy occupé par une commande ou une lecture : …** | Relancez la vérification dans un instant. |
 
 La vérification utilise la VIN **enregistrée** : sauvegardez l'équipement après l'avoir modifiée.
@@ -193,7 +229,7 @@ Vous mettez à jour le plugin depuis une version 0.x : rien n'est à refaire.
 
 Un équipement **migré depuis la version 0.x garde les noms de ses commandes** (par exemple « Etat Charge », « Charge Start », « Rafraichir ») : seuls les identifiants comptent pour les scénarios. Les commandes d'un **nouvel équipement** portent les libellés du tableau de la section [Commandes](#commandes). Vous pouvez renommer librement une commande.
 
-À la mise à jour, les commandes absentes de votre équipement sont ajoutées **en fin de liste** : **Temps de charge restant**, **Trappe de charge ouverte**, **Dernière erreur**, **Dernière lecture des données**, **Proxy joignable**, **Version du proxy** et **Rôle de clé** (qui vaut **Indéterminé** jusqu'à la première commande réservée au rôle Owner). Sur un équipement existant, l'action d'ouverture de la trappe peut s'appeler « Trappe de Charge Ouvert » : renommez-la si besoin.
+À la mise à jour, les commandes absentes de votre équipement sont ajoutées **en fin de liste** : **Temps de charge restant**, **Trappe de charge ouverte**, **Dernière erreur**, **Dernière lecture des données**, **Proxy joignable**, **Version du proxy**, **Rôle de clé** (qui vaut **Indéterminé** jusqu'à la première commande réservée au rôle Owner), **Durée lecture état** et **Durée lecture données** (vides jusqu'à la première lecture réussie). Sur un équipement existant, l'action d'ouverture de la trappe peut s'appeler « Trappe de Charge Ouvert » : renommez-la si besoin.
 
 ### Autonomie et vitesse de charge
 
@@ -255,6 +291,8 @@ Si le véhicule s'endort entre les deux requêtes, ce n'est pas une erreur : les
 
 Si le véhicule est hors de portée Bluetooth du proxy, la commande **Présence véhicule** passe à 0. Si c'est le proxy qui ne répond pas, n'a pas de clé appairée ou répond trop lentement, la présence garde sa dernière valeur.
 
+**Plusieurs véhicules sur un même proxy.** Les véhicules sont lus l'un après l'autre, chacun avec sa propre **Dernière erreur** et sa propre **Dernière lecture des données** : un véhicule hors de portée ou dont la clé n'est pas appairée n'empêche pas la lecture des autres. Le cycle dure au plus 4 minutes ; avec 3 véhicules ou moins sur un même proxy, il n'est jamais écourté, même au pire cas. Au-delà, les derniers véhicules peuvent ne pas être lus : vérifiez leur **Dernière lecture des données**. Quand un cycle est écourté, le log reçoit **un seul** avertissement par épisode (« Avertissement non répété jusqu'au prochain cycle complet. »), puis une ligne **Info** au premier cycle de nouveau complet.
+
 **Pourquoi les données ne bougent plus ?** L'information **Dernière erreur** donne la cause du dernier échec de lecture, suivie de la raison renvoyée par le proxy quand il en donne une (par exemple « Véhicule hors de portée — … » ou « Proxy sans clé : appairage à faire — … »). Elle revient à **Aucune** dès qu'un cycle de lecture réussit. Un véhicule qui dort n'est pas une erreur : **Dernière erreur** reste à **Aucune** et **Véhicule réveillé** vaut 0. L'information **Dernière lecture des données** indique depuis quand les données de charge et de climatisation datent.
 
 Dans le log du plugin, un problème ne laisse que **deux lignes** : une quand il commence, une quand tout revient à la normale (`Véhicule « <nom> » (id <n>) : retour à la normale après [<catégorie>].`), même s'il dure des heures. Le niveau de la ligne de début dépend de la cause : **Info** pour un véhicule hors de portée (situation normale), **Erreur** pour une erreur de configuration (VIN ou URL manquante) ou un proxy trop ancien, **Avertissement** pour les autres. La ligne de fin est toujours au niveau **Info**. **Pour voir ces lignes, le log du plugin doit être au moins en niveau Info** (**Configuration du plugin > Logs**). Tant que le problème dure, le détail de chaque cycle reste visible en **Debug**.
@@ -263,7 +301,8 @@ Les véhicules sont rafraîchis **l'un après l'autre**. Un véhicule hors de po
 
 - Si le cycle précédent n'est pas terminé, le nouveau cycle est **sauté** (un avertissement par heure au plus dans le log) ; il reprend normalement dès que le précédent est fini, même s'il a été interrompu.
 - Un cycle ne dépasse pas **4 minutes** : s'il y a beaucoup de véhicules ou si le proxy est lent, les véhicules restants sont lus au cycle suivant (avertissement nommant ces véhicules).
-- Pendant qu'une commande est en cours vers le même proxy, la lecture du cycle est sautée sans erreur ; la lecture suivante rattrape.
+- Pendant qu'une commande, un **Rafraîchir** ou une vérification d'appairage est en cours ou attend le même proxy, la lecture du cycle est sautée sans erreur ; la lecture suivante rattrape.
+- Avec plusieurs proxys, le cycle lit les véhicules l'un après l'autre : un proxy arrêté ne coûte que quelques secondes (jusqu'à environ 5 s) par véhicule de ce proxy, un proxy lent retarde d'autant la lecture des véhicules des autres proxys dans ce cycle. Les commandes et **Rafraîchir** des autres proxys ne sont jamais retardés.
 
 ### Exécution des commandes
 
@@ -279,7 +318,7 @@ Chaque commande action est transmise au proxy, qui attend la confirmation du vé
 
 **Après une commande réussie.** La limite de charge, le courant de charge et le verrouillage sont mis à jour immédiatement, puis l'état du véhicule (présence, éveil) est relu sans le réveiller. Les autres informations de charge et de climatisation sont actualisées au cycle de 5 minutes suivant.
 
-**Une commande ou une lecture à la fois.** Les échanges avec un même proxy se font l'un après l'autre : une commande attend la fin d'une autre commande ou d'une lecture vers le même proxy (jusqu'à 2 minutes environ). Si le proxy et le véhicule sont à la limite de leurs délais, la réponse peut prendre 3 à 4 minutes. Jeedom reste utilisable pendant ce temps.
+**Une commande ou une lecture à la fois.** Les échanges avec un même proxy se font l'un après l'autre : une commande, un **Rafraîchir** ou une vérification d'appairage n'attend que les échanges déjà en cours ou déjà en attente sur ce proxy (jusqu'à 2 minutes environ, 15 secondes pour la vérification) et passe avant les lectures périodiques, qui s'effacent et reprennent au cycle suivant. L'ordre de passage n'est pas garanti entre plusieurs demandes simultanées. Pour les commandes et **Rafraîchir**, deux proxys différents ne s'attendent jamais (le cycle périodique lit les véhicules l'un après l'autre : voir Rafraîchissement). Si le proxy et le véhicule sont à la limite de leurs délais, la réponse peut prendre 3 à 4 minutes. Jeedom reste utilisable pendant ce temps.
 
 ## Commandes
 
@@ -322,6 +361,8 @@ Les tableaux ci-dessous donnent, pour chaque commande, son **identifiant** (`log
 | Proxy joignable | `proxy_reachable` | info / binaire | | non | oui | 1 si le proxy a répondu au dernier cycle de rafraîchissement, 0 s'il est éteint, injoignable, ne répond pas dans les délais ou renvoie autre chose qu'une réponse valide du proxy (adresse erronée, proxy trop ancien). Un véhicule hors de portée ou endormi ne le fait pas passer à 0. Utilisable dans un scénario |
 | Version du proxy | `proxy_version` | info / texte | | non | oui | Version renvoyée par le proxy au dernier cycle (**inconnue** si elle est illisible) ; garde sa dernière valeur quand le proxy ne répond pas |
 | Rôle de clé | `key_role` | info / texte | | non | oui | Rôle probable de la clé du proxy pour ce véhicule : **Charging Manager** après le refus d'une commande réservée au rôle Owner faute de droits, **Owner** dès qu'une de ces commandes réussit, **Indéterminé** tant qu'aucune n'a été envoyée (voir [Rôle de la clé](#rôle-de-la-clé)). Dans un scénario, testez `Owner` ou `Charging Manager` (jamais traduits) ; « Indéterminé » suit la langue de Jeedom |
+| Durée lecture état | `state_read_duration` | info / numérique | s | non | oui | Temps, en secondes au dixième, de la dernière lecture réussie de l'état du véhicule (présence, verrouillage, veille) au cycle de rafraîchissement ou par **Rafraîchir**. Un échec ne la modifie pas : elle garde la durée du dernier succès. Historisez-la pour suivre la santé de la liaison Bluetooth (voir [Lecture lente du proxy](#lecture-lente-du-proxy)) |
+| Durée lecture données | `data_read_duration` | info / numérique | s | non | oui | Temps de la dernière lecture réussie des données de charge et de climatisation. Inchangée tant que le véhicule dort (aucune lecture). Une valeur proche de 0 est normale juste après une autre lecture : le proxy garde ces données en mémoire 30 secondes |
 
 Le niveau de batterie alimente aussi le suivi de batterie de Jeedom (page **Analyse > Equipements**).
 
@@ -362,7 +403,7 @@ Les actions marquées « masquée » ne sont pas affichées sur le widget par d�
 - **Après une commande**, seuls la limite de charge, le courant de charge et le verrouillage sont mis à jour tout de suite. Les autres informations de charge et de climatisation sont à jour au cycle de 5 minutes suivant.
 - **Véhicule endormi** : les informations de charge et de climatisation ne sont lues que véhicule réveillé (le plugin ne le réveille jamais de lui-même). Utilisez **Réveiller** puis **Rafraîchir**.
 - **Clé Charging Manager** : le verrouillage, le klaxon, les feux et le mode sentinelle sont refusés par le véhicule. Le plugin le détecte (information **Rôle de clé**) mais ne grise pas ces commandes sur le dashboard (voir [Rôle de la clé](#rôle-de-la-clé)).
-- **Un seul proxy** pour tous les véhicules, et **un seul équipement par véhicule** (VIN unique).
+- **Un seul équipement par véhicule** (VIN unique).
 - **Heure de départ programmée historisée** : si elle était historisée avant la mise à jour, elle reste numérique et n'est plus mise à jour tant que son sous-type n'est pas changé en **Autre**.
 - **Proxy déclaré par un nom de service Docker** : le lien vers le tableau de bord ne s'ouvre pas dans le navigateur (voir [Lien vers le tableau de bord du proxy](#lien-vers-le-tableau-de-bord-du-proxy)).
 
@@ -393,7 +434,8 @@ Le test n'interroge que la version du proxy : un test vert ne prouve ni que la c
 
 ### Messages à l'enregistrement
 
-- **« URL invalide : … »** (configuration du plugin) : mêmes causes que pour le bouton **Tester**. L'ancienne URL est conservée.
+- **« URL invalide : … »** (configuration du plugin ou URL du proxy d'un véhicule) : mêmes causes que pour le bouton **Tester**. L'ancienne URL est conservée.
+- **« Aucune URL de proxy configurée : … »** (dernière erreur d'un véhicule ou bouton **Tester ce proxy**) : ni le véhicule ni la configuration du plugin n'ont d'URL de proxy. Renseignez l'une des deux.
 - **« VIN invalide : 17 caractères attendus, chiffres et lettres sauf I, O et Q »** : corrigez la VIN de l'équipement (les espaces sont retirés tout seuls).
 - **« Cette VIN est déjà utilisée par l'équipement … »** : un autre équipement porte déjà cette VIN, ce qui arrive aussi avec **Dupliquer**. Supprimez le doublon ou corrigez la VIN.
 - **« Erreur interne du plugin : consultez le log TeslaBLE »** : erreur imprévue lors de l'enregistrement ; le détail est dans le log du plugin.
@@ -403,6 +445,7 @@ Le test n'interroge que la version du proxy : un test vert ne prouve ni que la c
 - **« La VIN de l'équipement … est invalide : corrigez-la dans sa page de configuration… »** : la VIN enregistrée par une ancienne version n'est pas valable. Corrigez-la.
 - **« L'équipement … a la même VIN que l'équipement … »** : deux équipements pour un même véhicule. Supprimez le doublon ou corrigez sa VIN.
 - **« L'information … est historisée : elle reste numérique et n'est plus mise à jour… »** : voir [Heure de départ programmée](#heure-de-départ-programmée).
+- **« Adaptateur Bluetooth du proxy probablement figé — … »** : voir [Alerte adaptateur Bluetooth figé](#alerte-adaptateur-bluetooth-figé). Redémarrez le Raspberry Pi.
 
 ### Information « Dernière erreur » (lecture)
 
@@ -411,12 +454,15 @@ Le test n'interroge que la version du proxy : un test vert ne prouve ni que la c
 | **Aucune** | Le dernier cycle de lecture a réussi (ou le véhicule dort, ce qui n'est pas une erreur). | Rien à faire. |
 | **Proxy injoignable** | Le proxy ne répond pas à l'adresse configurée. | Vérifiez l'URL, que le proxy est démarré, l'alimentation et le Wi-Fi du Raspberry Pi. |
 | **Délai dépassé** | Le proxy ou le véhicule répond trop lentement. | Vérifiez le Raspberry Pi (alimentation, Wi-Fi), redémarrez le proxy si cela se répète. |
+| **Adaptateur Bluetooth du proxy probablement figé : redémarrez le Raspberry Pi** | Plusieurs lectures de suite ont dépassé leur délai alors que le proxy répond : voir [Alerte adaptateur Bluetooth figé](#alerte-adaptateur-bluetooth-figé). | Redémarrez le Raspberry Pi. |
 | **Proxy sans clé : appairage à faire — …** | Le proxy n'a pas de clé appairée avec le véhicule. | Appairez la clé depuis le tableau de bord du proxy (lien dans la configuration du plugin). |
 | **Véhicule hors de portée — …** | Le proxy ne trouve pas le véhicule en Bluetooth. La **Présence véhicule** passe à 0. | Rapprochez le Raspberry Pi du véhicule ; vérifiez que le proxy a le Bluetooth pour lui seul et que le véhicule n'a pas déjà 3 appareils connectés. |
+| **Demande refusée par le véhicule : clé du proxy non appairée avec ce véhicule** | La clé active du proxy n'est pas appairée avec ce véhicule (avec plusieurs véhicules, la même clé doit être appairée sur chacun). Les autres véhicules ne sont pas touchés. | Utilisez **Appairer ma clé** puis **Vérifier l'appairage** sur l'équipement de ce véhicule. |
 | **Demande refusée par le véhicule — …** | Le véhicule a refusé la lecture ; la raison du proxy suit le message. | Lisez la raison indiquée après le message ; vérifiez aussi l'appairage de la clé. |
 | **Fonction non supportée par ce proxy — …** | La lecture demandée n'existe pas dans votre version du proxy. | Mettez le proxy à jour. |
 | **Réponse invalide du proxy** | Le proxy a renvoyé une réponse inattendue. | Vérifiez l'adresse, mettez le proxy à jour, redémarrez-le si cela se répète. |
 | **Version du proxy non prise en charge : 2.3.0 minimum, mettez le proxy à jour** | Le proxy est antérieur à 2.1.1 : l'état du véhicule n'est plus lisible. | Mettez le proxy à jour (voir [Vérifier et mettre à jour la version du proxy](#vérifier-et-mettre-à-jour-la-version-du-proxy)). Le log signale aussi cette ligne en erreur. |
+| **Proxy occupé : lecture du véhicule non effectuée, réessayez dans un instant** | Un **Rafraîchir** a attendu plus de 110 secondes : le proxy était occupé par une commande ou une lecture. Aucune lecture n'a eu lieu. | Relancez **Rafraîchir** dans un instant ; la lecture automatique suivante rattrape aussi. |
 | **Le VIN n'est pas configuré pour cet équipement** | La VIN de l'équipement est vide. | Renseignez la VIN dans l'équipement puis sauvegardez. |
 | **URL invalide : …** | L'URL du proxy est vide ou invalide dans la configuration du plugin. | Renseignez-la (voir [Configuration du plugin](#configuration-du-plugin)). |
 
@@ -443,11 +489,24 @@ Ces messages s'affichent en rouge dans Jeedom et sont aussi copiés dans **Derni
 ### Messages du log du plugin
 
 - **« Cycle de rafraîchissement sauté : le cycle précédent n'est pas terminé. »** : la lecture précédente dure plus de 5 minutes, en général parce que le proxy ou le Raspberry Pi répond très lentement. Vérifiez l'alimentation et la connexion Wi-Fi du Raspberry Pi, puis redémarrez le proxy si cela se répète.
-- **« Cycle de rafraîchissement écourté… véhicule(s) non lu(s) à ce cycle »** : le cycle a atteint sa durée maximale de 4 minutes ; les véhicules cités seront lus au cycle suivant. Si cela se répète, c'est que le proxy répond trop lentement : voir ci-dessus.
-- **« Lecture du véhicule … reportée : proxy occupé… »** : une commande longue occupe le proxy ; la lecture est reportée au cycle suivant.
+- **« Cycle de rafraîchissement écourté… véhicule(s) non lu(s) à ce cycle »** : le cycle a atteint sa durée maximale de 4 minutes ; les véhicules cités n'ont pas été lus à ce cycle. Ils le seront au cycle suivant si le proxy répond normalement ; jusqu'à 3 véhicules par proxy, le cycle n'est pas écourté, au-delà vérifiez la **Dernière lecture des données** de chaque véhicule. L'avertissement n'est émis qu'**une fois par épisode** (il précise « Avertissement non répété jusqu'au prochain cycle complet. »), même si l'épisode dure plusieurs heures ; si cela se répète, le proxy répond trop lentement : voir ci-dessus.
+- **« Cycle de rafraîchissement de nouveau complet : … »** (Info) : fin d'un épisode de cycle écourté ; tous les véhicules ont été lus.
+- **« Véhicule … traité en … s. »** (Debug) : durée de la lecture de chaque véhicule dans le cycle, y compris un véhicule sauté (proxy occupé, la ligne « sautée » la précède) ou en erreur. Les lignes **Requête** et **Réponse HTTP … en … ms** donnent le détail des appels.
+- **« Lecture du véhicule … reportée : proxy occupé… »** : un **Rafraîchir** a attendu plus de 110 secondes un proxy occupé par une commande ou une lecture ; la lecture n'a pas eu lieu et le message **Proxy occupé : lecture du véhicule non effectuée…** apparaît dans **Dernière erreur**.
+- **« Lecture du véhicule … sautée : une commande ou une lecture est en cours vers le proxy. »** (Debug) : le cycle automatique s'efface devant l'échange en cours ; la lecture est faite au cycle suivant.
+- **« Proxy obtenu pour le véhicule … après … s d'attente… »** (Debug) : une commande ou une lecture attendait le proxy depuis au moins une seconde.
 - **« Verrou du proxy indisponible… »** ou **« Verrou du cycle de rafraîchissement indisponible… »** : le plugin ne peut pas écrire dans le dossier temporaire de Jeedom. Vérifiez les droits de ce dossier ; le plugin continue de fonctionner sans la protection contre les échanges simultanés.
 - **« Commandes : … le nom … est déjà pris… »** : le plugin n'a pas pu donner le libellé prévu à une commande parce qu'une autre commande de l'équipement le porte. Renommez l'une des deux, puis sauvegardez l'équipement.
+- **« Adaptateur Bluetooth du proxy probablement figé pour le véhicule … »** (avertissement) et **« Adaptateur Bluetooth du proxy de nouveau opérationnel pour le véhicule … »** (Info) : début et fin d'un épisode, voir [Alerte adaptateur Bluetooth figé](#alerte-adaptateur-bluetooth-figé).
 - **« Migrations : … »** : voir [Constater la mise à niveau dans le log](#constater-la-mise-à-niveau-dans-le-log).
+
+### Lecture lente du proxy
+
+Le plugin mesure la durée de chaque lecture, sans aucune requête supplémentaire, et la publie dans **Durée lecture état** et **Durée lecture données**. Quand une lecture réussie dépasse **10 secondes** (état) ou **20 secondes** (données), le log reçoit **un seul** avertissement **« Lecture lente du proxy pour le véhicule … »**, qui n'est pas répété tant que la lecture reste lente. Quand la durée redescend à **7 secondes** (état) ou **14 secondes** (données), une ligne **Info** « Lecture du proxy redevenue normale… » le signale. Ces seuils sont fixes.
+
+Causes habituelles : Raspberry Pi trop éloigné du véhicule (mur, sol en béton, voiture garée loin), Raspberry Pi saturé (autre client du proxy, comme evcc, qui l'occupe) ou mal alimenté. Rapprochez le Raspberry Pi ou changez son alimentation, puis observez la durée aux cycles suivants.
+
+Une lecture en échec (proxy injoignable, délai dépassé) ne modifie pas ces informations : sa durée apparaît dans le message d'échec du log (« … après 25.0 s : … »). La durée d'une commande est écrite dans le log en niveau **Debug** (« Commande … exécutée en 3.2 s. »).
 
 ### Proxy du fork : jeton, adaptateur, corps refusé
 
@@ -457,6 +516,17 @@ Ces messages s'affichent en rouge dans Jeedom et sont aussi copiés dans **Derni
 | **Proxy injoignable** alors que le Raspberry Pi est allumé | Le proxy du fork s'arrête au démarrage si `btAdapter` est invalide ou si l'adaptateur n'existe pas ; Docker le relance en boucle. | Sur le Raspberry Pi, `docker logs tesla-ble-http-proxy` : cherchez `Cannot start with this Bluetooth adapter`. Corrigez ou retirez `btAdapter` (voir [Installer le proxy BLE](installation-proxy.md#12-dépannage)). |
 | **« Commande refusée par le véhicule : invalid request body: … »** | Le proxy du fork a refusé le contenu de la commande avant de l'envoyer. | Le texte après les deux-points nomme la clé en cause ; signalez-le avec le log du plugin en Debug. |
 
+### Messages de la fenêtre Logs du proxy
+
+| Message | Cause | Action |
+|---|---|---|
+| **« Logs indisponibles (proxy ≥ 2.3.0 requis) »** | Le serveur à l'URL enregistrée ne fournit pas de logs : proxy antérieur à 2.3.0, ou URL qui ne désigne pas le proxy. | Vérifiez l'URL avec le bouton **Tester**, puis mettez le proxy à jour si sa version est inférieure à 2.3.0. |
+| **« Proxy injoignable : vérifiez qu'il est démarré, puis son adresse avec le bouton Tester »** | Le proxy est arrêté, le Raspberry Pi éteint, ou l'adresse est fausse. | Démarrez le proxy, puis vérifiez l'URL avec **Tester**. |
+| **« URL du proxy absente ou invalide : renseignez-la, sauvegardez, puis rouvrez les logs »** | Aucune URL valide n'est enregistrée. | Renseignez l'URL, sauvegardez, puis rouvrez la fenêtre. |
+| Message d'échec suivi de **« réponse HTTP 401 au lieu de 200 »** | Le proxy du fork a un `apiToken`. | Retirez `apiToken` (voir le tableau ci-dessus). |
+| Message d'échec suivi de **« réponse HTTP 500 au lieu de 200 : Failed to encode logs »** | Le proxy n'arrive plus à relire sa propre mémoire de logs (défaut connu du proxy). | Redémarrez le proxy (`docker compose restart` sur le Raspberry Pi). |
+| **« Aucune ligne de log sur le proxy »** | Le proxy n'a encore rien journalisé. | Rafraîchissez après un cycle du plugin. |
+
 ### Symptômes sans message
 
 - **Présence véhicule reste à 0** : le proxy ne trouve pas le véhicule en Bluetooth. Rapprochez le Raspberry Pi du véhicule.
@@ -465,5 +535,5 @@ Ces messages s'affichent en rouge dans Jeedom et sont aussi copiés dans **Derni
 - **Le lien du tableau de bord ne s'ouvre pas** alors que le proxy fonctionne : l'URL contient un nom de service Docker que votre navigateur ne connaît pas. Ouvrez `http://<ip_du_pi>:8080/dashboard`.
 - **Le graphique de l'Autonomie fait un saut** : normal après la mise à jour depuis la 0.x (miles puis km), voir [Autonomie et vitesse de charge](#autonomie-et-vitesse-de-charge).
 - **Je ne vois pas les lignes de début et de fin de panne dans le log** : passez le log du plugin au moins en niveau **Info**.
-- **Le proxy ne répond plus au bout de quelques heures** : c'est un problème fréquent sur le Raspberry Pi Zero W de première génération. Redémarrez le proxy ou passez à un Raspberry Pi Zero 2 W.
+- **Le proxy ne répond plus au bout de quelques heures** : c'est un problème fréquent sur le Raspberry Pi Zero W de première génération. Redémarrez le proxy ou passez à un Raspberry Pi Zero 2 W. Si le proxy répond encore mais que les lectures expirent, le plugin vous prévient : voir [Alerte adaptateur Bluetooth figé](#alerte-adaptateur-bluetooth-figé).
 - **Connexions Bluetooth intermittentes** : le véhicule n'accepte que 3 appareils connectés à la fois ; déconnectez un téléphone ou une montre.
