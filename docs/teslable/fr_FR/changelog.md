@@ -4,6 +4,14 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 04/10/2026
+
+- Documentation : le proxy recommandé est désormais l'image du fork ghcr.io/superdcat/tesla-ble-http-proxy (version 2.3.0-tb.2) : installation, passage depuis l'image wimaha sans nouvel appairage, mise à jour de l'image (manuelle recommandée ou automatique), nouveaux réglages du proxy et dépannage ; le jeton apiToken du proxy ne doit pas être activé avec Jeedom <!-- UC1099 -->
+- Ajout : le plugin repère les fonctions que votre version du proxy ne prend pas en charge : l'action concernée est refusée aussitôt avec le message « Non supportée par votre version du proxy » au lieu d'une fausse panne, signalée « Fonction indisponible » dans l'onglet Commandes, et la version du proxy s'affiche dans la page de l'équipement ; avec l'image du fork, ces fonctions sont connues d'emblée. <!-- UC101 -->
+- Ajout : chaque véhicule expose les informations « Proxy joignable » (1/0) et « Version du proxy », mises à jour à chaque cycle sans solliciter le véhicule : un scénario peut vous alerter quand le Raspberry Pi ou le proxy tombe, sans confondre cette panne avec un véhicule hors de portée ou endormi <!-- UC102 -->
+- Ajout : quand le véhicule refuse une commande réservée aux clés Owner (verrouillage, klaxon, feux, sentinelle, climatisation), un message clair l'explique, la nouvelle information « Rôle de clé » indique le rôle probable de la clé du proxy et ces commandes sont signalées dans l'onglet Commandes de l'équipement <!-- UC103 -->
+- Ajout : la page de l'équipement propose une aide « Appairer ma clé » : lien vers le tableau de bord du proxy, VIN à recopier, étapes d'appairage, et un bouton « Vérifier l'appairage » qui indique, sans réveiller le véhicule, si la clé est acceptée, absente du proxy, non appairée, ou si le véhicule est hors de portée ou le proxy injoignable <!-- UC104 -->
+
 # 03/10/2026
 
 - Documentation : choix et installation du Raspberry Pi, rôle de la clé (Charging Manager ou Owner), sécurité réseau du proxy et limitations connues de la version 0.1

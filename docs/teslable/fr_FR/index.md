@@ -2,7 +2,7 @@
 
 Ce plugin permet de piloter la charge, la climatisation et quelques fonctions de base de vos véhicules **Tesla** depuis Jeedom, **en Bluetooth (BLE)** et sans passer par l'API cloud de Tesla.
 
-Jeedom ne parle pas directement au véhicule : il s'appuie sur un proxy [TeslaBleHttpProxy](https://github.com/wimaha/TeslaBleHttpProxy), installé sur un petit appareil équipé du Bluetooth (un Raspberry Pi, voir [Choisir et installer le Raspberry Pi](#choisir-et-installer-le-raspberry-pi)) placé à portée du véhicule, typiquement dans le garage. Le plugin interroge ce proxy en HTTP sur votre réseau local.
+Jeedom ne parle pas directement au véhicule : il s'appuie sur un proxy [TeslaBleHttpProxy](https://github.com/superdcat/TeslaBleHttpProxy) (le fork maintenu pour ce plugin, dérivé du projet de [wimaha](https://github.com/wimaha/TeslaBleHttpProxy)), installé sur un petit appareil équipé du Bluetooth (un Raspberry Pi, voir [Choisir et installer le Raspberry Pi](#choisir-et-installer-le-raspberry-pi)) placé à portée du véhicule, typiquement dans le garage. Le plugin interroge ce proxy en HTTP sur votre réseau local.
 
 ```
 Jeedom  --HTTP-->  TeslaBleHttpProxy (Raspberry Pi)  --Bluetooth-->  Véhicule
@@ -11,7 +11,7 @@ Jeedom  --HTTP-->  TeslaBleHttpProxy (Raspberry Pi)  --Bluetooth-->  Véhicule
 ## Prérequis
 
 - Jeedom 4.5 minimum, sur Debian 11 ou 12.
-- **TeslaBleHttpProxy 2.3.0 minimum**, installé, fonctionnel et joignable depuis Jeedom. Procédure complète pas à pas, sur un Raspberry Pi Zero 2 W : [Installer le proxy BLE](installation-proxy.md).
+- **TeslaBleHttpProxy 2.3.0 minimum**, installé, fonctionnel et joignable depuis Jeedom. L'**image du fork** `ghcr.io/superdcat/tesla-ble-http-proxy` est recommandée ; l'image de wimaha (2.3.0 ou plus récente) reste acceptée. Le plugin ignore le suffixe `-tb.N` des versions du fork : `2.3.0-tb.2` est jugée conforme à « 2.3.0 minimum ». Procédure complète pas à pas, sur un Raspberry Pi Zero 2 W : [Installer le proxy BLE](installation-proxy.md).
 - La **clé du proxy appairée avec le véhicule**. Cette étape se fait entièrement dans l'interface de TeslaBleHttpProxy (génération de la clé, puis validation avec votre carte-clé dans le véhicule) : voir [Installer le proxy BLE](installation-proxy.md#8-générer-la-clé-et-lappairer-avec-le-véhicule).
 - Le **VIN** de chaque véhicule à piloter (visible en bas de l'écran principal de l'application Tesla).
 
@@ -21,36 +21,33 @@ Jeedom  --HTTP-->  TeslaBleHttpProxy (Raspberry Pi)  --Bluetooth-->  Véhicule
 
 ### Vérifier et mettre à jour la version du proxy
 
-Le plugin exige **TeslaBleHttpProxy 2.3.0 minimum**. Suivez ces étapes pour connaître la version de votre proxy, puis la mettre à jour si besoin.
+Le plugin exige **TeslaBleHttpProxy 2.3.0 minimum**. Suivez ces étapes pour connaître la version de votre proxy, puis la mettre à jour si besoin. Avec l'image du fork, la version est de la forme `2.3.0-tb.2` (version de base de wimaha, puis numéro de version du fork).
 
 **1. Lire la version actuelle**
 
 1. Sur un ordinateur du même réseau que le proxy, ouvrez un navigateur.
 2. Dans la barre d'adresse, tapez `http://<ip_du_proxy>:<port>/api/proxy/1/version`, par exemple `http://192.168.1.50:8080/api/proxy/1/version`.
-3. Lisez la réponse : elle ressemble à `{"version":"2.3.0"}`. Le nombre après `"version"` est la version du proxy.
+3. Lisez la réponse : elle contient `"version"` suivi de la version du proxy, par exemple `2.3.0` avec l'image de wimaha. Avec l'image du fork, la réponse contient aussi `"flavor":"superdcat"` et une version comme `2.3.0-tb.2`.
 
-Si cette version est **2.3.0 ou plus récente**, vous n'avez rien à faire. Sinon, passez à l'étape 2.
+Si cette version est **2.3.0 ou plus récente**, vous n'avez rien à faire pour le plugin. Sinon, passez à l'étape 2.
 
 **2. Mettre à jour l'image du proxy**
 
 1. Connectez-vous en SSH au Raspberry Pi qui héberge le proxy.
-2. Placez-vous dans le dossier qui contient le fichier `docker-compose.yml` du proxy (le dossier `TeslaBleHttpProxy` si vous avez suivi la [documentation d'installation du proxy](https://github.com/wimaha/TeslaBleHttpProxy/blob/main/docs/installation.md)) :
+2. Placez-vous dans le dossier qui contient le fichier `docker-compose.yml` du proxy (le dossier `TeslaBleHttpProxy` si vous avez suivi [Installer le proxy BLE](installation-proxy.md)) :
 
    ```
    cd TeslaBleHttpProxy
    ```
 
-3. Téléchargez la dernière image :
+3. Dans `docker-compose.yml`, vérifiez la ligne `image:` : elle doit être `image: ghcr.io/superdcat/tesla-ble-http-proxy:2.3.0-tb.2` (ou une version plus récente du fork). Si elle pointe vers l'image de wimaha, voir [Passer de l'image wimaha à l'image du fork](installation-proxy.md#passer-de-limage-wimaha-à-limage-du-fork). Si elle porte un numéro de version précis, changez ce numéro.
+4. Téléchargez l'image puis relancez le proxy avec elle :
 
    ```
-   docker pull wimaha/tesla-ble-http-proxy
+   docker compose pull && docker compose up -d
    ```
 
-4. Relancez le proxy avec cette nouvelle image :
-
-   ```
-   docker compose up -d
-   ```
+   Un redémarrage du Raspberry Pi ou `restart: always` **ne mettent pas l'image à jour** : voir [Mettre à jour l'image du proxy](installation-proxy.md#mettre-à-jour-limage-du-proxy).
 
 **3. Revérifier la version**
 
@@ -68,14 +65,14 @@ Le proxy doit être **à portée Bluetooth du véhicule** (5 à 10 m, donc en g�
 
 | Carte | Verdict |
 |---|---|
-| **Raspberry Pi Zero 2 W** | Recommandé : petit, peu gourmand, image Docker 64 bits officielle du proxy. |
+| **Raspberry Pi Zero 2 W** | Recommandé : petit, peu gourmand, image Docker du proxy disponible pour ce processeur. |
 | Raspberry Pi Zero W (première génération) | Déconseillé : processeur ARMv6 qui n'est plus pris en charge par les versions récentes de Docker, et adaptateur Bluetooth qui a tendance à se figer au bout de quelques heures. |
 | Raspberry Pi 3, 4, 5 ou mini-PC avec Bluetooth | Convient, à condition d'être à portée du véhicule. |
 
 La procédure détaillée, avec les commandes, les réglages et le dépannage, est sur la page [Installer le proxy BLE](installation-proxy.md). En résumé, l'installation consiste à :
 
 1. Installer Raspberry Pi OS **64 bits Lite** et Docker.
-2. Lancer l'image `wimaha/tesla-ble-http-proxy`.
+2. Lancer l'image `ghcr.io/superdcat/tesla-ble-http-proxy` (fork recommandé ; l'image `wimaha/tesla-ble-http-proxy` reste une alternative).
 3. Ouvrir `http://<ip_du_pi>:8080/dashboard`, générer la clé, saisir le VIN, **réveiller le véhicule**, envoyer la clé puis poser la carte-clé sur la console centrale pour valider.
 4. Donner une **adresse IP fixe** au Raspberry Pi (réservation DHCP sur votre box), puisque son adresse est enregistrée dans le plugin.
 
@@ -87,7 +84,7 @@ Quelques conseils pour un fonctionnement stable :
 
 ### Rôle de la clé
 
-Avec TeslaBleHttpProxy 2.3.0, la clé générée par défaut a le rôle **Charging Manager**. Elle suffit pour lire l'état du véhicule et piloter la charge, mais le véhicule **refuse** certaines commandes. Pour les utiliser, générez et appairez une clé de rôle **Owner** depuis le dashboard du proxy (lien dans la configuration du plugin).
+Avec TeslaBleHttpProxy (fork ou wimaha 2.3.0), la clé générée par défaut a le rôle **Charging Manager**. Elle suffit pour lire l'état du véhicule et piloter la charge, mais le véhicule **refuse** certaines commandes. Pour les utiliser, générez et appairez une clé de rôle **Owner** depuis le dashboard du proxy (lien dans la configuration du plugin).
 
 | Rôle de la clé | Commandes concernées (liste indicative) |
 |---|---|
@@ -95,11 +92,23 @@ Avec TeslaBleHttpProxy 2.3.0, la clé générée par défaut a le rôle **Chargi
 | **Charging Manager** : refusé | **Verrouiller les portes**, **Déverrouiller les portes**, **Klaxonner**, **Faire clignoter les feux**, **Mode sentinelle** ; probablement aussi **Démarrer le climatiseur** et **Arrêter le climatiseur** |
 | **Owner** | Toutes les commandes |
 
-Cette liste est indicative : le véhicule décide. Le refus se reconnaît au message « Commande refusée par le véhicule (rôle de la clé du proxy insuffisant ?) ». Le comportement de la **Limite de charge** et de l'ouverture et de la fermeture de la trappe de charge avec une clé Charging Manager n'est pas confirmé : la [documentation du proxy](https://github.com/wimaha/TeslaBleHttpProxy/blob/main/docs/installation.md#step-3-generate-key-for-vehicle) ne cite que le réveil, le démarrage et l'arrêt de la charge et le courant de charge.
+Cette liste est indicative : le véhicule décide.
+
+**Le plugin reconnaît ce refus.** Quand l'une des commandes de la ligne « refusé » ci-dessus est refusée par le véhicule faute de droits :
+
+- le message « Cette commande nécessite une clé de rôle Owner : la clé du proxy a probablement le rôle Charging Manager… » s'affiche (il est aussi copié dans **Dernière erreur**) ;
+- l'information **Rôle de clé** de l'équipement passe à **Charging Manager** ;
+- dans l'onglet **Commandes** de l'équipement, ces commandes portent un badge gris **Rôle insuffisant**.
+
+Les commandes restent présentes et utilisables : un scénario qui les appelle reçoit le même message. Elles ne sont **pas grisées sur le dashboard** : fiez-vous à l'information **Rôle de clé**. Le plugin ne vous prévient pas à l'avance : c'est le premier refus qui révèle le rôle.
+
+**Passer à une clé Owner.** Générez et appairez une clé de rôle **Owner** en suivant [Générer la clé et l'appairer avec le véhicule](installation-proxy.md#8-générer-la-clé-et-lappairer-avec-le-véhicule) (choix du rôle : [Choisir le rôle de la clé](installation-proxy.md#choisir-le-rôle-de-la-clé)). Relancez ensuite l'une de ces commandes : dès qu'elle réussit, **Rôle de clé** repasse à **Owner** et le badge disparaît au rechargement de la page.
+
+Avec l'image du fork, le rôle de la clé active se lit aussi à la main : ouvrez `http://<ip_du_proxy>:<port>/api/proxy/1/capabilities` et regardez `key_role` (`owner` ou `charging_manager`, vide si aucune clé n'est installée) ; le plugin n'utilise pas cette information. Le comportement de la **Limite de charge** et de l'ouverture et de la fermeture de la trappe de charge avec une clé Charging Manager n'est pas confirmé : la [documentation du proxy](https://github.com/wimaha/TeslaBleHttpProxy/blob/main/docs/installation.md#step-3-generate-key-for-vehicle) ne cite que le réveil, le démarrage et l'arrêt de la charge et le courant de charge.
 
 > **IMPORTANT**
 >
-> Le proxy n'a **aucune authentification**. Avec une clé Owner, n'importe quel appareil de votre réseau local peut déverrouiller le véhicule. Gardez le proxy sur un réseau de confiance, idéalement isolé, et n'exposez **jamais** son port sur Internet. Si vous ne pilotez que la charge, préférez une clé Charging Manager.
+> Le proxy n'a **aucune authentification** par défaut, et **le plugin ne sait pas envoyer le jeton `apiToken` du fork** : ne définissez pas `apiToken` avec Jeedom, sous peine de perdre l'accès au proxy (voir [Dépannage](#dépannage)). Avec une clé Owner, n'importe quel appareil de votre réseau local peut déverrouiller le véhicule. Gardez le proxy sur un réseau de confiance, idéalement isolé, et n'exposez **jamais** son port sur Internet. Si vous ne pilotez que la charge, préférez une clé Charging Manager.
 
 ## Configuration du plugin
 
@@ -155,6 +164,23 @@ Les boutons en haut de page sont ceux de tout équipement Jeedom : **Configurati
 - La VIN est **unique** : un véhicule ne peut avoir qu'un seul équipement. Une VIN invalide, ou déjà utilisée par un autre équipement, est refusée avec un message.
 - **Dupliquer** un véhicule est donc **refusé** : la copie porte la même VIN. Pour un second véhicule, utilisez **Ajouter**.
 
+### Appairer ma clé et vérifier l'appairage
+
+Sous le champ **VIN**, la section **Appairer ma clé** rappelle les étapes de l'appairage, qui se fait dans le tableau de bord du proxy (détail : [Générer la clé et l'appairer avec le véhicule](installation-proxy.md#8-générer-la-clé-et-lappairer-avec-le-véhicule)). Une fois la VIN enregistrée et l'URL du proxy renseignée, elle affiche aussi le lien **Ouvrir le tableau de bord du proxy** (nouvel onglet), la VIN à recopier dans **Setup Vehicle**, et le bouton **Vérifier l'appairage**.
+
+**Vérifier l'appairage** lit l'état du véhicule par le proxy **sans le réveiller** (50 secondes au plus) et n'envoie aucune commande. Le plugin ne génère ni ne supprime jamais de clé : seul le tableau de bord du proxy le fait.
+
+| Message | Ce qu'il faut faire |
+|---|---|
+| **Appairage vérifié : le véhicule répond à la clé du proxy** | Rien. Avec l'image du fork, la ligne **Rôle de la clé active du proxy** indique en plus Owner ou Charging Manager. L'information **Rôle de clé** de l'équipement, elle, ne change qu'à la prochaine commande réservée (voir [Rôle de la clé](#rôle-de-la-clé)). |
+| **Proxy sans clé : …** | Le proxy n'a aucune clé : générez-en une (**Generate**), puis envoyez-la au véhicule. |
+| **Clé non appairée avec ce véhicule : …** | Réveillez le véhicule, envoyez la clé (**Send key**), puis posez la carte-clé sur la console centrale. |
+| **Véhicule hors de portée Bluetooth du proxy : …** | Rapprochez le véhicule ou le Raspberry Pi, vérifiez la VIN. |
+| **Proxy injoignable : …** | Vérifiez l'adresse du proxy avec le bouton **Tester** de la configuration du plugin. |
+| **Proxy occupé par une commande ou une lecture : …** | Relancez la vérification dans un instant. |
+
+La vérification utilise la VIN **enregistrée** : sauvegardez l'équipement après l'avoir modifiée.
+
 ## Mise à jour depuis la version 0.x
 
 Vous mettez à jour le plugin depuis une version 0.x : rien n'est à refaire.
@@ -167,7 +193,7 @@ Vous mettez à jour le plugin depuis une version 0.x : rien n'est à refaire.
 
 Un équipement **migré depuis la version 0.x garde les noms de ses commandes** (par exemple « Etat Charge », « Charge Start », « Rafraichir ») : seuls les identifiants comptent pour les scénarios. Les commandes d'un **nouvel équipement** portent les libellés du tableau de la section [Commandes](#commandes). Vous pouvez renommer librement une commande.
 
-À la mise à jour, les commandes absentes de votre équipement sont ajoutées **en fin de liste** : **Temps de charge restant**, **Trappe de charge ouverte**, **Dernière erreur** et **Dernière lecture des données**. Sur un équipement existant, l'action d'ouverture de la trappe peut s'appeler « Trappe de Charge Ouvert » : renommez-la si besoin.
+À la mise à jour, les commandes absentes de votre équipement sont ajoutées **en fin de liste** : **Temps de charge restant**, **Trappe de charge ouverte**, **Dernière erreur**, **Dernière lecture des données**, **Proxy joignable**, **Version du proxy** et **Rôle de clé** (qui vaut **Indéterminé** jusqu'à la première commande réservée au rôle Owner). Sur un équipement existant, l'action d'ouverture de la trappe peut s'appeler « Trappe de Charge Ouvert » : renommez-la si besoin.
 
 ### Autonomie et vitesse de charge
 
@@ -249,7 +275,7 @@ Chaque commande action est transmise au proxy, qui attend la confirmation du vé
 - **Limite de charge** : un nombre entier compris entre 50 et 100 %.
 - **Mode sentinelle** : **Activé** ou **Désactivé** (l'ancienne option « Aucun » n'existe plus).
 
-**En cas d'échec.** Si le proxy ou le véhicule refuse la commande, un message d'erreur apparaît en rouge dans l'interface de Jeedom (et dans le log du plugin en erreur), et il est aussi enregistré dans l'information **Dernière erreur**, où il reste affiché jusqu'au prochain cycle de lecture réussi (5 minutes au plus). Par exemple « Commande refusée par le véhicule (rôle de la clé du proxy insuffisant ?) » : voir [Rôle de la clé](#rôle-de-la-clé).
+**En cas d'échec.** Si le proxy ou le véhicule refuse la commande, un message d'erreur apparaît en rouge dans l'interface de Jeedom (et dans le log du plugin en erreur), et il est aussi enregistré dans l'information **Dernière erreur**, où il reste affiché jusqu'au prochain cycle de lecture réussi (5 minutes au plus). Par exemple « Cette commande nécessite une clé de rôle Owner : la clé du proxy a probablement le rôle Charging Manager… » quand une commande réservée au rôle Owner est refusée : voir [Rôle de la clé](#rôle-de-la-clé).
 
 **Après une commande réussie.** La limite de charge, le courant de charge et le verrouillage sont mis à jour immédiatement, puis l'état du véhicule (présence, éveil) est relu sans le réveiller. Les autres informations de charge et de climatisation sont actualisées au cycle de 5 minutes suivant.
 
@@ -293,6 +319,9 @@ Les tableaux ci-dessous donnent, pour chaque commande, son **identifiant** (`log
 | Mode dégivrage | `defrost_mode` | info / texte | | non | non | État du dégivrage |
 | Dernière erreur | `last_error` | info / texte | | non | oui | Cause du dernier échec de lecture ou de commande, suivie de la raison du proxy quand il en donne une ; **Aucune** quand tout va bien. Utilisable dans un scénario |
 | Dernière lecture des données | `last_data_update` | info / texte | | non | oui | Date et heure (heure de Jeedom, `AAAA-MM-JJ HH:MM:SS`) de la dernière lecture réussie des données de charge et de climatisation |
+| Proxy joignable | `proxy_reachable` | info / binaire | | non | oui | 1 si le proxy a répondu au dernier cycle de rafraîchissement, 0 s'il est éteint, injoignable, ne répond pas dans les délais ou renvoie autre chose qu'une réponse valide du proxy (adresse erronée, proxy trop ancien). Un véhicule hors de portée ou endormi ne le fait pas passer à 0. Utilisable dans un scénario |
+| Version du proxy | `proxy_version` | info / texte | | non | oui | Version renvoyée par le proxy au dernier cycle (**inconnue** si elle est illisible) ; garde sa dernière valeur quand le proxy ne répond pas |
+| Rôle de clé | `key_role` | info / texte | | non | oui | Rôle probable de la clé du proxy pour ce véhicule : **Charging Manager** après le refus d'une commande réservée au rôle Owner faute de droits, **Owner** dès qu'une de ces commandes réussit, **Indéterminé** tant qu'aucune n'a été envoyée (voir [Rôle de la clé](#rôle-de-la-clé)). Dans un scénario, testez `Owner` ou `Charging Manager` (jamais traduits) ; « Indéterminé » suit la langue de Jeedom |
 
 Le niveau de batterie alimente aussi le suivi de batterie de Jeedom (page **Analyse > Equipements**).
 
@@ -332,7 +361,7 @@ Les actions marquées « masquée » ne sont pas affichées sur le widget par d�
 
 - **Après une commande**, seuls la limite de charge, le courant de charge et le verrouillage sont mis à jour tout de suite. Les autres informations de charge et de climatisation sont à jour au cycle de 5 minutes suivant.
 - **Véhicule endormi** : les informations de charge et de climatisation ne sont lues que véhicule réveillé (le plugin ne le réveille jamais de lui-même). Utilisez **Réveiller** puis **Rafraîchir**.
-- **Clé Charging Manager** : le verrouillage, le klaxon, les feux et le mode sentinelle sont refusés par le véhicule (voir [Rôle de la clé](#rôle-de-la-clé)).
+- **Clé Charging Manager** : le verrouillage, le klaxon, les feux et le mode sentinelle sont refusés par le véhicule. Le plugin le détecte (information **Rôle de clé**) mais ne grise pas ces commandes sur le dashboard (voir [Rôle de la clé](#rôle-de-la-clé)).
 - **Un seul proxy** pour tous les véhicules, et **un seul équipement par véhicule** (VIN unique).
 - **Heure de départ programmée historisée** : si elle était historisée avant la mise à jour, elle reste numérique et n'est plus mise à jour tant que son sous-type n'est pas changé en **Autre**.
 - **Proxy déclaré par un nom de service Docker** : le lien vers le tableau de bord ne s'ouvre pas dans le navigateur (voir [Lien vers le tableau de bord du proxy](#lien-vers-le-tableau-de-bord-du-proxy)).
@@ -360,7 +389,7 @@ Les messages sont classés selon l'endroit où vous les voyez.
 | **« Aucune réponse du serveur Jeedom : consultez le log TeslaBLE »** | Jeedom n'a pas répondu au test au bout de 45 secondes. | Réessayez, puis consultez le log du plugin. |
 | **« Erreur interne du plugin : consultez le log TeslaBLE »** | Erreur imprévue du plugin. | Consultez le log du plugin et signalez-la avec ce log. |
 
-Le test n'interroge que la version du proxy : un test vert ne prouve ni que la clé est appairée, ni que le véhicule est à portée.
+Le test n'interroge que la version du proxy : un test vert ne prouve ni que la clé est appairée, ni que le véhicule est à portée. Pour cela, utilisez le bouton **Vérifier l'appairage** de l'équipement (voir [Appairer ma clé et vérifier l'appairage](#appairer-ma-clé-et-vérifier-lappairage)).
 
 ### Messages à l'enregistrement
 
@@ -399,7 +428,8 @@ Ces messages s'affichent en rouge dans Jeedom et sont aussi copiés dans **Derni
 
 | Message | Cause | Action |
 |---|---|---|
-| **« Commande refusée par le véhicule (rôle de la clé du proxy insuffisant ?) : … »** | Votre clé a le rôle Charging Manager, qui n'autorise pas cette commande. | Voir [Rôle de la clé](#rôle-de-la-clé) : appairez une clé Owner. |
+| **« Cette commande nécessite une clé de rôle Owner : la clé du proxy a probablement le rôle Charging Manager… »** | Le véhicule a refusé faute de droits une commande réservée au rôle Owner (verrouillage, klaxon, feux, sentinelle, climatisation) : votre clé a très probablement le rôle Charging Manager. | Voir [Rôle de la clé](#rôle-de-la-clé) : appairez une clé Owner. |
+| **« Commande refusée par le véhicule (rôle de la clé du proxy insuffisant ?) : … »** | Défaut d'autorisation sur une autre commande : rôle de clé insuffisant ou état du véhicule. | Voir [Rôle de la clé](#rôle-de-la-clé) ; avec une clé Owner, vérifiez l'état du véhicule. |
 | **« Commande refusée par le véhicule : … »** | Le véhicule a refusé la commande ; la raison renvoyée suit le message. | Corrigez selon la raison indiquée. |
 | **« Proxy injoignable, commande non envoyée »** | Le proxy ne répond pas : la commande n'est pas partie. | Vérifiez l'URL et l'alimentation du Raspberry Pi. |
 | **« Délai dépassé : la commande a pu être exécutée, vérifiez l'état du véhicule »** ou **« Liaison avec le proxy interrompue : la commande a pu être exécutée… »** | Le véhicule a peut-être exécuté la commande malgré tout. | Contrôlez l'état du véhicule avant de la renvoyer. |
@@ -418,6 +448,14 @@ Ces messages s'affichent en rouge dans Jeedom et sont aussi copiés dans **Derni
 - **« Verrou du proxy indisponible… »** ou **« Verrou du cycle de rafraîchissement indisponible… »** : le plugin ne peut pas écrire dans le dossier temporaire de Jeedom. Vérifiez les droits de ce dossier ; le plugin continue de fonctionner sans la protection contre les échanges simultanés.
 - **« Commandes : … le nom … est déjà pris… »** : le plugin n'a pas pu donner le libellé prévu à une commande parce qu'une autre commande de l'équipement le porte. Renommez l'une des deux, puis sauvegardez l'équipement.
 - **« Migrations : … »** : voir [Constater la mise à niveau dans le log](#constater-la-mise-à-niveau-dans-le-log).
+
+### Proxy du fork : jeton, adaptateur, corps refusé
+
+| Ce que vous voyez | Cause | Action |
+|---|---|---|
+| **« Demande refusée par le véhicule — unauthorized »** dans **Dernière erreur**, ou **« Commande refusée par le véhicule : unauthorized »** à l'envoi d'une commande, alors que le bouton **Tester** est vert | Le proxy du fork a un `apiToken` : il répond 401 au plugin, qui n'envoie pas de jeton. Seule la route de version reste ouverte, d'où le test vert. | Retirez la ligne `apiToken` de `docker-compose.yml` du proxy, puis `docker compose up -d`. |
+| **Proxy injoignable** alors que le Raspberry Pi est allumé | Le proxy du fork s'arrête au démarrage si `btAdapter` est invalide ou si l'adaptateur n'existe pas ; Docker le relance en boucle. | Sur le Raspberry Pi, `docker logs tesla-ble-http-proxy` : cherchez `Cannot start with this Bluetooth adapter`. Corrigez ou retirez `btAdapter` (voir [Installer le proxy BLE](installation-proxy.md#12-dépannage)). |
+| **« Commande refusée par le véhicule : invalid request body: … »** | Le proxy du fork a refusé le contenu de la commande avant de l'envoyer. | Le texte après les deux-points nomme la clé en cause ; signalez-le avec le log du plugin en Debug. |
 
 ### Symptômes sans message
 
