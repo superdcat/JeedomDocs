@@ -191,14 +191,20 @@ Le proxy accepte quelques réglages, à ajouter dans `docker-compose.yml` sous `
 | `logLevel` | `info` | Mettez `debug` le temps d'un diagnostic. |
 | `vehicleDataCacheTime` | 30 s | Durée pendant laquelle le proxy resservit les mêmes données de charge et de climatisation. Gardez la valeur par défaut. |
 | `httpListenAddress` | `:8080` | Changez le port seulement s'il est déjà pris ; reportez alors le nouveau port dans l'URL du plugin. |
-| `apiToken` | vide (aucune authentification) | **Ne le définissez pas avec Jeedom.** Voir l'encadré ci-dessous. |
+| `apiToken` | vide (aucune authentification) | Protège le proxy par un jeton : saisissez la **même valeur** dans **Jeton d'API du proxy** (configuration du plugin). Générez-le par exemple avec `openssl rand -hex 32`. Utilisez le même jeton sur tous vos proxys. Voir l'encadré ci-dessous. |
 | `btAdapter` | vide (adaptateur par défaut) | Le Raspberry Pi a **plusieurs adaptateurs Bluetooth** (par exemple une clé USB) et le proxy doit utiliser l'un d'eux : `hci0` à `hci15`, en minuscules (par exemple `hci1`). Disponible à partir de `2.3.0-tb.2`. |
 | `connectionTimeout` | 29 s | Durée pendant laquelle la connexion Bluetooth reste ouverte après une commande, de 10 à 120 secondes. Le délai se compte **depuis l'ouverture** de la connexion : les commandes suivantes ne le relancent pas. Une valeur plus longue occupe plus longtemps l'un des 3 emplacements Bluetooth du véhicule. Une valeur invalide est remplacée par 29. Disponible à partir de `2.3.0-tb.2`. |
 | `releaseAdapterWhenIdle` | `false` | Mettez `true` **seulement** si un autre service du Raspberry Pi doit pouvoir utiliser l'adaptateur Bluetooth quand le proxy ne travaille pas. Chaque première commande prend alors un peu plus de temps. Voir les limites dans les [variables d'environnement du fork](https://github.com/superdcat/TeslaBleHttpProxy/blob/main/docs/environment_variables.md#releaseadapterwhenidle). Disponible à partir de `2.3.0-tb.2`. |
 
 > **IMPORTANT**
 >
-> **Ne définissez pas `apiToken` tant que le plugin ne sait pas l'envoyer.** Le plugin Tesla BLE n'envoie pas de jeton dans cette version : avec un `apiToken` défini, le proxy répond « unauthorized » (HTTP 401) à toutes ses lectures et commandes, et Jeedom perd l'accès au véhicule (le bouton **Tester** reste pourtant vert, car la route de version reste ouverte). Si vous l'avez défini par erreur, supprimez la ligne et recréez le conteneur (`docker compose up -d`). Le plugin ne lit ni la position du véhicule ni les planifications : la protection de votre proxy repose sur l'isolement du réseau (voir [Sécurité](#11-sécurité)).
+> **Activer `apiToken` avec Jeedom**, dans cet ordre :
+>
+> 1. ajoutez la ligne `- apiToken=<votre jeton>` dans `docker-compose.yml`, puis `docker compose up -d` ;
+> 2. dans Jeedom, **Plugins > Gestion des plugins > Tesla BLE**, saisissez le même jeton dans **Jeton d'API du proxy**, puis **Sauvegarder** ;
+> 3. cliquez sur **Tester** : il doit afficher **« Jeton d'API accepté par le proxy »**.
+>
+> Le jeton : 1 à 256 caractères ASCII imprimables (lettres, chiffres, ponctuation), sans accent ni retour à la ligne. Une fois le jeton actif, le tableau de bord du proxy demande un identifiant dans le navigateur : nom d'utilisateur libre, mot de passe = le jeton. **evcc** ne sait pas envoyer ce jeton : ne l'activez pas si evcc utilise le même proxy. Le jeton circule en clair sur le réseau local : il ne remplace pas l'isolement du réseau (voir [Sécurité](#11-sécurité)).
 
 ## 8. Générer la clé et l'appairer avec le véhicule
 
@@ -211,7 +217,7 @@ Le proxy agit comme une clé de voiture supplémentaire. Il faut donc générer 
 | **Charging Manager** (recommandé) | Lire l'état et les données du véhicule ; réveiller ; démarrer et arrêter la charge ; régler le courant de charge | Usage centré sur la charge (heures creuses, solaire) |
 | **Owner** | Toutes les commandes, y compris verrouillage, déverrouillage, klaxon, feux, sentinelle et climatisation | Si vous voulez piloter autre chose que la charge |
 
-Le proxy n'a **aucune authentification** : avec une clé Owner, n'importe quel appareil de votre réseau local peut déverrouiller le véhicule. Ne choisissez Owner que si vous en avez besoin, et lisez la section [Sécurité](#11-sécurité).
+Le proxy n'a **aucune authentification par défaut** (le jeton d'API du fork est facultatif) : avec une clé Owner, n'importe quel appareil de votre réseau local peut déverrouiller le véhicule. Ne choisissez Owner que si vous en avez besoin, et lisez la section [Sécurité](#11-sécurité).
 
 ### Appairer
 
@@ -312,7 +318,7 @@ Pour revenir à l'option 1, supprimez la ligne de `crontab -e` et remettez un nu
 
 ## 11. Sécurité
 
-- Le proxy **n'a ni mot de passe ni chiffrement** : quiconque accède à votre réseau local peut lui envoyer des commandes. Le fork sait demander un jeton (`apiToken`), mais **le plugin ne sait pas l'envoyer** : ne l'activez pas avec Jeedom (voir [Réglages facultatifs](#réglages-facultatifs)).
+- Par défaut, le proxy **n'a ni mot de passe ni chiffrement** : quiconque accède à votre réseau local peut lui envoyer des commandes. Le fork sait demander un jeton (`apiToken`) : activez-le et saisissez-le dans la configuration du plugin (voir [Réglages facultatifs](#réglages-facultatifs)). Le jeton circule en clair sur le réseau : il complète l'isolement du réseau, il ne le remplace pas.
 - N'ouvrez **jamais** le port 8080 vers Internet (pas de redirection de port sur la box).
 - Si votre box le permet, placez le Raspberry Pi sur un réseau isolé, avec Jeedom comme seul appareil autorisé à le joindre.
 - Préférez une clé **Charging Manager** si vous ne pilotez que la charge.
@@ -330,7 +336,7 @@ Pour revenir à l'option 1, supprimez la ligne de `crontab -e` et remettez un nu
 | Coupures régulières après quelques heures | Wi-Fi en économie d'énergie, alimentation faible, ou adaptateur Bluetooth figé | Désactivez l'économie d'énergie Wi-Fi, changez d'alimentation, redémarrez le proxy. |
 | Connexions intermittentes avec la voiture | Trop d'appareils Bluetooth connectés | Le véhicule accepte **3 appareils connectés à la fois** (téléphones, montre, proxy). |
 | Le conteneur redémarre en boucle (`docker ps` : « Restarting »), le plugin affiche **Proxy injoignable** ; `docker logs tesla-ble-http-proxy` indique `Cannot start with this Bluetooth adapter` | `btAdapter` invalide (autre chose que `hci0` à `hci15` en minuscules) ou adaptateur absent / impossible à ouvrir | Corrigez la valeur ou retirez la ligne `btAdapter`, puis `docker compose up -d`. Cherchez le nom de l'adaptateur avec `bluetoothctl list` ou `hciconfig -a`. |
-| Toutes les lectures et commandes échouent avec **« Demande refusée par le véhicule — unauthorized »** (dernière erreur) ou **« Commande refusée par le véhicule : unauthorized »** (commande), alors que **Tester** est vert | `apiToken` est défini dans `docker-compose.yml` : le proxy répond 401 au plugin, qui n'envoie pas de jeton | Supprimez la ligne `apiToken`, puis `docker compose up -d`. |
+| Toutes les lectures et commandes échouent avec **« Jeton d'API refusé par le proxy »** (dernière erreur, commande) ; **Tester** affiche « Le proxy exige un jeton d'API » ou « Jeton d'API refusé par le proxy » | `apiToken` est défini dans `docker-compose.yml`, et le plugin n'a pas de jeton ou un jeton différent | Saisissez dans **Jeton d'API du proxy** exactement la valeur de `apiToken`, **Sauvegarder**, puis **Tester**. |
 | **« Commande refusée par le véhicule : invalid request body: … »** | Le proxy du fork a refusé le contenu de la commande (clé manquante, mauvais type, valeur hors limites) avant de l'envoyer | Le plugin vérifie ses valeurs avant l'envoi : si cela arrive, relevez le texte après les deux-points (il nomme la clé) et signalez-le avec le log du plugin en Debug. |
 | **« Cette commande nécessite une clé de rôle Owner : la clé du proxy a probablement le rôle Charging Manager… »**, ou information **Rôle de clé** à **Charging Manager** | La clé a le rôle **Charging Manager** | Générez et appairez une clé **Owner** (voir [Choisir le rôle de la clé](#choisir-le-rôle-de-la-clé)). Le rôle de la clé active se lit dans `key_role` à l'adresse `http://<ip_du_pi>:8080/api/proxy/1/capabilities`. |
 | Le véhicule n'est plus trouvé après l'installation d'un autre logiciel Bluetooth | Ce logiciel occupe l'adaptateur | Le proxy a besoin de l'adaptateur pour lui seul : retirez l'autre service Bluetooth de ce Raspberry Pi. |
