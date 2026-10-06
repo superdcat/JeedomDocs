@@ -4,6 +4,12 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 06/10/2026
+
+- Ajout : préconditionnement planifié par Jeedom : par véhicule, choisissez une heure de départ, les jours, l'avance et la durée maximale ; Jeedom démarre la climatisation avant le départ puis l'arrête à la fin de la durée, sans jamais contredire une climatisation que vous avez démarrée ou arrêtée vous-même (option « seulement si branché », clé de rôle Owner nécessaire) <!-- UC406 -->
+- Correctif : charge aux heures creuses : l'état de veille du véhicule est désormais bien pris en compte, un véhicule endormi dont l'état de charge affiché est périmé ne reçoit plus de commande d'arrêt de charge <!-- UC406 -->
+- Documentation : guide de la climatisation et du confort : récapitulatif des commandes (version du proxy requise, rôle de clé, effet sur le véhicule), exemple de préconditionnement planifié et dépannage des symptômes sans message <!-- UC499 -->
+
 # 05/10/2026
 
 - Ajout : les curseurs « Limite de charge » et « Courant de charge » prennent automatiquement les bornes acceptées par le véhicule, publiées dans trois nouvelles informations (« Limite de charge minimale », « Limite de charge maximale », « Courant de charge maximal ») ; un Min ou un Max que vous réglez vous-même reste prioritaire et n'est plus modifié <!-- UC301 -->
