@@ -216,6 +216,9 @@ Dans l'onglet **Equipement** :
 | **Avance (min)** | Préconditionnement planifié : minutes avant l'heure de départ où la climatisation est démarrée. Entier de **1 à 60**. Vide : **15 minutes**. |
 | **Durée maximale (min)** | Préconditionnement planifié : durée, **comptée depuis le démarrage prévu**, au bout de laquelle Jeedom arrête la climatisation. Entier de **1 à 120**, **au moins égal à l'avance**. Vide : **30 minutes** (ou l'avance plus 15 minutes si elle dépasse 15), soit un arrêt **15 minutes après le départ** avec l'avance par défaut. |
 | **Seulement si branché** | Préconditionnement planifié : **décochée par défaut**. Cochée, la climatisation n'est pas démarrée si le véhicule est débranché ou si son état de charge est inconnu. Une borne qui ne fournit pas de courant compte comme branchée : la climatisation puise alors dans la batterie. |
+| **Latitude** (section **Position du domicile**) | Position du domicile, pour calculer **À la maison** : degrés décimaux de -90 à 90, par exemple `48.8566` (virgule admise, 8 décimales au plus). **Vide : la position de Jeedom** (**Réglages > Système > Configuration**, onglet **Général**). À renseigner avec la **longitude** : une seule des deux est refusée. Voir [Position et confidentialité](#position-et-confidentialité). |
+| **Longitude** (section **Position du domicile**) | Degrés décimaux de -180 à 180, par exemple `2.3522`. Vide avec la latitude vide : position de Jeedom. |
+| **Rayon (m)** (section **Position du domicile**) | Distance maximale, en mètres, entre le véhicule et le domicile pour que **À la maison** vaille 1. Entier de **10 à 10000**. Vide : **100 m**. Sans effet si le proxy ne fournit pas la position du véhicule. |
 | **Description** | Texte libre, facultatif. |
 
 Les boutons en haut de page sont ceux de tout équipement Jeedom : **Configuration avancée**, **Dupliquer**, **Sauvegarder** et **Supprimer**. L'onglet **Commandes** liste les commandes du véhicule (voir [Commandes](#commandes)).
@@ -351,6 +354,8 @@ Les huit informations d'ouvrant (portes, coffres, trappe de charge, tonneau) son
 Les informations **Occupant présent** (visible, historisée) et **État de verrouillage détaillé** (visible, non historisée) sont créées de la même façon ; vos réglages existants ne sont jamais écrasés.
 
 Les informations **Sentinelle** et **Provenance de la sentinelle** (visibles, non historisées) sont créées de la même façon, avec les valeurs **Inconnu** et **Aucune** tant que rien n'a été lu ni ordonné ; vos réglages existants ne sont jamais écrasés (voir [État du mode sentinelle](#état-du-mode-sentinelle)).
+
+Les informations **Alerte ouvrants** et **Alerte déverrouillé sans occupant** (masquées, historisées) sont créées de la même façon, à **0** ; les alertes restent **désactivées** tant que vous ne les activez pas (voir [Alertes d'ouverture prolongée](#alertes-douverture-prolongée)).
 
 Si la mise à niveau échoue sur un véhicule, elle est retentée automatiquement à la prochaine mise à jour ou activation du plugin.
 
@@ -684,13 +689,25 @@ Désactiver la fonction ou modifier ses réglages **pendant la fenêtre n'arrêt
 
 **Autres fonctions.** Le préconditionnement planifié est **indépendant** de la programmation faite dans le véhicule ([Préconditionnement planifié](#informations) lu par le plugin) : si le véhicule préconditionne déjà, la climatisation est vue active et Jeedom n'intervient pas. Il peut s'enchaîner, au même passage, avec la [Charge aux heures creuses](#charge-aux-heures-creuses) : les deux commandes partent l'une après l'autre. Le plugin ne tient pas compte de la présence d'un occupant : une climatisation démarrée par Jeedom et encore en marche à la première lecture qui suit la fin de la fenêtre est arrêtée.
 
+### Confirmation des actions sensibles
+
+Cinq actions demandent une **confirmation** avant l'envoi, sur le dashboard et sur mobile : **Déverrouiller les portes** (`door_unlock`), **Ouvrir la trappe de charge** (`charge_port_door_open`), **Mode sentinelle** (`set_sentry_mode`), **Ouvrir le coffre arrière** (`open_trunk_rear`) et **Ouvrir le frunk** (`open_trunk_front`). Les autres actions (verrouiller, klaxonner, feux, charge, climat…) partent au premier clic.
+
+- **Un clic ouvre une fenêtre de confirmation.** Rien n'est envoyé tant que vous n'avez pas confirmé.
+- **Case « Confirmer l'action ».** Elle se trouve dans les paramètres avancés de la commande (onglet **Commandes** de l'équipement, roue crantée de la commande). Elle est **cochée à la création** ; décochez-la pour retirer la confirmation d'une commande, cochez-la sur une autre pour en ajouter une. Votre choix n'est jamais réécrit par le plugin (mise à jour comprise : sur un équipement existant, la mise à jour pose la confirmation une seule fois, sauf là où vous l'aviez déjà réglée).
+- **Un scénario n'est pas concerné.** Une action appelée depuis un scénario s'exécute **sans confirmation**. Un appel par l'API JSON-RPC de Jeedom doit passer `confirmAction=1`, sinon Jeedom le refuse.
+
+> **IMPORTANT : ce n'est pas une protection de sécurité.** La confirmation est un garde-fou d'interface contre le clic accidentel, rien de plus. Le proxy n'a **aucune authentification** par défaut : toute machine de votre réseau qui peut le joindre peut déverrouiller ou ouvrir le véhicule **sans passer par Jeedom**, donc sans confirmation. Gardez le proxy sur un réseau de confiance, jamais exposé sur Internet (voir [Rôle de la clé](#rôle-de-la-clé)).
+
+Pour **Mode sentinelle**, l'état affiché après l'ordre est décrit dans [État du mode sentinelle](#état-du-mode-sentinelle) (provenance **Réel** ou **Dernier ordre**).
+
 ### Ouvrir le coffre arrière et le frunk
 
 Deux actions ouvrent un coffre à distance : **Ouvrir le coffre arrière** (`open_trunk_rear`) et **Ouvrir le frunk** (`open_trunk_front`, le coffre avant). Elles envoient la même commande du proxy, `actuate_trunk`, avec le coffre visé. L'état se lit dans les informations **Coffre arrière** (`trunk_rear`) et **Coffre avant (frunk)** (`trunk_front`).
 
 **Proxy du fork requis (version `2.3.0-tb.2` au minimum), commandes masquées.** Le proxy officiel 2.3.0 n'a pas cette commande : elle a été ajoutée par le fork. Tant que le proxy n'annonce pas la commande, les deux actions sont **refusées sur-le-champ**, sans aucun échange avec le véhicule, avec le message **« Non supportée par votre version du proxy »**. Elles sont créées **masquées**, y compris après le passage au fork : **à vous de les afficher** (cochez **Afficher** dans l'onglet **Commandes** de l'équipement) ou de les appeler depuis un scénario. La disponibilité suit l'annonce du proxy (route `capabilities`), relue quand sa version change : après la mise à jour du proxy, les actions deviennent utilisables sans réinstaller le plugin ni recréer l'équipement. Pour ces deux actions, le plugin n'affiche ni le badge **Fonction indisponible**, ni le badge **Rôle insuffisant** : le refus s'affiche au clic.
 
-**Confirmation.** Sur le dashboard et sur mobile, un clic demande une **confirmation** avant l'envoi (réglage **Confirmer l'action** de la commande, actif par défaut ; décochez-le pour la retirer). Un **scénario** exécute l'action sans confirmation ; un appel JSON-RPC doit passer `confirmAction=1`.
+**Confirmation.** Un clic demande une **confirmation** avant l'envoi, comme pour les autres actions sensibles : voir [Confirmation des actions sensibles](#confirmation-des-actions-sensibles) (case **Confirmer l'action**, scénario sans confirmation, JSON-RPC `confirmAction=1`).
 
 **Vérification avant l'ouverture du coffre arrière.** Pour le coffre arrière, le véhicule traite la commande comme une **bascule** : sur un hayon motorisé déjà ouvert, elle le **refermerait**. Le plugin relit donc d'abord l'état du véhicule (sans le réveiller) et n'envoie la commande que si le coffre arrière est lu **fermé**. Trois refus possibles, aucun envoi, et **Dernière erreur** n'est pas modifiée :
 
@@ -723,6 +740,64 @@ Deux informations disent si le mode sentinelle est actif : **Sentinelle** (`sent
 **Redémarrage de Jeedom.** La dernière valeur connue et sa provenance sont **conservées** et reprises au démarrage, y compris après une coupure d'alimentation.
 
 > **Dans un scénario.** Les libellés **Activée**, **Désactivée**, **Inconnu**, **Réel**, **Dernier ordre** et **Aucune** **suivent la langue de Jeedom** : comparez-les dans la langue courante de votre Jeedom. Pour savoir si la valeur est fiable, testez **Provenance de la sentinelle** (par exemple **Réel**) en plus de **Sentinelle**.
+
+### Alertes d'ouverture prolongée
+
+Le plugin peut vous **prévenir** quand un ouvrant (porte, coffre arrière, frunk, tonneau, trappe de charge) reste ouvert, ou quand le véhicule reste **déverrouillé sans occupant**, plus longtemps que la durée que vous choisissez. Les alertes sont **désactivées par défaut** et se règlent **par véhicule**, dans le bloc **Alertes d'ouverture prolongée** de la page de l'équipement :
+
+| Réglage | Rôle |
+|---|---|
+| **Ouvrant resté ouvert** : **Activer** | Active l'alerte des ouvrants. |
+| **Durée avant alerte (min)** | De 1 à 1440 minutes. **Obligatoire** pour activer l'alerte ; une durée invalide est refusée à l'enregistrement. |
+| **Véhicule déverrouillé sans occupant** : **Activer** | Active l'alerte du verrouillage, avec **sa propre durée** (**Durée avant alerte (min)**). |
+
+Les deux alertes sont indépendantes. Une alerte, c'est :
+
+- **un message** dans le centre de messages de Jeedom, qui nomme le véhicule et l'ouvrant (par exemple « Ma Tesla : ouvrant « Coffre avant (frunk) » ouvert depuis plus de 10 min »), **une seule fois par épisode** ; **plusieurs ouvrants ouverts en même temps donnent plusieurs messages**, un par ouvrant ;
+- **l'info à 1** : **Alerte ouvrants** (`closures_alert`) tant qu'au moins un ouvrant est resté ouvert au-delà de la durée, **Alerte déverrouillé sans occupant** (`unlocked_alert`) pour le verrouillage. Utilisez-les comme déclencheur d'un scénario pour être notifié par le moyen de votre choix ; elles sont **masquées** et **historisées** : affichez-les si vous le souhaitez.
+
+Quand tout est refermé (ou reverrouillé, ou qu'un occupant est présent), l'info repasse à **0** et une nouvelle ouverture prolongée alertera de nouveau. **Le message reste dans le centre de messages** après la fermeture : Jeedom ne le retire pas, supprimez-le vous-même.
+
+**Précision.** Les alertes sont évaluées **à chaque lecture réussie de l'état du véhicule**, donc à la cadence de rafraîchissement (5 minutes par défaut, voir [Rafraîchissement des informations](#rafraîchissement-des-informations)). La durée se compte depuis la **première lecture qui voit l'anomalie** : l'alerte part **entre la durée choisie et cette durée plus deux intervalles de rafraîchissement** après l'ouverture réelle ; « ouvert depuis plus de 10 min » est donc toujours vrai.
+
+**Jamais d'alerte sur une valeur périmée.** Quand le proxy est injoignable, que le véhicule est hors de portée ou que la lecture échoue, **rien n'est évalué** et la durée ne s'accumule pas. Si l'interruption dépasse **deux intervalles de rafraîchissement plus deux minutes**, le chronomètre **repart de zéro** au retour des lectures ; une alerte déjà émise reste émise, sans nouveau message.
+
+**Trappe de charge.** La trappe ouverte compte comme une anomalie **seulement si le véhicule a été vu débranché** (dernier **État charge** lu : `Disconnected`). Branché, en charge, ou état inconnu : aucune alerte pour la trappe.
+
+**Présence inconnue.** « Déverrouillé sans occupant » n'est évalué que si le véhicule est **déverrouillé** et que l'**Occupant présent** vaut **0** : une présence inconnue ne déclenche rien (voir [Informations](#informations)).
+
+### Position et confidentialité
+
+La position du véhicule est une **donnée personnelle** : elle dit où vous êtes et quand vous n'y êtes pas. Le plugin la protège par défaut, mais quelques précautions restent à votre charge.
+
+**Ce qui est lu, et quand.** La position n'est fournie que par le **proxy du fork** (`2.3.0-tb.2` au minimum) : le proxy officiel 2.3.0 ne la sert pas, et les informations n'existent alors pas (voir [Données étendues : ce qui est disponible](#données-étendues--ce-qui-est-disponible)). Elle est lue au plus **toutes les 15 minutes**, seulement quand le véhicule est **éveillé et à portée Bluetooth** du proxy, jamais en le réveillant. Le proxy étant dans votre garage, la position lue est en pratique celle du domicile. Une position absente, à 0/0, hors plage ou **plus ancienne d'une heure** est ignorée : les informations gardent leur dernière valeur.
+
+**Non visible et non historisée par défaut.** **Latitude** et **Longitude** sont créées **masquées** et **non historisées** : elles n'apparaissent ni sur le widget ni dans un graphique, et rien n'est conservé. Pour les utiliser :
+
+1. Ouvrez l'onglet **Commandes** de l'équipement.
+2. Sur **Latitude** et **Longitude**, cochez **Afficher** pour les voir sur le widget, et **Historiser** pour en conserver les valeurs.
+3. **Sauvegardez**. Ce choix n'est jamais écrasé ensuite.
+
+Attention : une position historisée est stockée dans la base de Jeedom et dans ses sauvegardes, comme n'importe quel historique. N'historisez que si vous en avez besoin.
+
+**Le domicile et le rayon.** L'information **À la maison** vaut **1** quand le véhicule est à moins de **Rayon (m)** du domicile, **0** au-delà. Le domicile se règle dans l'onglet **Equipement**, section **Position du domicile** (voir [Configuration des équipements](#configuration-des-équipements)) :
+
+| Réglage | Valeur |
+|---|---|
+| **Latitude** et **Longitude** | Les coordonnées de votre domicile. **Vides tous les deux : la position de Jeedom** (**Réglages > Système > Configuration**, onglet **Général**). Une seule renseignée est refusée. |
+| **Rayon (m)** | Entier de **10 à 10000**. Vide : **100 m**. Un GPS imprécis ou un garage en sous-sol peut demander un rayon plus large. |
+
+À l'enregistrement de l'équipement, **À la maison** est recalculée tout de suite à partir de la dernière position lue (si **Latitude** et **Longitude** existent sur l'équipement), sans attendre la lecture suivante.
+
+**Limites de À la maison.** C'est une information binaire qui ne sait pas dire « inconnu » :
+
+- Elle n'est **jamais écrite** tant que le **domicile** (aucune coordonnée renseignée, aucune position dans Jeedom) ou la **position** (jamais lue, ignorée) sont inconnus. **Avant tout calcul, la tuile affiche 0** : elle ne prouve donc pas que le véhicule est parti.
+- Elle **ne repasse pas à 0** quand le véhicule part : hors de portée Bluetooth, plus aucune position n'est lue et l'information garde sa **dernière valeur** (1). Elle garde aussi sa valeur si vous effacez le domicile ou si la position devient trop ancienne.
+- **Dans un scénario**, testez `== 1` (jamais `== 0` ou « différent de 1 »), et **combinez avec Présence véhicule** : « À la maison vaut 1 **et** Présence véhicule vaut 1 » signifie que le véhicule est chez vous et joignable. **Présence véhicule à 0** signale qu'il n'est plus à portée du proxy, c'est-à-dire en pratique parti.
+
+**Le log `event` de Jeedom.** Le plugin n'écrit **jamais** de coordonnée (véhicule ou domicile) ni de distance dans son propre log, à aucun niveau, même en **Debug**. Mais Jeedom enregistre lui-même chaque nouvelle valeur d'une information dans son log **`event`** (**Analyse > Logs**) : **Latitude** et **Longitude** y apparaissent, **même masquées et non historisées**. Pour vous en protéger, au choix : baissez le niveau du log `event` dans les réglages de logs de Jeedom (**Réglages > Système > Configuration**, onglet **Logs**), ou supprimez les informations **Latitude** et **Longitude** de l'équipement (**À la maison** reste calculée). Le plugin recrée les commandes manquantes à chaque sauvegarde de l'équipement : supprimez-les de nouveau si elles reviennent. Relisez aussi une capture du log avant de la publier sur un forum.
+
+**Le proxy doit rester protégé.** Le proxy officiel n'a **aucune authentification** : n'importe quel appareil de votre réseau local peut lui demander la position du véhicule. Le proxy du fork, seul à servir la position, **peut** exiger un **jeton d'API** (facultatif : réglage **Jeton d'API du proxy** de la configuration du plugin), qui protège aussi la position. Dans tous les cas, gardez le proxy sur un réseau de confiance et n'exposez **jamais** son port sur Internet (voir [Rôle de la clé](#rôle-de-la-clé) et [Configuration du plugin](#configuration-du-plugin)).
 
 ### Pourquoi les appels sont séquentiels
 
@@ -821,6 +896,62 @@ Récapitulatif de ce que permet la climatisation et le confort. Le proxy officie
 
 **Pourquoi certaines commandes sont refusées ou masquées.** Le proxy officiel 2.3.0 n'a pas les commandes de consigne, de sièges, de volant, de dégivrage maximal ni de maintien de climat : le fork les ajoute et les **annonce** par sa route `capabilities`. Tant que le proxy n'annonce pas la commande, le plugin la refuse sur-le-champ avec **« Non supportée par votre version du proxy »**, sans rien envoyer au véhicule. Ces commandes sont créées **masquées**, y compris après le passage au fork : cochez **Afficher** dans l'onglet **Commandes**, ou appelez-les depuis un scénario. Après le passage au fork, **aucune réinstallation du plugin** n'est nécessaire : la disponibilité est relue quand la version du proxy change. Si le véhicule refuse ensuite la commande faute de droits, il faut une clé **Owner** : voir [Rôle de la clé](#rôle-de-la-clé) et la procédure d'appairage [Générer la clé et l'appairer avec le véhicule](installation-proxy.md#8-générer-la-clé-et-lappairer-avec-le-véhicule). Les symptômes sans message sont décrits dans [Climat et confort : symptômes sans message](#climat-et-confort--symptômes-sans-message).
 
+### Ouvrants et sécurité : ce qui est disponible
+
+Récapitulatif des ouvrants, de la présence, du verrouillage, de la sentinelle et des alertes. Les lectures marchent avec le **proxy officiel 2.3.0** et une clé **Charging Manager**. Les commandes d'ouverture des coffres exigent le **proxy du fork** (versions `2.3.0-tb.N`) et sont créées **masquées**. Le rôle de clé **Owner** est nécessaire pour verrouiller, déverrouiller et piloter la sentinelle, et **supposé** nécessaire pour les coffres (non confirmé en usage réel : « à confirmer »).
+
+| Fonction | Identifiant | Disponibilité | Rôle de clé | Confirmation demandée | Détail |
+|---|---|---|---|---|---|
+| Les huit ouvrants (quatre portes, **Coffre arrière**, **Coffre avant (frunk)**, **Trappe de charge (ouvrant)**, **Tonneau**) | `door_front_driver`, `door_front_passenger`, `door_rear_driver`, `door_rear_passenger`, `trunk_rear`, `trunk_front`, `charge_port_closure`, `tonneau` | Proxy officiel 2.3.0 | Charging Manager suffit (lecture) | Sans objet | [Informations](#informations) |
+| **Occupant présent** | `user_present` | Proxy officiel 2.3.0 | Charging Manager suffit (lecture) | Sans objet | [Informations](#informations) |
+| **Verrouillage du véhicule**, **État de verrouillage détaillé** | `vehicule_lock`, `lock_state` | Proxy officiel 2.3.0 | Charging Manager suffit (lecture) | Sans objet | [Informations](#informations) |
+| **Sentinelle**, **Provenance de la sentinelle** | `sentry_mode`, `sentry_mode_source` | Proxy officiel 2.3.0 : valeur du **dernier ordre**. Proxy du fork `2.3.0-tb.2` au minimum : valeur **réelle** (véhicule éveillé) | Charging Manager suffit (lecture) | Sans objet | [État du mode sentinelle](#état-du-mode-sentinelle) |
+| **Alerte ouvrants**, **Alerte déverrouillé sans occupant** et les réglages **Alertes d'ouverture prolongée** | `closures_alert`, `unlocked_alert` | Proxy officiel 2.3.0 (réglages dans l'équipement, alertes désactivées par défaut) | Charging Manager suffit (lecture) | Sans objet | [Alertes d'ouverture prolongée](#alertes-douverture-prolongée) |
+| Verrouiller les portes, Déverrouiller les portes | `door_lock`, `door_unlock` | Proxy officiel 2.3.0 | **Owner** (refusé avec Charging Manager) | Déverrouiller : **oui** | [Actions](#actions) |
+| Ouvrir la trappe de charge, Fermer la trappe de charge | `charge_port_door_open`, `charge_port_door_close` | Proxy officiel 2.3.0 | Non confirmé (voir [Rôle de la clé](#rôle-de-la-clé)) | Ouvrir : **oui** | [Actions](#actions) |
+| Mode sentinelle | `set_sentry_mode` | Proxy officiel 2.3.0 | **Owner** (refusé avec Charging Manager) | **Oui** | [État du mode sentinelle](#état-du-mode-sentinelle) |
+| Ouvrir le coffre arrière, Ouvrir le frunk | `open_trunk_rear`, `open_trunk_front` | Proxy du fork, `2.3.0-tb.2` au minimum | Owner supposé | **Oui** | [Ouvrir le coffre arrière et le frunk](#ouvrir-le-coffre-arrière-et-le-frunk) |
+
+Les actions qui demandent une confirmation sont décrites dans [Confirmation des actions sensibles](#confirmation-des-actions-sensibles). La différence **Réel** / **Dernier ordre** de la sentinelle est expliquée dans [État du mode sentinelle](#état-du-mode-sentinelle) : testez **Provenance de la sentinelle** avant de vous fier à **Sentinelle**.
+
+> **IMPORTANT : réseau de confiance.** Le proxy n'a **ni authentification ni chiffrement (TLS)** par défaut ; le fork peut exiger un jeton d'API, facultatif. Avec une clé Owner, toute machine de votre réseau local peut déverrouiller le véhicule ou ouvrir un coffre sans passer par Jeedom, et la confirmation de Jeedom ne la retient pas. Gardez le proxy sur un réseau de confiance, idéalement isolé, et n'exposez **jamais** son port sur Internet (voir [Rôle de la clé](#rôle-de-la-clé)).
+
+**Pourquoi les commandes de coffre sont refusées ou masquées.** Le proxy officiel 2.3.0 n'a pas la commande qui actionne un coffre : le fork l'ajoute et l'**annonce** par sa route `capabilities`. Tant que le proxy ne l'annonce pas, le plugin refuse **Ouvrir le coffre arrière** et **Ouvrir le frunk** sur-le-champ avec **« Non supportée par votre version du proxy »**, sans rien envoyer au véhicule. Pour les activer : installez ou mettez à jour le proxy du fork (`2.3.0-tb.2` au minimum), sans réinstaller le plugin ni recréer l'équipement (la disponibilité est relue quand la version du proxy change). Les deux commandes sont créées **masquées**, y compris après le passage au fork : cochez **Afficher** dans l'onglet **Commandes**, ou appelez-les depuis un scénario. Si le véhicule refuse ensuite faute de droits, il faut une clé **Owner**. Les symptômes sans message sont décrits dans [Ouvrants et sécurité : symptômes sans message](#ouvrants-et-sécurité--symptômes-sans-message).
+
+### Données étendues : ce qui est disponible
+
+Récapitulatif des informations de la tranche « données étendues » : modèle, kilométrage et conduite, pression des pneus, mise à jour logicielle et position. Le détail de chaque information (libellé, identifiant, visibilité, historisation) est dans le tableau [Informations](#informations). Toutes sont des **lectures seules**, sans réveil du véhicule.
+
+| Donnée | Identifiants | Unité | Prérequis du proxy | Cadence de lecture |
+|---|---|---|---|---|
+| Modèle et année | `model`, `model_year` | | **Aucun** : décodés de la VIN, sans interroger le proxy | À l'enregistrement de l'équipement, à la mise à jour du plugin et au démarrage de Jeedom |
+| Kilométrage et conduite | `odometer`, `shift_state`, `speed`, `power` | km, km/h, kW | Le proxy doit **annoncer** `drive_state` | À chaque lecture des données (véhicule éveillé) |
+| Pression des pneus | `tpms_pressure_fl`, `_fr`, `_rl`, `_rr` | bar | Le proxy doit **annoncer** `tire_pressure` | Au plus toutes les **15 minutes**, véhicule éveillé |
+| Mise à jour logicielle | `software_update_status`, `software_update_version`, `software_update_progress` | % (progression) | Le proxy doit **annoncer** `software_update` | Au plus toutes les **15 minutes**, véhicule éveillé |
+| Position | `latitude`, `longitude`, `at_home` | ° | Le proxy doit **annoncer** `location_data` | Au plus toutes les **15 minutes**, véhicule éveillé |
+
+**Quel proxy ?** Un proxy « annonce » une donnée quand sa route `capabilities` la liste (`http://<ip_du_proxy>:<port>/api/proxy/1/capabilities`, voir [Rôle de la clé](#rôle-de-la-clé)). Le **proxy du fork** `2.3.0-tb.2` au minimum annonce ces quatre catégories ; le **proxy officiel 2.3.0 ne les sert pas**. Pour le kilométrage, la fonction est fusionnée dans le projet de wimaha mais sans version publiée à la date de cette documentation : elle ne sera lue qu'avec une version qui l'**annonce**. Le plugin ne se fie jamais à un numéro de version, seulement à cette annonce : vérifiez **Version du proxy** et, au besoin, l'adresse ci-dessus.
+
+**Pourquoi une donnée étendue est absente.** Sur un proxy qui n'annonce pas une catégorie, les informations correspondantes **ne sont pas créées** : elles n'apparaissent pas dans l'onglet **Commandes** (il n'existe pas de valeur « Non supporté » affichée). Seuls **Modèle** et **Année modèle** sont toujours présentes. Pour les obtenir :
+
+1. Vérifiez **Version du proxy** de l'équipement, puis installez ou mettez à jour le **proxy du fork** (voir [Vérifier et mettre à jour la version du proxy](#vérifier-et-mettre-à-jour-la-version-du-proxy)).
+2. Attendez le cycle de rafraîchissement suivant (une minute au plus) : à la **re-détection**, quand la version du proxy change, le plugin relit ce que le proxy annonce et **crée seul** les informations devenues disponibles. Aucune réinstallation du plugin ni recréation de l'équipement n'est nécessaire. Un **Sauvegarder** sur l'équipement fait aussi créer les informations manquantes si le proxy les annonce.
+3. Vérifiez qu'elles se remplissent : elles restent vides jusqu'à la première lecture, **véhicule éveillé** (lancez **Rafraîchir (avec réveil)** pour la provoquer). Les pressions, la mise à jour et la position attendent en plus que 15 minutes se soient écoulées depuis la tentative précédente.
+
+Si un proxy **annonce** une catégorie mais que le véhicule ou le proxy la **refuse** (**« Fonction non supportée par ce proxy — … »**), le plugin cesse de la demander jusqu'au prochain changement de version du proxy : voir [Données étendues : symptômes sans message](#données-étendues--symptômes-sans-message).
+
+**Valeurs et unités.**
+
+- **Kilométrage** : converti de miles en kilomètres, au dixième. Un compteur nul ou aberrant est ignoré. Historisé par défaut.
+- **Rapport** : `P`, `R`, `N` ou `D`. **Vide** veut dire « non communiqué » : le plugin écrit alors une chaîne vide, un test `== "D"` ne reste donc pas vrai après l'arrêt.
+- **Vitesse** et **Puissance** : le plugin suppose une vitesse en mph (convertie en km/h) et une puissance en kW, négative admise. Ces deux unités ne sont pas confirmées par une documentation du véhicule : comparez avec l'écran de votre véhicule avant de vous en servir. Créées masquées, car le proxy étant au garage, elles ne valent presque jamais autre chose que 0 ou la puissance de charge.
+- **Pression des pneus** : en **bar**, sans conversion. Une valeur nulle, négative ou supérieure à 10 bar est ignorée (l'information garde sa dernière valeur ou reste vide). Les pneus ne sont lus que sur un véhicule éveillé : les dernières valeurs restent affichées quand il dort.
+- **Mise à jour** : quatre libellés, **Aucune**, **Disponible** (aussi une installation programmée), **Téléchargement en cours** (aussi en attente du Wi-Fi) et **Installation en cours**. **Version proposée** vaut **Aucune** hors mise à jour, et **Inconnue** quand une mise à jour est active sans version rapportée. **Progression** vaut 0 hors téléchargement et installation. Ces libellés suivent la langue de Jeedom : dans un scénario, testez de préférence **Progression** ou comparez dans la langue courante.
+- **Modèle** et **Année modèle** : décodés de la VIN (modèle : 4e caractère ; année : 10e caractère, de 2008 à 2037). Une VIN vide, non Tesla ou non décodable donne **Inconnu**. Elles sont **visibles** et **non historisées**.
+- **Position** : voir [Position et confidentialité](#position-et-confidentialité).
+
+Les données étendues sont lues avec les données de charge : elles suivent donc la **fenêtre d'endormissement** (aucune lecture pendant la fenêtre, voir [Laisser le véhicule s'endormir](#laisser-le-véhicule-sendormir)) et gardent leur dernière valeur tant que le véhicule dort. Un refus d'une seule catégorie n'empêche pas les autres lectures, et ne modifie jamais **Dernière erreur** pour les pressions, la mise à jour et la position.
+
 ### Informations
 
 « H » : historisée par défaut. « V » : visible par défaut sur le widget. Vous pouvez changer ces deux réglages dans l'onglet **Commandes**.
@@ -842,6 +973,8 @@ Récapitulatif de ce que permet la climatisation et le confort. Le proxy officie
 | État de verrouillage détaillé | `lock_state` | info / texte | | non | oui | Libellé du verrouillage : **Déverrouillé**, **Verrouillé**, **Verrouillé de l'intérieur** ou **Déverrouillage sélectif** ; une valeur inconnue est affichée telle quelle. Il suit la langue de Jeedom : dans un scénario, testez **Verrouillage du véhicule** et **Occupant présent**, un libellé comparé dépend de la langue |
 | Sentinelle | `sentry_mode` | info / texte | | non | oui | **Activée**, **Désactivée** ou **Inconnu** (aucune lecture ni ordre connus). Voir [État du mode sentinelle](#état-du-mode-sentinelle). Elle suit la langue de Jeedom : dans un scénario, comparez dans la langue courante de Jeedom, et testez **Provenance de la sentinelle** pour savoir d'où vient la valeur |
 | Provenance de la sentinelle | `sentry_mode_source` | info / texte | | non | oui | **Réel** (lue sur le véhicule), **Dernier ordre** (déduite de la dernière commande réussie du plugin) ou **Aucune** (rien n'a encore été lu ni ordonné). Même règle de langue que **Sentinelle** |
+| Alerte ouvrants | `closures_alert` | info / binaire | | oui | non | 1 tant qu'un ouvrant est resté ouvert plus longtemps que la durée réglée (alerte activée seulement), 0 sinon. Voir [Alertes d'ouverture prolongée](#alertes-douverture-prolongée). |
+| Alerte déverrouillé sans occupant | `unlocked_alert` | info / binaire | | oui | non | 1 tant que le véhicule est resté déverrouillé sans occupant plus longtemps que la durée réglée (alerte activée seulement), 0 sinon. Voir [Alertes d'ouverture prolongée](#alertes-douverture-prolongée). |
 | État charge | `charging_state` | info / texte | | non | oui | État de la charge renvoyé par le véhicule, sans traduction : `Charging`, `Disconnected`, `Complete`, `Stopped`, `Starting`, `NoPower`, `Calibrating` ou `Unknown`. C'est cette valeur qu'il faut tester dans un scénario |
 | État de charge (traduit) | `charging_state_label` | info / texte | | non | non | L'état de charge en français (**En charge**, **Déconnecté**, **Terminée**, **Arrêtée**, **Démarrage**, **Pas de courant**, **Étalonnage**, **Inconnu**), pour l'affichage. Un état que le plugin ne connaît pas est affiché tel que le véhicule l'envoie. Il suit la langue de Jeedom : dans un scénario, testez **État charge**, jamais ce libellé |
 | Limite charge | `charge_limit_soc` | info / numérique | % | oui | oui | Limite de charge configurée |
@@ -904,6 +1037,22 @@ Récapitulatif de ce que permet la climatisation et le confort. Le proxy officie
 | Rôle de clé | `key_role` | info / texte | | non | oui | Rôle probable de la clé du proxy pour ce véhicule : **Charging Manager** après le refus d'une commande réservée au rôle Owner faute de droits, **Owner** dès qu'une de ces commandes réussit, **Indéterminé** tant qu'aucune n'a été envoyée (voir [Rôle de la clé](#rôle-de-la-clé)). Dans un scénario, testez `Owner` ou `Charging Manager` (jamais traduits) ; « Indéterminé » suit la langue de Jeedom |
 | Durée lecture état | `state_read_duration` | info / numérique | s | non | oui | Temps, en secondes au dixième, de la dernière lecture réussie de l'état du véhicule (présence, verrouillage, veille) au cycle de rafraîchissement ou par **Rafraîchir**. Un échec ne la modifie pas : elle garde la durée du dernier succès. Historisez-la pour suivre la santé de la liaison Bluetooth (voir [Lecture lente du proxy](#lecture-lente-du-proxy)) |
 | Durée lecture données | `data_read_duration` | info / numérique | s | non | oui | Temps de la dernière lecture réussie des données de charge et de climatisation. Inchangée tant que le véhicule dort (aucune lecture). Une valeur proche de 0 est normale juste après une autre lecture : le proxy garde ces données en mémoire 30 secondes |
+| Modèle | `model` | info / texte | | non | oui | Modèle décodé de la VIN, sans interroger le proxy : **Model S**, **Model X**, **Model 3**, **Model Y**, **Cybertruck**, **Semi** ou **Roadster** ; **Inconnu** si la VIN n'est pas celle d'un Tesla reconnu. Voir [Données étendues : ce qui est disponible](#données-étendues--ce-qui-est-disponible) |
+| Année modèle | `model_year` | info / texte | | non | oui | Année modèle décodée de la VIN (par exemple `2023`) ; **Inconnu** si elle n'est pas décodable |
+| Kilométrage | `odometer` | info / numérique | km | oui | oui | Compteur kilométrique, converti en kilomètres (le véhicule le renvoie en miles). Créée seulement si le proxy annonce `drive_state` |
+| Rapport | `shift_state` | info / texte | | non | non | Rapport engagé : `P`, `R`, `N` ou `D` ; **vide** quand le véhicule ne le communique pas. Créée seulement si le proxy annonce `drive_state` |
+| Vitesse | `speed` | info / numérique | km/h | non | non | Vitesse, supposée en mph côté véhicule et convertie en km/h (à confirmer en usage réel). Créée seulement si le proxy annonce `drive_state` |
+| Puissance | `power` | info / numérique | kW | non | non | Puissance instantanée, valeur du véhicule en kilowatts, négative admise (à confirmer en usage réel). Créée seulement si le proxy annonce `drive_state` |
+| Pression pneu avant gauche | `tpms_pressure_fl` | info / numérique | bar | non | oui | Pression du pneu, en bar, sans conversion. Créée seulement si le proxy annonce `tire_pressure` |
+| Pression pneu avant droit | `tpms_pressure_fr` | info / numérique | bar | non | oui | Idem, pneu avant droit |
+| Pression pneu arrière gauche | `tpms_pressure_rl` | info / numérique | bar | non | oui | Idem, pneu arrière gauche |
+| Pression pneu arrière droit | `tpms_pressure_rr` | info / numérique | bar | non | oui | Idem, pneu arrière droit |
+| Mise à jour | `software_update_status` | info / texte | | non | oui | **Aucune**, **Disponible**, **Téléchargement en cours** ou **Installation en cours** (un statut inattendu du proxy est affiché tel quel). Créée seulement si le proxy annonce `software_update` |
+| Version proposée | `software_update_version` | info / texte | | non | oui | Version de la mise à jour proposée ; **Aucune** hors mise à jour, **Inconnue** si une mise à jour est active sans version rapportée |
+| Progression | `software_update_progress` | info / numérique | % | non | non | Avancement du téléchargement ou de l'installation ; 0 hors de ces deux phases |
+| Latitude | `latitude` | info / numérique | ° | non | non | Latitude du véhicule en degrés décimaux. **Masquée et non historisée** : donnée personnelle (voir [Position et confidentialité](#position-et-confidentialité)). Créée seulement si le proxy annonce `location_data` |
+| Longitude | `longitude` | info / numérique | ° | non | non | Longitude du véhicule, mêmes règles que la latitude |
+| À la maison | `at_home` | info / binaire | | non | oui | 1 si le véhicule est dans le rayon du domicile, 0 au-delà ; **jamais écrite** tant que le domicile ou la position sont inconnus |
 
 L'information **Charge batterie** alimente aussi le suivi de batterie de Jeedom (page **Analyse > Équipements**) ; **Niveau de batterie (brut)** ne l'alimente pas.
 
@@ -996,6 +1145,7 @@ Les actions marquées « masquée » ne sont pas affichées sur le widget par d�
 - **Alerte** : recevez une notification si **Verrouillage du véhicule** reste à 0 le soir.
 - **Panne de liaison** : recevez une notification quand **Dernière erreur** passe à autre chose que **Aucune** (proxy injoignable, proxy sans clé appairée...). Un véhicule qui dort ne la déclenche pas.
 - **Garde de fraîcheur** : n'ajustez le courant de charge que si les données ont moins de 5 minutes, sinon ne faites rien (voir l'exemple pas à pas « n'agir que sur des données récentes » ci-dessous).
+- **Coffre resté ouvert** : activez l'alerte d'ouverture prolongée et déclenchez une notification (voir l'[exemple pas à pas : être alerté quand le coffre reste ouvert](#exemple-pas-à-pas--être-alerté-quand-le-coffre-reste-ouvert)).
 
 ### Exemple pas à pas : charge solaire avec Ajuster selon le surplus
 
@@ -1076,6 +1226,29 @@ Pourquoi **99999** est une bonne chose ici : tant qu'aucune lecture n'est connue
 
 **Variante : alerte « données de plus de 2 heures ».** Créez un scénario en mode **Programmé** (par exemple toutes les heures) avec la condition `#[Objet][Véhicule][Âge des données (min)]# >= 120 ET #[Objet][Véhicule][Âge des données (min)]# < 99999` et une notification dans **ALORS**. La borne `< 99999` évite une fausse alerte quand aucune lecture n'est connue ; préférez `>= 120` à une égalité exacte (`== 120`), qui n'est vraie qu'une minute et peut être sautée. Un véhicule qui dort longtemps déclenche cette alerte sans qu'il y ait de panne : c'est un simple constat de fraîcheur. Pour obtenir des données fraîches, lancez **Rafraîchir (avec réveil)**.
 
+### Exemple pas à pas : être alerté quand le coffre reste ouvert
+
+Ce scénario vous prévient quand un ouvrant (coffre arrière, frunk, porte, trappe de charge) reste ouvert plus de 10 minutes. Il repose sur l'alerte d'ouverture prolongée (voir [Alertes d'ouverture prolongée](#alertes-douverture-prolongée)) ; une clé Charging Manager suffit, ce sont des lectures.
+
+1. Ouvrez la page de votre véhicule (**Plugins > Communication > Tesla BLE**) et allez au bloc **Alertes d'ouverture prolongée**.
+2. Dans **Ouvrant resté ouvert**, cochez **Activer** et saisissez **Durée avant alerte (min)** : `10`. La durée est obligatoire, de 1 à 1440 minutes.
+3. **Sauvegardez**. Un message d'erreur à l'enregistrement signale une durée vide ou invalide (voir [Messages à l'enregistrement](#messages-à-lenregistrement)).
+4. Ouvrez l'onglet **Commandes** et cochez **Afficher** sur **Alerte ouvrants** (elle est masquée par défaut, mais déjà historisée). **Sauvegardez**.
+5. Ouvrez **Outils > Scénarios**, cliquez sur **Ajouter** et nommez le scénario, par exemple « Alerte coffre ouvert ». Dans **Mode du scénario**, choisissez **Provoqué**.
+6. Dans **Déclencheur(s)**, ajoutez la commande **Alerte ouvrants** de votre véhicule, par exemple `#[Garage][Tesla][Alerte ouvrants]#`.
+7. Dans l'onglet **Scénario**, ajoutez un bloc **Si/Alors/Sinon** avec la condition `#[Garage][Tesla][Alerte ouvrants]# == 1`. Le scénario se lance aussi au retour à 0 : sans cette condition, vous seriez prévenu à la fermeture.
+8. Dans **ALORS**, ajoutez une **Action** de notification de votre installation (application mobile, Telegram, e-mail…) avec un texte comme « Un ouvrant de la Tesla est resté ouvert depuis plus de 10 minutes ». Le centre de messages de Jeedom reçoit de son côté un message qui nomme l'ouvrant, sans rien configurer.
+9. **Sauvegardez**, puis testez : ouvrez le coffre arrière à la main et attendez la durée choisie **plus deux intervalles de rafraîchissement** (jusqu'à 20 minutes avec 10 minutes et l'intervalle par défaut de 5 minutes). **Alerte ouvrants** passe à 1, le message apparaît dans le centre de messages et la notification part.
+10. Fermez le coffre : à la lecture suivante, **Alerte ouvrants** repasse à 0 et le scénario se lance sans notifier. Le message reste dans le centre de messages : supprimez-le.
+
+Pour un véhicule laissé déverrouillé, procédez de même avec **Véhicule déverrouillé sans occupant** et l'information **Alerte déverrouillé sans occupant**.
+
+**Conseils d'usage de la présence d'un occupant.** **Occupant présent** (`user_present`) vaut 1 quand le véhicule détecte une personne à bord.
+
+- **Condition « personne à bord ».** Dans un scénario, testez `#[Garage][Tesla][Occupant présent]# == 0` avant une action qui n'a de sens que véhicule vide (par exemple relancer un verrouillage). Associez-la à **Verrouillage du véhicule** et testez ces deux informations plutôt que le libellé **État de verrouillage détaillé**, qui change avec la langue de Jeedom.
+- **Présence inconnue = dernière valeur.** Quand le véhicule ne donne pas l'état (il dort), l'information garde sa dernière valeur : elle peut afficher « personne » alors qu'une personne est restée à bord, ou l'inverse. Contrôlez **Âge des données (min)** si la décision compte.
+- **Ce n'est pas une sécurité.** Ne vous en servez jamais pour protéger une personne ou un animal (par exemple pour décider de couper la climatisation : un enfant ou un animal resté à bord peut ne pas être détecté). Ne la confondez pas avec **Présence véhicule**, qui dit seulement que le véhicule est à portée Bluetooth du proxy.
+
 ## Limitations connues
 
 - **Après une commande**, seuls la limite de charge, le courant de charge et le verrouillage sont mis à jour tout de suite. Les autres informations sont à jour après la **relecture programmée** (30 secondes par défaut, voir [Relecture après une commande](#relecture-après-une-commande)), ou à la lecture suivante si le proxy est occupé. Si le véhicule s'est rendormi, les dernières valeurs sont conservées (aucune erreur, aucun réveil) ; hors de portée, la présence passe à « Non » ; si le proxy est injoignable, « Dernière erreur » est renseignée.
@@ -1096,6 +1269,8 @@ Pourquoi **99999** est une bonne chose ici : tant qu'aucune lecture n'est connue
 - **Mode chien, camp et maintien de climat** : réservé au proxy du fork, version `2.3.0-tb.1` au minimum (refus immédiat avec le proxy 2.3.0) ; l'action reste **masquée** : à afficher soi-même après le passage au fork ; elle réveille le véhicule, consomme de la batterie sur une longue durée, ne s'arrête pas toute seule et ne remplace pas une surveillance de la température pour un animal ; avec **Lire aussi la climatisation** sur **Non, charge seule**, ou si le véhicule se rendort, **Maintien de climat (chien, camp)** garde la valeur annoncée ; la fenêtre d'endormissement ne s'ouvre pas tant qu'un maintien (`On`, `Dog`, `Party`) est lu ; le rôle Owner, le nom `Party` du mode camp et la valeur relue après un arrêt sont à valider en usage réel.
 - **Ouvrir le coffre arrière et le frunk** : réservé au proxy du fork, version `2.3.0-tb.2` au minimum (refus immédiat avec le proxy 2.3.0) ; les deux actions restent **masquées** : à afficher soi-même après le passage au fork ; elles réveillent le véhicule ; le coffre arrière n'est ouvert que s'il est lu fermé (la relecture peut manquer une ouverture récente, et un hayon motorisé peut alors se refermer) ; un loquet signalé « non lâché » (échec d'ouverture précédent) est traité comme fermé et la commande est renvoyée, comportement à valider en usage réel ; le frunk n'est pas relu ; le plugin ne referme jamais un coffre ; le rôle Owner supposé nécessaire et le comportement sur un coffre motorisé (ou un frunk motorisé) sont à valider en usage réel.
 - **État du mode sentinelle** : la lecture réelle exige le proxy du fork en version `2.3.0-tb.2` au minimum et un véhicule **éveillé** ; sinon l'information suit le **dernier ordre** envoyé par Jeedom et ne voit ni un changement fait depuis l'application, l'écran du véhicule ou une coupure automatique, ni une valeur lue sur un véhicule endormi (dernière valeur lue conservée) ; l'état `Idle` est compté **Activée** (à confirmer en usage réel) ; les libellés suivent la langue de Jeedom (voir [État du mode sentinelle](#état-du-mode-sentinelle)).
+- **Alertes d'ouverture prolongée** : la durée n'est comptée que sur des lectures réussies, à la cadence de rafraîchissement (alerte entre la durée et la durée plus deux intervalles). Si le **cache de Jeedom est vidé** pendant une alerte, l'épisode est oublié : l'info repasse à 0 puis à 1 après une durée complète, avec un second message. Un **État charge** figé sur un véhicule endormi (par exemple « Stopped » ou « Complete » périmé après un débranchement) masque une trappe de charge oubliée ouverte. Sans l'information d'ouvrants du véhicule (huit états fermés ou absents), l'épisode est considéré comme clos. Le message n'est pas retiré du centre de messages à la fermeture.
+- **Données étendues** (modèle, kilométrage et conduite, pneus, mise à jour logicielle, position) : à l'exception du modèle et de l'année, elles exigent le **proxy du fork** (`2.3.0-tb.2` au minimum) qui les **annonce** ; sinon elles ne sont pas créées. Elles ne sont lues que **véhicule éveillé** et à portée Bluetooth (les pressions, la mise à jour et la position au plus toutes les 15 minutes, pas pendant une fenêtre d'endormissement). Les unités de **Vitesse** (mph) et de **Puissance** (kW) sont supposées et à confirmer en usage réel. **À la maison** est binaire : jamais écrite sans domicile ni position (la tuile affiche 0 avant le premier calcul), elle ne repasse pas à 0 quand le véhicule part ; testez `== 1` avec **Présence véhicule**. Le log `event` de Jeedom enregistre latitude et longitude même masquées (voir [Position et confidentialité](#position-et-confidentialité)).
 - **Un seul équipement par véhicule** (VIN unique).
 - **Heure de départ programmée historisée** : si elle était historisée avant la mise à jour, elle reste numérique et n'est plus mise à jour tant que son sous-type n'est pas changé en **Autre**.
 - **Proxy déclaré par un nom de service Docker** : le lien vers le tableau de bord ne s'ouvre pas dans le navigateur (voir [Lien vers le tableau de bord du proxy](#lien-vers-le-tableau-de-bord-du-proxy)).
@@ -1108,7 +1283,7 @@ Pourquoi **99999** est une bonne chose ici : tant qu'aucune lecture n'est connue
 | Véhicules par proxy | **3 au plus** pour que le cycle ne soit jamais écourté au pire cas ; au-delà, vérifiez la **Dernière lecture des données** de chaque véhicule. |
 | Durée d'un cycle | Lancé **chaque minute** pour les véhicules échus (5 minutes d'intervalle par défaut), 4 minutes au plus ; il dure autant que son proxy le plus lent (les proxys sont lus en parallèle). |
 | Attente d'un proxy occupé | Environ 2 minutes (110 secondes pour une lecture, 15 secondes pour la vérification d'appairage), puis **Proxy occupé**. |
-| Rôle de la clé | **Charging Manager** par défaut : lectures et charge seulement, y compris le pilotage selon le surplus et la charge aux heures creuses ; **Owner** pour le verrouillage, le klaxon, les feux, la sentinelle et le préconditionnement planifié (voir [Rôle de la clé](#rôle-de-la-clé)). |
+| Rôle de la clé | **Charging Manager** par défaut : lectures et charge seulement, y compris le pilotage selon le surplus et la charge aux heures creuses ; **Owner** pour le verrouillage, le déverrouillage, le klaxon, les feux, la sentinelle, les coffres (supposé) et le préconditionnement planifié (voir [Rôle de la clé](#rôle-de-la-clé)). |
 | Authentification du proxy | **Aucune par défaut** : gardez-le sur un réseau de confiance, jamais exposé sur Internet. Le proxy du fork peut exiger un **jeton d'API** (facultatif, même jeton pour tous les proxys), qui protège l'accès mais ne remplace pas un réseau de confiance. |
 | Équipements par véhicule | Un seul (VIN unique). |
 | Logs du proxy | Proxy **2.3.0** minimum ; seul le proxy de la configuration du plugin est affiché. |
@@ -1147,6 +1322,9 @@ Le test n'interroge que la version du proxy : un test vert ne prouve ni que la c
 - **« Charge aux heures creuses : l'heure de début (ou de fin) doit être au format HH:MM, de 00:00 à 23:59 »**, **« … le SoC cible doit être un entier entre 1 et 100 % »**, **« … la plage horaire est vide, l'heure de fin doit différer de l'heure de début »** et **« … renseignez l'heure de début, l'heure de fin et le SoC cible pour activer la fonction »** : réglage de la **Charge aux heures creuses** invalide ; corrigez-le (rien n'a été enregistré).
 - **« Pilotage selon le surplus : … »** : réglage du pilotage selon le surplus hors bornes (voir [Pilotage selon le surplus](#pilotage-selon-le-surplus)).
 - **« Préconditionnement planifié : l'heure de départ doit être au format HH:MM, de 00:00 à 23:59 »**, **« … l'avance doit être un entier entre 1 et 60 minutes »**, **« … la durée maximale doit être un entier entre 1 et 120 minutes »**, **« … la durée maximale doit être au moins égale à l'avance »**, **« … renseignez l'heure de départ pour activer la fonction »**, **« … cochez au moins un jour pour activer la fonction »** et **« … « Lire aussi la climatisation » doit rester à Oui pour activer la fonction »** : réglage du **Préconditionnement planifié par Jeedom** invalide ; corrigez-le (rien n'a été enregistré).
+- **« Alertes d'ouverture prolongée : la durée avant alerte … doit être un entier entre 1 et 1440 minutes, obligatoire pour activer l'alerte »** : la durée de l'alerte (ouvrant resté ouvert, ou véhicule déverrouillé sans occupant) est vide alors que l'alerte est activée, ou n'est pas un entier de 1 à 1440 (voir [Alertes d'ouverture prolongée](#alertes-douverture-prolongée)). Rien n'est enregistré.
+- **« Position du domicile invalide : renseignez la latitude (de -90 à 90) et la longitude (de -180 à 180) en degrés décimaux, 8 décimales au plus, ou laissez les deux vides pour utiliser la position de Jeedom »** : une seule des deux coordonnées du domicile est renseignée, ou l'une est hors plage, non numérique, avec trop de décimales, ou le couple vaut 0/0. Corrigez-les (ou videz les deux champs pour utiliser la position de Jeedom) ; rien n'a été enregistré. La valeur saisie n'est jamais recopiée dans le message (voir [Position et confidentialité](#position-et-confidentialité)).
+- **« Rayon du domicile invalide : nombre entier de mètres, de 10 à 10000 »** : le **Rayon (m)** n'est pas un entier de 10 à 10000. Corrigez-le (ou videz le champ pour 100 m) ; rien n'a été enregistré.
 - **« Erreur interne du plugin : consultez le log TeslaBLE »** : erreur imprévue lors de l'enregistrement ; le détail est dans le log du plugin.
 
 ### Centre de messages de Jeedom (après une mise à jour)
@@ -1155,6 +1333,7 @@ Le test n'interroge que la version du proxy : un test vert ne prouve ni que la c
 - **« L'équipement … a la même VIN que l'équipement … »** : deux équipements pour un même véhicule. Supprimez le doublon ou corrigez sa VIN.
 - **« L'information … est historisée : elle reste numérique et n'est plus mise à jour… »** : voir [Heure de départ programmée](#heure-de-départ-programmée).
 - **« Adaptateur Bluetooth du proxy probablement figé — … »** : voir [Alerte adaptateur Bluetooth figé](#alerte-adaptateur-bluetooth-figé). Redémarrez le Raspberry Pi.
+- **« … : ouvrant « … » ouvert depuis plus de … min »** et **« … : véhicule déverrouillé sans occupant depuis plus de … min »** : alertes d'ouverture prolongée, un message par ouvrant et par épisode (voir [Alertes d'ouverture prolongée](#alertes-douverture-prolongée)). Le message n'est pas retiré à la fermeture : supprimez-le.
 
 ### Information « Dernière erreur » (lecture)
 
@@ -1176,7 +1355,7 @@ Le test n'interroge que la version du proxy : un test vert ne prouve ni que la c
 | **Préconditionnement planifié suspendu jusqu'au prochain départ : échecs de commande répétés** | Trois commandes de suite ont échoué (voir le message d'erreur de la commande dans le log, avertissement). | Corrigez la cause (clé, portée, proxy) ; le pilotage reprend au départ suivant. |
 | **Demande refusée par le véhicule : clé du proxy non appairée avec ce véhicule** | La clé active du proxy n'est pas appairée avec ce véhicule (avec plusieurs véhicules, la même clé doit être appairée sur chacun). Les autres véhicules ne sont pas touchés. | Utilisez **Appairer ma clé** puis **Vérifier l'appairage** sur l'équipement de ce véhicule. |
 | **Demande refusée par le véhicule — …** | Le véhicule a refusé la lecture ; la raison du proxy suit le message. | Lisez la raison indiquée après le message ; vérifiez aussi l'appairage de la clé. |
-| **Fonction non supportée par ce proxy — …** | La lecture demandée n'existe pas dans votre version du proxy. | Mettez le proxy à jour. |
+| **Fonction non supportée par ce proxy — …** | La lecture demandée n'existe pas dans votre version du proxy (par exemple le kilométrage `drive_state` demandé à un proxy qui le refuse). | Mettez le proxy à jour (proxy du fork pour les données étendues : voir [Données étendues : ce qui est disponible](#données-étendues--ce-qui-est-disponible)). |
 | **Réponse invalide du proxy** | Le proxy a renvoyé une réponse inattendue. | Vérifiez l'adresse, mettez le proxy à jour, redémarrez-le si cela se répète. |
 | **Version du proxy non prise en charge : 2.3.0 minimum, mettez le proxy à jour** | Le proxy est antérieur à 2.1.1 : l'état du véhicule n'est plus lisible. | Mettez le proxy à jour (voir [Vérifier et mettre à jour la version du proxy](#vérifier-et-mettre-à-jour-la-version-du-proxy)). Le log signale aussi cette ligne en erreur. |
 | **Proxy occupé : lecture du véhicule non effectuée, réessayez dans un instant** | Un **Rafraîchir** a attendu plus de 110 secondes : le proxy était occupé par une commande ou une lecture. Aucune lecture n'a eu lieu. | Relancez **Rafraîchir** dans un instant ; la lecture automatique suivante rattrape aussi. |
@@ -1193,7 +1372,7 @@ Ces messages s'affichent en rouge dans Jeedom et sont aussi copiés dans **Derni
 
 | Message | Cause | Action |
 |---|---|---|
-| **« Cette commande nécessite une clé de rôle Owner : la clé du proxy a probablement le rôle Charging Manager… »** | Le véhicule a refusé faute de droits une commande réservée au rôle Owner (verrouillage, klaxon, feux, sentinelle, climatisation) : votre clé a très probablement le rôle Charging Manager. | Voir [Rôle de la clé](#rôle-de-la-clé) : appairez une clé Owner. |
+| **« Cette commande nécessite une clé de rôle Owner : la clé du proxy a probablement le rôle Charging Manager… »** | Le véhicule a refusé faute de droits une commande réservée au rôle Owner (verrouillage, déverrouillage, klaxon, feux, sentinelle, coffres, climatisation) : votre clé a très probablement le rôle Charging Manager. | Voir [Rôle de la clé](#rôle-de-la-clé) : appairez une clé Owner. |
 | **« Commande refusée par le véhicule (rôle de la clé du proxy insuffisant ?) : … »** | Défaut d'autorisation sur une autre commande : rôle de clé insuffisant ou état du véhicule. | Voir [Rôle de la clé](#rôle-de-la-clé) ; avec une clé Owner, vérifiez l'état du véhicule. |
 | **« Commande refusée par le véhicule : … »** | Le véhicule a refusé la commande ; la raison renvoyée suit le message. | Corrigez selon la raison indiquée. |
 | **« Proxy injoignable, commande non envoyée »** | Le proxy ne répond pas : la commande n'est pas partie. | Vérifiez l'URL et l'alimentation du Raspberry Pi. |
@@ -1209,7 +1388,7 @@ Ces messages s'affichent en rouge dans Jeedom et sont aussi copiés dans **Derni
 | **« Valeur invalide : le dégivrage maximal doit être 0 (arrêt) ou 1 (marche) »** | Un scénario envoie une valeur hors de la liste de la commande **Dégivrage maximal**. | Utilisez 0 (Arrêt) ou 1 (Marche) (voir [Dégivrage maximal](#dégivrage-maximal)). |
 | **« Valeur invalide : le mode de maintien de climat doit être 0 (arrêt), 1 (maintien), 2 (chien) ou 3 (camp) »** | Un scénario envoie une valeur hors de la liste de la commande **Mode de maintien de climat**. | Utilisez 0 (Arrêt), 1 (Maintien), 2 (Mode chien) ou 3 (Mode camp) (voir [Mode chien, camp et maintien de climat](#mode-chien-camp-et-maintien-de-climat)). |
 | **« Échec de la commande : … »** | Autre cause (proxy sans clé, véhicule hors de portée, réponse invalide…) : la cause suit le message. | Voir le tableau **Dernière erreur** ci-dessus. |
-| **« Non supportée par votre version du proxy »** | La commande (par exemple **Ajouter une programmation de charge**, **Consigne conducteur**, **Régler le chauffage du siège avant gauche**, **Dégivrage maximal** ou **Mode de maintien de climat**) n'existe pas dans votre proxy : rien n'a été envoyé. | Installez le proxy du fork (voir [Programmer la charge](#programmer-la-charge), [Régler la consigne de température](#régler-la-consigne-de-température), [Chauffer les sièges et le volant](#chauffer-les-sièges-et-le-volant), [Dégivrage maximal](#dégivrage-maximal) et [Mode chien, camp et maintien de climat](#mode-chien-camp-et-maintien-de-climat)). |
+| **« Non supportée par votre version du proxy »** | La commande (par exemple **Ouvrir le coffre arrière**, **Ouvrir le frunk**, **Ajouter une programmation de charge**, **Consigne conducteur**, **Régler le chauffage du siège avant gauche**, **Dégivrage maximal** ou **Mode de maintien de climat**) n'existe pas dans votre proxy : rien n'a été envoyé. | Installez le proxy du fork (voir [Programmer la charge](#programmer-la-charge), [Régler la consigne de température](#régler-la-consigne-de-température), [Chauffer les sièges et le volant](#chauffer-les-sièges-et-le-volant), [Dégivrage maximal](#dégivrage-maximal) et [Mode chien, camp et maintien de climat](#mode-chien-camp-et-maintien-de-climat)). |
 | **« Valeur invalide : la consigne doit être un nombre entre … et … °C »** | La valeur de **Consigne conducteur** ou **Consigne passager** n'est pas un nombre, ou sort de la plage du curseur (15 à 28 °C, ou les bornes du véhicule). | Envoyez un nombre dans la plage indiquée par le message. |
 | **« Jours de la programmation invalides : … »** ou **« Heure de début invalide : … »** | Les jours ou l'heure de **Ajouter une programmation de charge** n'ont pas le format attendu. | Corrigez-les (`lun,mar,mer,jeu,ven` ; `23:00`). |
 | **« Coordonnées de Jeedom absentes ou invalides : … »** | La latitude et la longitude de Jeedom ne sont pas renseignées (ou valent 0 et 0). | Renseignez-les dans Réglages, Système, Configuration, onglet **Général**. |
@@ -1264,6 +1443,9 @@ Les avertissements du log liés à ces réglages (valeur d'**Intervalle pendant 
 - **« Véhicule … : relecture programmée dans N s (commande …). »**, **« … : lecture sans réveil. »**, **« Relecture du véhicule … remplacée par une commande plus récente. »**, **« … abandonnée : proxy occupé… »** et **« Relecture ignorée : … »** (Debug) : déroulé d'une relecture après commande, voir [Relecture après une commande](#relecture-après-une-commande). Rien à faire.
 - **« Véhicule … : relecture non programmée : … »** (avertissement, une fois par heure au plus) : la tâche de relecture n'a pas pu être créée ; la commande a réussi et les valeurs seront à jour à la lecture suivante. Si le message revient, vérifiez le moteur de tâches de Jeedom.
 - **« Équipement … : délai de relecture après commande invalide, ramené à 30 secondes. »** (avertissement) : une valeur hors liste a été enregistrée (par un script, une API ou une restauration) ; choisissez un délai dans la liste de l'équipement.
+- **« Véhicule … : le proxy annonce désormais … ; information(s) créée(s) : … »** (Info) : après un changement de version du proxy, le plugin a créé les informations de données étendues devenues disponibles (voir [Données étendues : ce qui est disponible](#données-étendues--ce-qui-est-disponible)). **« … informations de données étendues non créées …, nouvel essai à la prochaine lecture de ces données »** (avertissement, une fois par heure au plus) : la création a échoué (erreur d'enregistrement Jeedom) ; elle est retentée seule, ou par **Sauvegarder** sur l'équipement.
+- **« Véhicule … : fonction `donnees:…` refusée par le proxy (not supported), indisponible jusqu'au prochain changement de version du proxy. »** (Info) : le proxy a refusé une catégorie qu'il annonçait ; le plugin ne la demande plus avant une mise à jour du proxy. **« Capacités du proxy du véhicule … : version …, origine …, action(s) indisponible(s) : … »** (Info) : lecture de ce que le proxy annonce, au changement de version.
+- **« Lecture de la position (ou des pressions des pneus, ou de la mise à jour logicielle) du véhicule … en échec : … »** (avertissement, une fois par épisode) et **« … rétablie. »** (Info) : le véhicule ou le proxy a refusé cette lecture. Les autres lectures ne sont pas affectées et **Dernière erreur** n'est pas modifiée. En Debug, **« Position (ou Pressions des pneus, ou Mise à jour logicielle) du véhicule … non lue(s) : … »** donne la raison d'une lecture non faite (véhicule endormi, hors de portée, budget de lecture atteint, aucune information sur l'équipement) et **« Position du véhicule … inchangée : … »** celle d'une position ignorée (périmée, 0/0, hors plage) ; aucune coordonnée n'y figure jamais.
 - **« Migrations : … »** : voir [Constater la mise à niveau dans le log](#constater-la-mise-à-niveau-dans-le-log).
 
 ### Lecture lente du proxy
@@ -1321,6 +1503,40 @@ Passez le log du plugin en **Debug** : la ligne **« préconditionnement planifi
 | **Un dégivrage maximal ou un maintien de climat ne s'arrête pas** | Le plugin ne les arrête jamais de lui-même ; le préconditionnement planifié ne les remplace ni ne les arrête non plus. | Envoyez **Arrêt** depuis le widget ou un scénario. |
 
 Les messages affichés pour ces fonctions (**Valeur invalide : …**, **Préconditionnement planifié : …**, **Véhicule non branché : préconditionnement planifié non lancé**, **Non supportée par votre version du proxy**) sont décrits dans [Messages à l'enregistrement](#messages-à-lenregistrement), [Information « Dernière erreur » (lecture)](#information--dernière-erreur--lecture) et [Erreur à l'envoi d'une commande](#erreur-à-lenvoi-dune-commande).
+
+### Ouvrants et sécurité : symptômes sans message
+
+Messages de cette fonction : **« Coffre déjà ouvert ou en mouvement… »**, **« État du coffre inconnu… »**, **« État du coffre illisible… »** et **« Non supportée par votre version du proxy »** dans [Erreur à l'envoi d'une commande](#erreur-à-lenvoi-dune-commande) ; le refus d'une durée d'alerte dans [Messages à l'enregistrement](#messages-à-lenregistrement) ; les messages d'alerte dans [Centre de messages de Jeedom (après une mise à jour)](#centre-de-messages-de-jeedom-après-une-mise-à-jour) ; le refus de rôle dans [Rôle de la clé](#rôle-de-la-clé).
+
+| Symptôme | Causes possibles | Action |
+|---|---|---|
+| **Un ouvrant reste à 0 alors qu'il est ouvert** | Le véhicule dort : l'état n'est pas relu et la dernière valeur reste ; un état inconnu laisse la dernière valeur ; proxy antérieur à 2.3.0 (ouvrants non publiés) ; le proxy transmet les ouvrants comme fermés quand le véhicule ne les fournit pas. | Contrôlez **Âge des données (min)** et **Présence véhicule** ; lancez **Rafraîchir** ; vérifiez **Version du proxy** (voir [Vérifier et mettre à jour la version du proxy](#vérifier-et-mettre-à-jour-la-version-du-proxy)). |
+| **Sentinelle en « Dernier ordre » qui ne suit pas l'application** | Proxy officiel 2.3.0 ou fork trop ancien : la valeur est celle du dernier ordre de Jeedom. Avec le fork `2.3.0-tb.2`, un véhicule endormi garde aussi sa dernière valeur lue. | Passez au proxy du fork (`2.3.0-tb.2` au minimum) et lancez **Rafraîchir (avec réveil)** ; voir [État du mode sentinelle](#état-du-mode-sentinelle). |
+| **L'alerte ne part pas** | Alerte non activée ou durée vide (refusée à l'enregistrement) ; durée pas encore écoulée (l'alerte part entre la durée et la durée plus deux intervalles de rafraîchissement) ; proxy injoignable, véhicule hors de portée ou lecture en échec (rien n'est évalué) ; trappe de charge ouverte alors que le véhicule est branché ou en charge (aucune alerte pour la trappe) ; présence d'un occupant ou présence inconnue (alerte « déverrouillé sans occupant ») ; cache de Jeedom vidé pendant l'épisode ; scénario qui ne teste pas **Alerte ouvrants** `== 1`. | Vérifiez le bloc **Alertes d'ouverture prolongée**, **Dernière erreur** et **Âge des données (min)** ; voir [Alertes d'ouverture prolongée](#alertes-douverture-prolongée). |
+| **Le message d'alerte est toujours dans le centre de messages** | Jeedom ne retire pas le message à la fermeture. | Supprimez-le à la main. |
+| **Aucune confirmation ne s'affiche avant une action sensible** | La case **Confirmer l'action** est décochée sur la commande ; l'action est lancée depuis un scénario ou l'API (jamais de confirmation) ; la commande n'est pas l'une des cinq actions concernées. | Cochez la case dans les paramètres avancés de la commande ; voir [Confirmation des actions sensibles](#confirmation-des-actions-sensibles). |
+| **Le coffre n'apparaît pas sur le widget** | **Ouvrir le coffre arrière** et **Ouvrir le frunk** sont créées **masquées**, même avec le proxy du fork. | Cochez **Afficher** dans l'onglet **Commandes** (voir [Ouvrants et sécurité : ce qui est disponible](#ouvrants-et-sécurité--ce-qui-est-disponible)). |
+| **Le coffre arrière ne s'ouvre pas** | Un hayon motorisé déjà ouvert est refusé par le plugin pour ne pas le refermer ; le véhicule a refusé faute de droits (**Rôle de clé**) ; proxy officiel 2.3.0. | Lisez **Dernière erreur** et le message affiché ; voir [Ouvrir le coffre arrière et le frunk](#ouvrir-le-coffre-arrière-et-le-frunk). |
+
+### Données étendues : symptômes sans message
+
+Messages de cette fonction : le refus du domicile et du rayon dans [Messages à l'enregistrement](#messages-à-lenregistrement), **« Fonction non supportée par ce proxy — … »** dans [Information « Dernière erreur » (lecture)](#information--dernière-erreur--lecture), les lignes de log dans [Messages du log du plugin](#messages-du-log-du-plugin).
+
+| Symptôme | Causes possibles | Action |
+|---|---|---|
+| **Kilométrage, Rapport, Vitesse, Puissance, pressions, Mise à jour ou position absents** de l'onglet **Commandes** | Le proxy n'annonce pas la catégorie (proxy officiel 2.3.0, ou version du fork trop ancienne) : les informations ne sont **pas créées**. | Vérifiez **Version du proxy**, installez le proxy du fork (`2.3.0-tb.2` au minimum), attendez un cycle (re-détection) ou **Sauvegardez** l'équipement : voir [Données étendues : ce qui est disponible](#données-étendues--ce-qui-est-disponible). |
+| **Les informations existent mais restent vides** | Aucune lecture n'a encore eu lieu : le véhicule dort ou est hors de portée, ou une **fenêtre d'endormissement** est ouverte ; pour les pressions, la mise à jour et la position, moins de 15 minutes depuis la tentative précédente. | Lancez **Rafraîchir (avec réveil)** ; contrôlez **Âge des données (min)** et **Présence véhicule**. |
+| **Les informations ne sont plus mises à jour** après être passées au fork | Le proxy a refusé la catégorie (ligne Info « refusée par le proxy (not supported) » dans le log) ; le plugin ne la redemande qu'au prochain changement de version du proxy. | Mettez le proxy du fork à jour ; un changement de version relance la détection. |
+| **Kilométrage figé** | Véhicule endormi (aucune lecture, dernière valeur gardée) ou fenêtre d'endormissement ouverte. | Normal. **Rafraîchir (avec réveil)** pour une lecture immédiate. |
+| **Pression à 0 ou absente** | Une valeur nulle, négative ou supérieure à 10 bar est ignorée : l'information garde sa dernière valeur, ou reste vide si elle n'a jamais été lue ; le véhicule ne communique pas la pression d'un pneu. | Attendez la lecture suivante, véhicule éveillé ; contrôlez sur l'écran du véhicule. |
+| **Vitesse ou Puissance semblent fausses** | Unités supposées (mph et kW), non confirmées ; le proxy étant au garage, ces valeurs ne sont presque jamais significatives. | Comparez avec l'écran du véhicule ; ne vous en servez pas pour une décision critique. |
+| **Mise à jour affiche « Inconnue » ou un libellé brut** | Une mise à jour est active sans version rapportée par le véhicule (« Inconnue »), ou le proxy renvoie un statut que le plugin ne connaît pas (affiché tel quel). | Rien à faire ; la version apparaît dès que le véhicule la communique. |
+| **Modèle ou Année modèle valent « Inconnu »** | La VIN est vide, ou n'est pas celle d'un Tesla reconnu, ou son 10e caractère n'est pas une année décodable. | Vérifiez la **VIN** de l'équipement et **sauvegardez**. |
+| **À la maison reste à 0 (ou n'apparaît pas)** | Avant le premier calcul, la tuile affiche 0 : l'information n'est **jamais écrite** tant que le domicile ou la position sont inconnus. Aucune coordonnée de domicile renseignée et aucune position dans Jeedom ; position jamais lue (proxy officiel, véhicule endormi) ; **Rayon (m)** trop petit. | Renseignez le **domicile** et le **rayon** dans l'équipement, ou la position de Jeedom ; attendez une lecture de la position (15 minutes au plus). Voir [Position et confidentialité](#position-et-confidentialité). |
+| **À la maison reste à 1 alors que le véhicule est parti** | Hors de portée Bluetooth, plus aucune position n'est lue : l'information garde sa dernière valeur. | Combinez `À la maison == 1` avec **Présence véhicule** dans vos scénarios. |
+| **La position ne se met pas à jour** | Véhicule endormi ou hors de portée ; position jugée trop ancienne (plus d'une heure) ou à 0/0, ignorée ; moins de 15 minutes depuis la lecture précédente ; **Latitude** et **Longitude** supprimées (seule **À la maison** reste calculée). | Lancez **Rafraîchir (avec réveil)** ; contrôlez **Présence véhicule** et **Âge des données (min)**. |
+| **La latitude et la longitude apparaissent dans un log de Jeedom** | Le log `event` de Jeedom enregistre chaque nouvelle valeur d'une information, même masquée ; ce n'est pas le log du plugin. | Voir [Position et confidentialité](#position-et-confidentialité) : baissez le niveau du log `event` ou supprimez ces deux informations. |
+| **Je ne vois pas Latitude et Longitude sur le widget** | Elles sont créées **masquées** et **non historisées**, volontairement. | Cochez **Afficher** (et **Historiser** si besoin) dans l'onglet **Commandes**. |
 
 ### Symptômes sans message
 
