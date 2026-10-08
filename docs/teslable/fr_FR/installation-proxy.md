@@ -32,7 +32,7 @@ Le Bluetooth d'une Tesla porte à **5 à 10 mètres**. Le proxy doit donc être 
 
 - Un **Raspberry Pi Zero 2 W**.
 - Une **alimentation 5 V / 2,5 A** micro-USB de qualité, idéalement l'alimentation officielle. Une alimentation trop faible provoque des coupures Bluetooth difficiles à diagnostiquer.
-- Une **carte microSD** de 16 Go ou plus, de bonne marque.
+- Une **carte microSD de marque**, de gamme **« High Endurance »** (conçue pour un fonctionnement continu), de **16 Go** conseillés (8 Go au minimum avec Raspberry Pi OS Lite 64 bits). Le Raspberry Pi tourne jour et nuit : une vieille carte ou une carte d'entrée de gamme finit par s'user et tomber en panne.
 - Un **boîtier**, de préférence en plastique : un boîtier métallique réduit la portée radio.
 - Un ordinateur avec un lecteur de carte microSD, pour préparer la carte.
 - Le **Wi-Fi de votre box en 2,4 GHz** doit capter à l'endroit où vous installerez le Raspberry Pi.
@@ -47,7 +47,7 @@ Avant d'installer quoi que ce soit, vérifiez l'emplacement :
 
 ## 4. Préparer la carte microSD
 
-On utilise l'outil officiel **Raspberry Pi Imager**, qui configure le Wi-Fi et l'accès à distance avant même le premier démarrage.
+On utilise l'outil officiel **Raspberry Pi Imager**, qui installe **Raspberry Pi OS Lite (64-bit)** et configure le Wi-Fi et l'accès à distance avant même le premier démarrage.
 
 1. Téléchargez et installez [Raspberry Pi Imager](https://www.raspberrypi.com/software/) sur votre ordinateur.
 2. Insérez la carte microSD dans l'ordinateur et lancez Raspberry Pi Imager.
@@ -103,17 +103,24 @@ Le proxy est distribué sous forme d'image **Docker**, ce qui simplifie l'instal
    curl -sSL https://get.docker.com | sh
    ```
 
-2. Autorisez votre utilisateur à utiliser Docker :
+2. Contrôlez que l'installation est allée au bout :
+
+   ```
+   sudo docker run --rm hello-world
+   ```
+
+   Un message « Hello from Docker! » doit s'afficher. Ne vous contentez pas de `docker --version` : il répond dès que le client est installé, même si le moteur Docker, lui, ne l'est pas. Si la commande échoue, voir [Dépannage](#12-depannage).
+3. Autorisez votre utilisateur à utiliser Docker :
 
    ```
    sudo usermod -aG docker $USER
    ```
 
-3. **Déconnectez-vous** (`exit`) puis reconnectez-vous en SSH pour que ce droit soit pris en compte.
-4. Vérifiez que Docker fonctionne :
+4. **Déconnectez-vous** (`exit`) puis reconnectez-vous en SSH pour que ce droit soit pris en compte.
+5. Vérifiez que Docker fonctionne sans `sudo` :
 
    ```
-   docker --version
+   docker run --rm hello-world
    ```
 
 ## 7. Installer TeslaBleHttpProxy
@@ -148,13 +155,19 @@ Le proxy est distribué sous forme d'image **Docker**, ce qui simplifie l'instal
        cap_add:
          - NET_ADMIN
          - SYS_ADMIN
+       logging:
+         driver: json-file
+         options:
+           max-size: "10m"
+           max-file: "3"
    ```
 
    Ces lignes ont chacune un rôle :
-   - `image` : l'image du fork, avec un **numéro de version précis** (recommandé : le proxy ne change que lorsque vous le décidez, voir [Mettre à jour l'image du proxy](#mettre-à-jour-limage-du-proxy)). Pour une version plus récente, consultez les [versions publiées](https://github.com/superdcat/TeslaBleHttpProxy/releases) ; `:latest` est possible, mais déconseillé comme réglage par défaut ;
+   - `image` : l'image du fork, avec un **numéro de version précis** (recommandé : le proxy ne change que lorsque vous le décidez, voir [Mettre à jour l'image du proxy](#mettre-a-jour-limage-du-proxy)). Pour une version plus récente, consultez les [versions publiées](https://github.com/superdcat/TeslaBleHttpProxy/releases) ; `:latest` est possible, mais déconseillé comme réglage par défaut ;
    - `volumes` : le dossier `key` conserve la clé du véhicule en dehors du conteneur, elle survit aux mises à jour ; `/var/run/dbus` donne accès au Bluetooth du Raspberry Pi ;
-   - `restart: always` : le proxy redémarre tout seul après une coupure de courant (sans changer d'image : voir [Mettre à jour l'image du proxy](#mettre-à-jour-limage-du-proxy)) ;
-   - `network_mode: host`, `privileged` et `cap_add` : le proxy a besoin d'un accès direct au réseau et à l'adaptateur Bluetooth.
+   - `restart: always` : le proxy redémarre tout seul après une coupure de courant (sans changer d'image : voir [Mettre à jour l'image du proxy](#mettre-a-jour-limage-du-proxy)) ;
+   - `network_mode: host`, `privileged` et `cap_add` : le proxy a besoin d'un accès direct au réseau et à l'adaptateur Bluetooth ;
+   - `logging` : limite les journaux Docker à 3 fichiers de 10 Mo. Le proxy écrit en continu : sans cette limite, les journaux grossissent et usent la carte microSD pour rien.
 
 4. Enregistrez avec `Ctrl + X`, puis `Y` et `Entrée`.
 5. Démarrez le proxy :
@@ -204,7 +217,7 @@ Le proxy accepte quelques réglages, à ajouter dans `docker-compose.yml` sous `
 > 2. dans Jeedom, **Plugins > Gestion des plugins > Tesla BLE**, saisissez le même jeton dans **Jeton d'API du proxy**, puis **Sauvegarder** ;
 > 3. cliquez sur **Tester** : il doit afficher **« Jeton d'API accepté par le proxy »**.
 >
-> Le jeton : 1 à 256 caractères ASCII imprimables (lettres, chiffres, ponctuation), sans accent ni retour à la ligne. Une fois le jeton actif, le tableau de bord du proxy demande un identifiant dans le navigateur : nom d'utilisateur libre, mot de passe = le jeton. **evcc** ne sait pas envoyer ce jeton : ne l'activez pas si evcc utilise le même proxy. Le jeton circule en clair sur le réseau local : il ne remplace pas l'isolement du réseau (voir [Sécurité](#11-sécurité)).
+> Le jeton : 1 à 256 caractères ASCII imprimables (lettres, chiffres, ponctuation), sans accent ni retour à la ligne. Une fois le jeton actif, le tableau de bord du proxy demande un identifiant dans le navigateur : nom d'utilisateur libre, mot de passe = le jeton. **evcc** ne sait pas envoyer ce jeton : ne l'activez pas si evcc utilise le même proxy. Le jeton circule en clair sur le réseau local : il ne remplace pas l'isolement du réseau (voir [Sécurité](#11-securite)).
 
 ## 8. Générer la clé et l'appairer avec le véhicule
 
@@ -217,7 +230,7 @@ Le proxy agit comme une clé de voiture supplémentaire. Il faut donc générer 
 | **Charging Manager** (recommandé) | Lire l'état et les données du véhicule ; réveiller ; démarrer et arrêter la charge ; régler le courant de charge | Usage centré sur la charge (heures creuses, solaire) |
 | **Owner** | Toutes les commandes, y compris verrouillage, déverrouillage, klaxon, feux, sentinelle et climatisation | Si vous voulez piloter autre chose que la charge |
 
-Le proxy n'a **aucune authentification par défaut** (le jeton d'API du fork est facultatif) : avec une clé Owner, n'importe quel appareil de votre réseau local peut déverrouiller le véhicule. Ne choisissez Owner que si vous en avez besoin, et lisez la section [Sécurité](#11-sécurité).
+Le proxy n'a **aucune authentification par défaut** (le jeton d'API du fork est facultatif) : avec une clé Owner, n'importe quel appareil de votre réseau local peut déverrouiller le véhicule. Ne choisissez Owner que si vous en avez besoin, et lisez la section [Sécurité](#11-securite).
 
 ### Appairer
 
@@ -237,14 +250,14 @@ Ouvrez dans un navigateur `http://<ip_du_pi>:8080/api/1/vehicles/<VIN>/body_cont
 
 Le proxy est prêt : passez à la [configuration du plugin](index.md#configuration-du-plugin). L'URL à saisir est `http://<ip_du_pi>:8080/`. Le bouton **Tester** de la page de configuration doit afficher la version du proxy.
 
-Ajoutez ensuite un équipement par véhicule avec son VIN, comme décrit dans [Configuration des équipements](index.md#configuration-des-équipements).
+Ajoutez ensuite un équipement par véhicule avec son VIN, comme décrit dans [Configuration des équipements](index.md#configuration-des-equipements).
 
 ## 10. Entretien
 
 | Action | Commande (dans le dossier `~/TeslaBleHttpProxy`) |
 |---|---|
 | Voir les journaux du proxy | `docker logs --since 12h tesla-ble-http-proxy` |
-| Mettre à jour le proxy | Voir [Mettre à jour l'image du proxy](#mettre-à-jour-limage-du-proxy) |
+| Mettre à jour le proxy | Voir [Mettre à jour l'image du proxy](#mettre-a-jour-limage-du-proxy) |
 | Télécharger l'image de la version écrite dans `docker-compose.yml` | `docker compose pull` |
 | Télécharger l'image du fork à la main | `docker pull ghcr.io/superdcat/tesla-ble-http-proxy:2.3.0-tb.2` (remplacez le numéro) |
 | Redémarrer le proxy | `docker compose restart` |
@@ -318,7 +331,7 @@ Pour revenir à l'option 1, supprimez la ligne de `crontab -e` et remettez un nu
 
 ## 11. Sécurité
 
-- Par défaut, le proxy **n'a ni mot de passe ni chiffrement** : quiconque accède à votre réseau local peut lui envoyer des commandes. Le fork sait demander un jeton (`apiToken`) : activez-le et saisissez-le dans la configuration du plugin (voir [Réglages facultatifs](#réglages-facultatifs)). Le jeton circule en clair sur le réseau : il complète l'isolement du réseau, il ne le remplace pas.
+- Par défaut, le proxy **n'a ni mot de passe ni chiffrement** : quiconque accède à votre réseau local peut lui envoyer des commandes. Le fork sait demander un jeton (`apiToken`) : activez-le et saisissez-le dans la configuration du plugin (voir [Réglages facultatifs](#reglages-facultatifs)). Le jeton circule en clair sur le réseau : il complète l'isolement du réseau, il ne le remplace pas.
 - N'ouvrez **jamais** le port 8080 vers Internet (pas de redirection de port sur la box).
 - Si votre box le permet, placez le Raspberry Pi sur un réseau isolé, avec Jeedom comme seul appareil autorisé à le joindre.
 - Préférez une clé **Charging Manager** si vous ne pilotez que la charge.
@@ -328,6 +341,7 @@ Pour revenir à l'option 1, supprimez la ligne de `crontab -e` et remettez un nu
 
 | Symptôme | Cause probable | Que faire |
 |---|---|---|
+| `usermod: group 'docker' does not exist` (étape 6) | L'installation de Docker n'est pas allée au bout : le moteur n'est pas installé, seul le client l'est | Vérifiez l'espace avec `df -h /` : la racine doit occuper presque toute la carte. Relancez `sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin` et lisez l'erreur. Si `df` reste à environ 2 Go après agrandissement, ou si `dmesg` montre des `I/O error` sur `mmcblk0`, la carte est défaillante : remplacez-la. |
 | La page `/api/proxy/1/version` ne s'ouvre pas | Proxy arrêté, mauvaise IP ou mauvais port | `docker ps` doit lister `tesla-ble-http-proxy` ; sinon `docker compose up -d`. Vérifiez l'IP dans la box. |
 | `bluetoothctl list` n'affiche rien | Bluetooth du Raspberry Pi indisponible | `sudo reboot`. Vérifiez l'alimentation (5 V / 2,5 A). |
 | « Vehicle is not in range » ou véhicule pas toujours trouvé | Portée Bluetooth insuffisante | Rapprochez le Raspberry Pi, évitez le boîtier métallique, augmentez `scanTimeout`. |
@@ -338,7 +352,7 @@ Pour revenir à l'option 1, supprimez la ligne de `crontab -e` et remettez un nu
 | Le conteneur redémarre en boucle (`docker ps` : « Restarting »), le plugin affiche **Proxy injoignable** ; `docker logs tesla-ble-http-proxy` indique `Cannot start with this Bluetooth adapter` | `btAdapter` invalide (autre chose que `hci0` à `hci15` en minuscules) ou adaptateur absent / impossible à ouvrir | Corrigez la valeur ou retirez la ligne `btAdapter`, puis `docker compose up -d`. Cherchez le nom de l'adaptateur avec `bluetoothctl list` ou `hciconfig -a`. |
 | Toutes les lectures et commandes échouent avec **« Jeton d'API refusé par le proxy »** (dernière erreur, commande) ; **Tester** affiche « Le proxy exige un jeton d'API » ou « Jeton d'API refusé par le proxy » | `apiToken` est défini dans `docker-compose.yml`, et le plugin n'a pas de jeton ou un jeton différent | Saisissez dans **Jeton d'API du proxy** exactement la valeur de `apiToken`, **Sauvegarder**, puis **Tester**. |
 | **« Commande refusée par le véhicule : invalid request body: … »** | Le proxy du fork a refusé le contenu de la commande (clé manquante, mauvais type, valeur hors limites) avant de l'envoyer | Le plugin vérifie ses valeurs avant l'envoi : si cela arrive, relevez le texte après les deux-points (il nomme la clé) et signalez-le avec le log du plugin en Debug. |
-| **« Cette commande nécessite une clé de rôle Owner : la clé du proxy a probablement le rôle Charging Manager… »**, ou information **Rôle de clé** à **Charging Manager** | La clé a le rôle **Charging Manager** | Générez et appairez une clé **Owner** (voir [Choisir le rôle de la clé](#choisir-le-rôle-de-la-clé)). Le rôle de la clé active se lit dans `key_role` à l'adresse `http://<ip_du_pi>:8080/api/proxy/1/capabilities`. |
+| **« Cette commande nécessite une clé de rôle Owner : la clé du proxy a probablement le rôle Charging Manager… »**, ou information **Rôle de clé** à **Charging Manager** | La clé a le rôle **Charging Manager** | Générez et appairez une clé **Owner** (voir [Choisir le rôle de la clé](#choisir-le-role-de-la-cle)). Le rôle de la clé active se lit dans `key_role` à l'adresse `http://<ip_du_pi>:8080/api/proxy/1/capabilities`. |
 | Le véhicule n'est plus trouvé après l'installation d'un autre logiciel Bluetooth | Ce logiciel occupe l'adaptateur | Le proxy a besoin de l'adaptateur pour lui seul : retirez l'autre service Bluetooth de ce Raspberry Pi. |
 
 ## Références

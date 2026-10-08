@@ -4,6 +4,15 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 08/10/2026
+
+- Ajout : les commandes d'un nouveau véhicule sont rangées par thème (état, charge, climat, ouvrants, véhicule, supervision, puis actions) et une commande ajoutée par une mise à jour rejoint son groupe sans déplacer les autres ; l'ordre des véhicules existants et vos réglages manuels sont conservés <!-- UC704 -->
+- Documentation : la documentation décrit la tuile du véhicule (contenu, états, retour au widget standard et retour à la tuile), les types génériques et leur précaution d'usage avec les actions de résumé, l'image du modèle (remplacement et retrait définitif) et l'ordre des commandes, avec un dépannage dédié <!-- UC799 -->
+- Évolution : la description du plugin est désormais disponible en allemand et en espagnol, en plus du français et de l'anglais, et le plugin déclare ces quatre langues <!-- UC901 -->
+- Ajout : l'interface du plugin est disponible en anglais, en allemand et en espagnol : pages de configuration et de l'équipement, messages, widget et noms des commandes créées suivent la langue de Jeedom, avec repli en français pour toute traduction manquante. <!-- UC902 -->
+- Documentation : la documentation du plugin (guide complet et installation du proxy) et l'historique des versions sont désormais disponibles en anglais, en allemand et en espagnol, et les liens internes de la documentation mènent désormais à la section visée <!-- UC903 -->
+- Documentation : la documentation explique comment choisir entre la version stable et la version beta et revenir en stable, comment lire le changelog, quelles langues sont disponibles et comment changer la langue de Jeedom, et comment signaler un défaut sur le forum de la communauté Jeedom <!-- UC999 -->
+
 # 07/10/2026
 
 - Ajout : quatre nouvelles informations « Kilométrage » (visible, historisé), « Rapport », « Vitesse » et « Puissance » (masquées par défaut) sont lues quand le véhicule est éveillé, sans jamais le réveiller ; elles n'apparaissent qu'avec un proxy qui sait les fournir (fork 2.3.0-tb.2 ou plus récent) et sont créées automatiquement après la mise à jour du proxy <!-- UC602 -->
