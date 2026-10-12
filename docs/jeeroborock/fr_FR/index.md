@@ -7,6 +7,8 @@ définies dans l'application mobile Roborock.
 
 ## Ce que le plugin fait, et ce qu'il ne fait pas
 
+JeeRoborock est un logiciel libre, publié sous licence **GPL v3 ou ultérieure**.
+
 - Le pilotage passe par le **cloud Roborock** : Jeedom doit avoir accès à Internet, et votre robot doit
   être connecté à votre réseau et au cloud Roborock pour répondre. Certaines opérations dépendent
   strictement du cloud et **ne fonctionnent pas sans Internet** : la connexion au compte, l'inventaire des
@@ -24,7 +26,7 @@ définies dans l'application mobile Roborock.
 
 ## Prérequis et installation
 
-1. **Jeedom 4.2 minimum**, installé sur un serveur sous **Debian 12 ou 13**. Cette version de Debian est
+1. **Jeedom 4.4.7 minimum**, installé sur un serveur sous **Debian 12 ou 13**. Cette version de Debian est
    nécessaire pour que la dépendance du plugin fonctionne ; en dessous (Debian 11 par exemple),
    l'activation du plugin est refusée.
 2. Depuis la page du plugin, laissez Jeedom installer sa dépendance Python. L'indicateur de dépendances de
@@ -118,6 +120,8 @@ informations viennent du compte Roborock et sont mises à jour par la synchronis
 | Localiser | Fait émettre un signal sonore au robot |
 | Rafraîchir | Relit immédiatement l'état du robot |
 
+**Pendant le vidage du bac à poussière.** Quand la station vide le bac (état du robot « Vidage du bac à poussière »), le robot ne prend pas en compte un ordre de nettoyage. Le plugin le refuse alors, au lieu de répondre « ok » sans effet : c'est le cas de « Démarrer », de « Nettoyer des pièces », des commandes « Nettoyer <nom de la pièce> » et de « Nettoyer une zone ». Le message affiché est « Le robot vide son bac à poussière : l'ordre de nettoyage n'a pas été envoyé. Réessayez dans un instant, quand le vidage sera terminé (robot de nouveau en charge). » Dans un scénario, l'action échoue de la même façon. Les autres commandes (pause, arrêt, retour à la base, localiser, se déplacer vers un point) ne sont pas concernées, ni les usages (routines), exécutés par le cloud Roborock. Si le plugin ne parvient pas à relire l'état du robot juste avant l'ordre, l'ordre part normalement.
+
 ### Station d'accueil, consommables et entretien
 
 Ces commandes n'apparaissent **que si votre station le permet** :
@@ -157,7 +161,13 @@ synchronisation. Un bouton **« Rafraîchir le journal »** relit cet historique
   relancer. » ;
 - le premier rafraîchissement peut ne ramener que quelques enregistrements et se compléter au clic
   suivant : c'est un fonctionnement normal, pas une panne, la récupération étant bornée dans le temps ;
-- le journal se met aussi à jour tout seul à la fin de chaque nettoyage, sans action de votre part.
+- le dernier nettoyage se met aussi à jour tout seul, sans action de votre part : le plugin relit le
+  journal dès que le robot a terminé son nettoyage (lavage et vidage à la station compris), puis, tant que
+  ce nettoyage n'y apparaît pas, environ 1, 3, 8 et 18 minutes plus tard (au moins 5 minutes d'écart après
+  une relecture en échec). Comptez de quelques secondes à quelques minutes, 30 minutes au plus ; si le
+  robot est resté injoignable pendant tout ce temps, une dernière relecture a lieu à son retour. Le plugin
+  cesse ensuite d'insister jusqu'au nettoyage suivant ; le bouton « Rafraîchir le journal » reste
+  disponible.
 
 Si le cloud Roborock est injoignable au moment de la consultation, les valeurs déjà connues du dernier
 nettoyage et de l'historique restent affichées telles quelles — elles ne sont jamais remises à zéro. C'est
@@ -327,6 +337,11 @@ L'onglet « Équipement » d'un robot propose deux panneaux supplémentaires :
   invalide automatiquement la liste des pièces et l'image de la carte affichées**, qui sont ensuite
   resynchronisées.
 
+Les noms de cartes s'affichent **en clair**, y compris sur les robots qui les transmettent codés (Roborock
+S7 : « %20 » à la place des espaces, « %E9 » à la place de « é »). Si un nom déjà enregistré apparaît
+encore codé, cliquez une fois sur **« Rafraîchir la liste des cartes »** (ou changez de carte) : il est
+réécrit en clair, sans autre manipulation.
+
 Le même onglet propose deux blocs distincts, chacun avec son propre bouton :
 
 - **Image de la carte** — l'image de la carte active, reconstruite automatiquement pendant les
@@ -371,6 +386,14 @@ Selon les capacités détectées sur votre robot, les commandes suivantes peuven
   rectangle correspondant.
 - **Se déplacer vers un point** — reçoit deux coordonnées `x,y` en millimètres.
 
+Après un réglage de puissance d'aspiration, de débit d'eau, d'itinéraire de serpillère ou de mode de
+nettoyage, le plugin relit l'état du robot pour vérifier qu'il l'a bien pris. Il lui laisse jusqu'à une
+douzaine de secondes, sans renvoyer l'ordre : si le robot le prend tout de suite, la réponse n'est pas
+ralentie. Le message « non appliqué » n'apparaît que si le robot n'a toujours pas la valeur au bout de ce
+délai. Si vous enchaînez deux réglages très vite sur le même robot, seul le dernier est vérifié : le
+précédent est signalé « transmis au robot (application non confirmée) », sans erreur. Le même message
+apparaît si le robot ne répond plus pendant la vérification.
+
 Les coordonnées de zone et de point sont exprimées dans le même repère que celui utilisé pour la carte
 (voir « Carte et pièces »).
 
@@ -394,6 +417,19 @@ Indépendamment de ce mécanisme, si **aucune** donnée n'a pu être obtenue dep
 plugin bascule les deux indicateurs « En ligne » **et** « Connecté » sur **déconnecté** : c'est un signal
 de robot injoignable (hors tension, hors réseau, ou cloud Roborock indisponible), pas une erreur du
 plugin lui-même.
+
+### Plusieurs robots sur le même compte
+
+Un robot éteint, déchargé ou hors Wi-Fi n'empêche plus de piloter et de suivre les autres robots de
+votre compte : il s'affiche simplement **hors ligne**. Les tentatives de reconnexion à ce robot ne
+consomment **pas** le quota Roborock (voir « Quotas Roborock »).
+
+Une fois rallumé, le robot redevient pilotable **de lui-même**, sans nouvelle authentification ni
+réinstallation. Comptez **6 minutes au plus** après le retour de sa connexion : l'attente entre deux
+tentatives s'allonge progressivement, jusqu'à **5 minutes**.
+
+Pendant ce court intervalle, le robot peut déjà apparaître **en ligne** alors que ses commandes sont
+encore refusées comme **hors ligne**. Patientez quelques minutes, puis réessayez.
 
 ## Ré-authentification requise
 
@@ -487,6 +523,7 @@ quel (voir ci-dessus).
 | « La carte du robot n'a pas pu être décodée » | La donnée reçue de la station est illisible (incident ponctuel côté robot ou cloud) | Réessayez plus tard ; consultez le journal du démon si le problème persiste |
 | « L'image de la carte est trop volumineuse pour être transférée » | La carte produite par le robot dépasse la taille que le plugin accepte de stocker | Réessayez plus tard ; si le problème persiste, ce robot n'est pas compatible avec cette fonction |
 | « Le robot doit être à la base pour lancer cette opération » | Une action d'entretien de la station a été demandée alors que le robot n'est pas à sa base | Attendez que le robot retourne à sa base, ou lancez « Retour à la base » d'abord |
+| « Le robot vide son bac à poussière : l'ordre de nettoyage n'a pas été envoyé… » | Un ordre de nettoyage (« Démarrer », « Nettoyer des pièces », « Nettoyer <pièce> », « Nettoyer une zone ») a été donné pendant que la station vide le bac ; le robot l'aurait ignoré | Patientez la fin du vidage (quelques secondes à une minute), puis relancez l'ordre. Dans un scénario, attendez que l'état du robot soit revenu à « En charge » avant de relancer |
 | « Cette opération d'entretien n'est pas disponible sur la station de ce robot » | La station de ce robot ne prend pas en charge cette action | C'est normal : la commande ne devrait pas apparaître si la station ne le permet pas ; rafraîchissez l'état du robot |
 | « La liste des usages reçue du cloud Roborock est incomplète : par précaution, aucun usage n'a été supprimé. » | La réponse du cloud a été tronquée, ou ce robot a plus de 64 usages | Relancez la synchronisation plus tard ; rien n'a été perdu entre-temps |
 | « Les conditions d'utilisation Roborock n'ont pas été acceptées » (ou « ont changé ») | Roborock demande de valider (ou revalider) ses conditions d'utilisation | Ouvrez l'application mobile Roborock, acceptez les conditions proposées, puis réessayez depuis Jeedom |
@@ -496,7 +533,8 @@ quel (voir ci-dessus).
 | « Le robot est occupé », « Le robot a refusé l'action dans son état actuel » ou « Le robot a signalé une erreur » | Le robot ne peut pas exécuter cette demande dans son état du moment (nettoyage en cours, bac plein, incident mécanique…) | Vérifiez l'état du robot (commande « État », ou application mobile), traitez l'incident signalé puis relancez l'action |
 | « Cette fonction n'est pas disponible sur ce modèle de robot » ou « Le robot ne reconnaît pas cette commande » | Le robot n'implémente pas cette fonction, bien que la commande existe dans Jeedom | Aucune manipulation ne débloquera la situation : cette fonction n'existe pas sur ce matériel, masquez la commande si elle vous gêne |
 | « Aucune demande de code en cours » | Le démon a redémarré entre l'envoi et la validation du code | Cliquez de nouveau sur « Envoyer un code », puis validez le nouveau code reçu |
-| Un réglage (aspiration, débit d'eau, itinéraire, mode de nettoyage) n'est pas appliqué | Le robot refuse ce réglage dans son état actuel (en général : pas au repos) | Réessayez une fois le robot au repos ou à sa base |
+| « … transmis au robot (application non confirmée). » après un réglage | Le plugin n'a pas pu vérifier que le robot a pris la valeur : un autre réglage a été envoyé juste après sur le même robot, ou le robot ne répondait plus pendant la vérification. Ce n'est pas une erreur | Contrôlez la valeur affichée par la commande d'information correspondante ; renvoyez le réglage si elle n'est pas la bonne |
+| Un réglage (aspiration, débit d'eau, itinéraire, mode de nettoyage) n'est pas appliqué | Le robot n'a toujours pas pris la valeur une douzaine de secondes après l'avoir reçue : il refuse ce réglage dans son état actuel (en général : pas au repos) | Réessayez une fois le robot au repos ou à sa base |
 | « Cette puissance d'aspiration / ce débit d'eau / cet itinéraire / ce mode de nettoyage n'est pas disponible sur ce robot » | La liste des paliers connue par Jeedom est périmée (le robot n'annonce plus cette valeur) | Rafraîchissez l'état du robot puis réessayez |
 | « Pièce inconnue », « aucune pièce connue » ou « plusieurs pièces portent ce nom » | Le nom saisi ne correspond à aucune pièce détectée, aucune pièce n'a encore été synchronisée, ou le nom est ambigu | Resynchronisez les pièces depuis l'onglet Équipement, utilisez le nom exact de l'application Roborock, ou la commande dédiée à cette pièce plutôt que la commande générique |
 | « Ces coordonnées sortent des limites de la carte connue » | La zone ou le point saisi dépasse la carte actuellement connue du robot | Vérifiez les coordonnées dans le bloc « Zone et point » de l'onglet Équipement, ou rafraîchissez l'image de la carte |
@@ -532,6 +570,18 @@ le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniqu
 - L'image de la carte peut rester **illisible** quand le robot n'est joignable que par la connexion
   locale évoquée plus haut, sans passer par le canal MQTT du cloud (message « La carte du robot n'a
   pas pu être décodée »).
+- Un robot éteint ou hors Wi-Fi qui se reconnecte redevient pilotable de lui-même, mais après un délai
+  qui peut atteindre **6 minutes** (voir « Plusieurs robots sur le même compte ») : ce délai n'est pas
+  réglable.
+- Le refus d'un ordre de nettoyage pendant le vidage du bac ne vise que l'état « Vidage du bac à
+  poussière » : les autres états de la station (lavage, séchage) ne déclenchent pas ce refus. Il ne vise ni
+  les usages (routines), ni « Se déplacer vers un point ». Aucun ordre n'est mis en attente : c'est à
+  vous (ou à votre scénario) de le renvoyer.
+- La mise à jour automatique du dernier nettoyage est **bornée** : cinq relectures au plus, sur 30
+  minutes après la fin du nettoyage. Au-delà, le plugin n'insiste plus ; utilisez « Rafraîchir le
+  journal ».
+- Un nom de carte déjà enregistré sous forme codée (avant la mise à jour du plugin) reste codé jusqu'au
+  premier « Rafraîchir la liste des cartes » ou changement de carte.
 - La lecture des noms de pièces (panneau « Pièces » de l'onglet Équipement) exige que le robot soit
   **en ligne** : elle échoue si le robot est injoignable au moment du clic.
 - La vue carte (panneau « Accueil > JeeRoborock ») ne déclenche elle-même aucune mise à jour : elle se

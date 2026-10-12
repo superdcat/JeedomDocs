@@ -33,6 +33,8 @@ automatically.
 - Dock: dust emptying, mop washing, mop drying, dock error, water shortage.
 - Consumables: remaining wear in % for the main brush, side brush, filter, sensors and mop roller.
 - Common settings, read-only: suction power, water flow, mop route, cleaning mode.
+- A robot that is switched off or off Wi-Fi does not block the account's other robots: it shows as offline
+  and becomes controllable again by itself (6 minutes at most after its return).
 - **Real-time** update by the daemon (30 s while cleaning, 60 s at rest), and switch to "disconnected"
   if the data grows stale.
 - Dashboard tile (desktop and mobile) combining photo, status, battery and control actions.
@@ -58,7 +60,7 @@ automatically.
 **Log, statistics and schedules**
 
 - Last cleaning (start, duration, area, end reason, error) and a history panel of the last 10 cleanings,
-  with a refresh button.
+  with a refresh button. The last cleaning also updates itself after a cleaning ends.
 - Four cumulative counters historized by default: total duration, total area, number of cleanings,
   number of bin empties.
 - Schedules created in the mobile app, viewable read-only from the Device tab.
@@ -79,6 +81,20 @@ automatically.
 The plugin does not display the channel used to reach each robot (local connection or cloud), and does
 not track or update the firmware: these two features have been set aside. Firmware updates are done
 from the Roborock app.
+
+# 10/12/2026
+
+- Fix: a robot that is switched off, out of battery or off Wi-Fi no longer prevents controlling the other robots of the account: it shows as offline, its reconnection attempts no longer use the Roborock quota, and it becomes controllable again on its own within 6 minutes of coming back. <!-- UC44 -->
+- Documentation: new "Several robots on the same account" topic in "Real time and freshness" (French documentation). <!-- UC44 -->
+- Fix: changing the suction power, water flow, mop route or cleaning mode no longer wrongly reports "not applied" when the robot, for example on its dock, takes the setting a few seconds later: the plugin now gives it up to about twelve seconds before concluding, without slowing down the answer when the setting is taken immediately. <!-- UC45 -->
+- Documentation: the "Fine control" topic explains how settings are checked after sending, and the "not applied" troubleshooting entry is clarified (French documentation). <!-- UC45 -->
+- Fix: a cleaning order (Start, room or zone cleaning, from the dashboard as well as from a scenario) sent while the dock is emptying the dust bin is no longer reported as sent while the robot ignores it: it is refused with a message asking you to try again once emptying is over <!-- UC46 -->
+- Documentation: the "Status and basic control" section and the troubleshooting table explain why a cleaning order is refused while the bin is being emptied <!-- UC46 -->
+- Fix: the "last cleaning" commands once again update by themselves after each cleaning, usually within a few minutes: if the robot has not recorded the cleaning yet or does not answer (mop washing, bin emptying), the plugin reads its log again up to five times over 30 minutes, without using any Roborock quota. <!-- UC47 -->
+- Documentation: "Cleaning log" section: timing of the automatic update of the last cleaning (French documentation). <!-- UC47 -->
+- Fix: map names sent encoded by some robots (S7: "%20" instead of spaces, "%E9" instead of "é") are now displayed in plain text; for a robot already configured, click "Refresh map list" once in the Equipment tab. <!-- UC48 -->
+- Change: the plugin page now states the GPL v3 or later licence (official text included) and requires Jeedom 4.4.7 or later, the first version that installs the plugin's Python dependencies in a dedicated environment; on Jeedom 4.4, the robot tile is shown with the plugin icon. <!-- UC50 -->
+- Documentation: minimum Jeedom version (4.4.7) and licence (GPL v3 or later), offline robot when several robots are on the account, settings confirmed after a short delay, cleaning order refused while the bin is being emptied, automatic update of the last cleaning, map names shown in plain text; known limitations and troubleshooting completed. <!-- UC109 -->
 
 # 10/01/2026
 

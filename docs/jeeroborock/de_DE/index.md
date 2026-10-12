@@ -7,6 +7,8 @@ festgelegten Routinen („Routinen“).
 
 ## Was das Plugin tut, und was nicht
 
+JeeRoborock ist freie Software, veröffentlicht unter der Lizenz **GPL v3 oder später**.
+
 - Die Steuerung läuft über die **Roborock-Cloud**: Jeedom muss Internetzugang haben, und Ihr Roboter
   muss mit Ihrem Netzwerk und der Roborock-Cloud verbunden sein, um zu antworten. Einige Vorgänge
   hängen zwingend von der Cloud ab und **funktionieren nicht ohne Internet**: die Anmeldung am Konto,
@@ -25,7 +27,7 @@ festgelegten Routinen („Routinen“).
 
 ## Voraussetzungen und Installation
 
-1. **Jeedom mindestens 4.2**, installiert auf einem Server mit **Debian 12 oder 13**. Diese
+1. **Jeedom mindestens 4.4.7**, installiert auf einem Server mit **Debian 12 oder 13**. Diese
    Debian-Version wird benötigt, damit die Abhängigkeit des Plugins funktioniert; darunter (z. B.
    Debian 11) wird die Aktivierung des Plugins verweigert.
 2. Lassen Sie Jeedom von der Plugin-Seite aus seine Python-Abhängigkeit installieren. Die
@@ -125,6 +127,8 @@ aktualisiert.
 | Orten | Lässt den Roboter ein akustisches Signal ausgeben |
 | Aktualisieren | Liest den Status des Roboters sofort erneut aus |
 
+**Während der Behälter geleert wird.** Wenn die Station den Staubbehälter leert (Roboterstatus „Vidage du bac à poussière“, d. h. Staubbehälter wird geleert), berücksichtigt der Roboter keinen Reinigungsbefehl. Das Plugin verweigert ihn dann, statt ohne Wirkung „ok“ zu antworten: Das betrifft „Starten“, „Räume reinigen“, die Befehle „<Raumname> reinigen“ und „Eine Zone reinigen“. Die angezeigte Meldung lautet „Le robot vide son bac à poussière : l'ordre de nettoyage n'a pas été envoyé. Réessayez dans un instant, quand le vidage sera terminé (robot de nouveau en charge).“ (Der Roboter leert seinen Staubbehälter: Der Reinigungsbefehl wurde nicht gesendet. Versuchen Sie es gleich noch einmal, wenn das Leeren beendet ist (Roboter wieder in Ladung).) In einem Szenario schlägt die Aktion genauso fehl. Die anderen Befehle (Pause, Stopp, Zurück zur Basis, Lokalisieren, Zu einem Punkt fahren) sind nicht betroffen, ebenso wenig die Routinen, die von der Roborock-Cloud ausgeführt werden. Kann das Plugin den Status des Roboters unmittelbar vor dem Befehl nicht auslesen, wird der Befehl normal gesendet.
+
 ### Dockingstation, Verbrauchsmaterial und Wartung
 
 Diese Befehle erscheinen **nur, wenn Ihre Station dies zulässt**:
@@ -167,7 +171,13 @@ Roborock aus:
   Warten Sie eine Minute, bevor Sie es erneut versuchen.) an;
 - die erste Aktualisierung liefert unter Umständen nur wenige Einträge und vervollständigt sich beim
   nächsten Klick: Das ist ein normales Verhalten, kein Ausfall, da der Abruf zeitlich begrenzt ist;
-- das Protokoll aktualisiert sich auch von selbst am Ende jeder Reinigung, ohne Ihr Zutun.
+- die letzte Reinigung aktualisiert sich auch von selbst, ohne Ihr Zutun: Das Plugin liest das Protokoll
+  erneut aus, sobald der Roboter seine Reinigung beendet hat (einschließlich Waschen und Leeren an der
+  Station), dann, solange diese Reinigung dort nicht erscheint, etwa 1, 3, 8 und 18 Minuten später
+  (mindestens 5 Minuten Abstand nach einem fehlgeschlagenen Auslesen). Rechnen Sie mit einigen Sekunden
+  bis zu einigen Minuten, höchstens 30 Minuten; war der Roboter während dieser ganzen Zeit nicht
+  erreichbar, erfolgt bei seiner Rückkehr ein letztes Auslesen. Danach hört das Plugin bis zur nächsten
+  Reinigung auf, es zu versuchen; die Schaltfläche „Protokoll aktualisieren“ bleibt verfügbar.
 
 Ist die Roborock-Cloud zum Zeitpunkt der Abfrage nicht erreichbar, bleiben die bereits bekannten Werte
 der letzten Reinigung und des Verlaufs unverändert angezeigt — sie werden nie auf null zurückgesetzt.
@@ -344,6 +354,11 @@ Der Reiter „Gerät“ eines Roboters bietet zwei zusätzliche Panels:
   **Ein Kartenwechsel macht automatisch die angezeigte Raumliste und das Kartenbild ungültig**, die
   anschließend neu synchronisiert werden.
 
+Die Kartennamen werden **im Klartext** angezeigt, auch bei Robotern, die sie codiert übermitteln
+(Roborock S7: „%20“ statt Leerzeichen, „%E9“ statt „é“). Erscheint ein bereits gespeicherter Name noch
+codiert, klicken Sie einmal auf **„Kartenliste aktualisieren“** (oder
+wechseln Sie die Karte): Er wird im Klartext neu geschrieben, ohne weiteres Zutun.
+
 Derselbe Reiter bietet zwei getrennte Blöcke, jeder mit eigener Schaltfläche:
 
 - **Kartenbild** — das Bild der aktiven Karte, automatisch während der Reinigungen neu erstellt
@@ -387,6 +402,15 @@ Je nach den bei Ihrem Roboter erkannten Fähigkeiten können folgende Befehle er
   entsprechende Rechteck.
 - **Zu einem Punkt fahren** — erhält zwei Koordinaten `x,y` in Millimetern.
 
+Nach einer Einstellung von Saugleistung, Wasserdurchfluss, Wischroute oder Reinigungsmodus liest das
+Plugin den Status des Roboters erneut aus, um zu prüfen, dass er die Einstellung übernommen hat. Es
+gewährt bis zu etwa zwölf Sekunden, ohne den Befehl erneut zu senden: Übernimmt der Roboter ihn sofort,
+wird die Antwort nicht verlangsamt. Die Meldung „nicht angewendet“ erscheint nur, wenn der Roboter den
+Wert nach dieser Frist immer noch nicht hat. Wenn Sie zwei Einstellungen sehr schnell hintereinander am
+selben Roboter vornehmen, wird nur die letzte geprüft: Die vorherige wird ohne Fehler als „transmis au
+robot (application non confirmée)“ (an den Roboter übermittelt, Anwendung nicht bestätigt) gemeldet. Die
+gleiche Meldung erscheint, wenn der Roboter während der Prüfung nicht mehr antwortet.
+
 Die Koordinaten von Zone und Punkt werden in demselben Koordinatensystem ausgedrückt wie das für die
 Karte verwendete (siehe „Karte und Räume“).
 
@@ -410,6 +434,20 @@ Unabhängig von diesem Mechanismus wechselt das Plugin, wenn **keine** Daten sei
 **3 Minuten** erhalten werden konnten, beide Anzeigen „Online“ **und** „Verbunden“ auf **getrennt**:
 Das ist ein Signal für einen nicht erreichbaren Roboter (ausgeschaltet, außerhalb des Netzwerks, oder
 Roborock-Cloud nicht verfügbar), kein Fehler des Plugins selbst.
+
+### Mehrere Roboter im selben Konto
+
+Ein ausgeschalteter, entladener oder vom WLAN getrennter Roboter hindert nicht mehr daran, die anderen
+Roboter Ihres Kontos zu steuern und zu überwachen: Er wird einfach als **offline** angezeigt. Die
+Wiederverbindungsversuche zu diesem Roboter verbrauchen **kein** Roborock-Kontingent (siehe
+„Roborock-Kontingente“).
+
+Nach dem Wiedereinschalten ist der Roboter **von selbst** wieder steuerbar, ohne neue Authentifizierung
+oder Neuinstallation. Rechnen Sie mit **höchstens 6 Minuten** nach der Rückkehr seiner Verbindung: Die
+Wartezeit zwischen zwei Versuchen verlängert sich schrittweise bis auf **5 Minuten**.
+
+In diesem kurzen Intervall kann der Roboter bereits **online** erscheinen, während seine Befehle noch als
+**offline** abgelehnt werden. Warten Sie einige Minuten und versuchen Sie es dann erneut.
 
 ## Erneute Authentifizierung erforderlich
 
@@ -507,6 +545,7 @@ Der über die Konfigurationsseite erzeugte Diagnosebericht ist dagegen dafür ko
 | „Die Roboterkarte konnte nicht dekodiert werden“ | Die von der Station empfangenen Daten sind unlesbar (punktueller Vorfall auf Roboter- oder Cloud-Seite) | Versuchen Sie es später erneut; prüfen Sie bei anhaltendem Problem das Protokoll des Daemons |
 | „Das Kartenbild ist zu groß, um übertragen zu werden“ | Die vom Roboter erzeugte Karte überschreitet die vom Plugin akzeptierte Speichergröße | Versuchen Sie es später erneut; besteht das Problem weiter, ist dieser Roboter nicht mit dieser Funktion kompatibel |
 | „Der Roboter muss sich an der Basis befinden, um diesen Vorgang zu starten“ | Eine Wartungsaktion der Station wurde angefordert, obwohl der Roboter nicht an seiner Basis ist | Warten Sie, bis der Roboter zu seiner Basis zurückkehrt, oder starten Sie zunächst „Zurück zur Basis“ |
+| „Le robot vide son bac à poussière : l'ordre de nettoyage n'a pas été envoyé…“ (Der Roboter leert seinen Staubbehälter: Der Reinigungsbefehl wurde nicht gesendet…) | Ein Reinigungsbefehl („Starten“, „Räume reinigen“, „<Raum> reinigen“, „Eine Zone reinigen“) wurde gegeben, während die Station den Behälter leert; der Roboter hätte ihn ignoriert | Warten Sie das Ende des Leerens ab (einige Sekunden bis eine Minute) und senden Sie den Befehl dann erneut. Warten Sie in einem Szenario, bis der Roboterstatus wieder „En charge“ (in Ladung) ist, bevor Sie ihn erneut senden |
 | „Dieser Wartungsvorgang ist auf der Station dieses Roboters nicht verfügbar“ | Die Station dieses Roboters unterstützt diese Aktion nicht | Das ist normal: Der Befehl sollte nicht erscheinen, wenn die Station es nicht zulässt; aktualisieren Sie den Status des Roboters |
 | „Die von der Roborock-Cloud empfangene Routinenliste ist unvollständig: Aus Vorsicht wurde keine Routine gelöscht.“ | Die Antwort der Cloud wurde abgeschnitten, oder dieser Roboter hat mehr als 64 Routinen | Starten Sie die Synchronisierung später erneut; in der Zwischenzeit ist nichts verloren gegangen |
 | „Die Roborock-Nutzungsbedingungen wurden nicht akzeptiert“ (oder „haben sich geändert“) | Roborock verlangt die (erneute) Bestätigung seiner Nutzungsbedingungen | Öffnen Sie die Roborock-App, akzeptieren Sie die vorgeschlagenen Bedingungen und versuchen Sie es dann erneut von Jeedom aus |
@@ -516,7 +555,8 @@ Der über die Konfigurationsseite erzeugte Diagnosebericht ist dagegen dafür ko
 | „Der Roboter ist beschäftigt“, „Der Roboter hat die Aktion in seinem aktuellen Zustand abgelehnt“ oder „Der Roboter hat einen Fehler gemeldet“ | Der Roboter kann diese Anfrage in seinem aktuellen Zustand nicht ausführen (laufende Reinigung, voller Behälter, mechanischer Vorfall …) | Prüfen Sie den Status des Roboters (Befehl „Status“, oder mobile App), beheben Sie den gemeldeten Vorfall und starten Sie die Aktion dann erneut |
 | „Diese Funktion ist bei diesem Robotermodell nicht verfügbar“ oder „Der Roboter erkennt diesen Befehl nicht“ | Der Roboter implementiert diese Funktion nicht, obwohl der Befehl in Jeedom existiert | Keine Manipulation wird die Situation entblockieren: Diese Funktion existiert auf dieser Hardware nicht, blenden Sie den Befehl aus, wenn er Sie stört |
 | „Keine laufende Codeanfrage“ | Der Daemon hat zwischen dem Senden und der Bestätigung des Codes neu gestartet | Klicken Sie erneut auf „Code senden“ und bestätigen Sie dann den neu erhaltenen Code |
-| Eine Einstellung (Saugleistung, Wasserdurchfluss, Route, Reinigungsmodus) wird nicht angewendet | Der Roboter verweigert diese Einstellung in seinem aktuellen Zustand (in der Regel: nicht im Ruhezustand) | Versuchen Sie es erneut, sobald der Roboter im Ruhezustand oder an seiner Basis ist |
+| „… transmis au robot (application non confirmée).“ (an den Roboter übermittelt, Anwendung nicht bestätigt) nach einer Einstellung | Das Plugin konnte nicht prüfen, ob der Roboter den Wert übernommen hat: Unmittelbar danach wurde eine andere Einstellung am selben Roboter gesendet, oder der Roboter antwortete während der Prüfung nicht mehr. Das ist kein Fehler | Prüfen Sie den vom entsprechenden Informationsbefehl angezeigten Wert; senden Sie die Einstellung erneut, wenn er nicht stimmt |
+| Eine Einstellung (Saugleistung, Wasserdurchfluss, Route, Reinigungsmodus) wird nicht angewendet | Der Roboter hat den Wert etwa zwölf Sekunden nach dem Empfang immer noch nicht übernommen: Er verweigert diese Einstellung in seinem aktuellen Zustand (in der Regel: nicht im Ruhezustand) | Versuchen Sie es erneut, sobald der Roboter im Ruhezustand oder an seiner Basis ist |
 | „Diese Saugleistung / dieser Wasserdurchfluss / diese Route / dieser Reinigungsmodus ist bei diesem Roboter nicht verfügbar“ | Die von Jeedom bekannte Stufenliste ist veraltet (der Roboter meldet diesen Wert nicht mehr) | Aktualisieren Sie den Status des Roboters und versuchen Sie es erneut |
 | „Unbekannter Raum“, „kein bekannter Raum“ oder „mehrere Räume tragen diesen Namen“ | Der eingegebene Name entspricht keinem erkannten Raum, noch wurde kein Raum synchronisiert, oder der Name ist mehrdeutig | Synchronisieren Sie die Räume über den Reiter Gerät neu, verwenden Sie den genauen Namen aus der Roborock-App, oder den diesem Raum zugeordneten Befehl statt des allgemeinen Befehls |
 | „Diese Koordinaten liegen außerhalb der bekannten Kartengrenzen“ | Die eingegebene Zone oder der Punkt überschreitet die aktuell bekannte Karte des Roboters | Prüfen Sie die Koordinaten im Block „Zone und Punkt“ des Reiters Gerät, oder aktualisieren Sie das Kartenbild |
@@ -556,6 +596,19 @@ verstehen.
 - Das Kartenbild kann **unlesbar** bleiben, wenn der Roboter nur über die oben erwähnte lokale
   Verbindung erreichbar ist, ohne den MQTT-Kanal der Cloud zu durchlaufen (Meldung „Die Roboterkarte
   konnte nicht dekodiert werden“).
+- Ein ausgeschalteter oder vom WLAN getrennter Roboter, der sich wieder verbindet, ist von selbst wieder
+  steuerbar, aber nach einer Verzögerung von bis zu **6 Minuten** (siehe „Mehrere Roboter im selben
+  Konto“): Diese Verzögerung ist nicht einstellbar.
+- Die Verweigerung eines Reinigungsbefehls während des Leerens des Behälters betrifft nur den Status
+  „Vidage du bac à poussière“ (Staubbehälter wird geleert): Die anderen Zustände der Station (Waschen,
+  Trocknen) lösen diese Verweigerung nicht aus. Sie betrifft weder die Routinen noch „Zu einem Punkt
+  fahren“. Kein Befehl wird in eine Warteschlange gestellt: Es liegt an Ihnen (oder Ihrem Szenario), ihn
+  erneut zu senden.
+- Die automatische Aktualisierung der letzten Reinigung ist **begrenzt**: höchstens fünf Auslesungen
+  innerhalb von 30 Minuten nach dem Ende der Reinigung. Danach hört das Plugin auf, es zu versuchen;
+  nutzen Sie „Protokoll aktualisieren“.
+- Ein bereits in codierter Form gespeicherter Kartenname (vor dem Plugin-Update) bleibt codiert bis zum
+  ersten „Kartenliste aktualisieren“ oder Kartenwechsel.
 - Das Auslesen der Raumnamen (Panel „Räume“ des Reiters Gerät) erfordert, dass der Roboter **online**
   ist: Es schlägt fehl, wenn der Roboter zum Zeitpunkt des Klicks nicht erreichbar ist.
 - Die Kartenansicht (Panel „Startseite > JeeRoborock“) löst selbst keine Aktualisierung aus: Sie

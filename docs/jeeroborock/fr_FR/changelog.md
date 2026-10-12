@@ -36,6 +36,8 @@ aucune tentative de connexion n'est rejouée automatiquement.
   capteurs et le rouleau de serpillière.
 - Réglages courants en lecture : puissance d'aspiration, débit d'eau, itinéraire de serpillère,
   mode de nettoyage.
+- Un robot éteint ou hors Wi-Fi ne bloque pas les autres robots du compte : il s'affiche hors ligne et
+  redevient pilotable de lui-même (6 minutes au plus après son retour).
 - Mise à jour **en temps réel** par le démon (30 s en nettoyage, 60 s au repos), et bascule en
   « déconnecté » si la donnée vieillit.
 - Tuile de tableau de bord (desktop et mobile) réunissant photo, état, batterie et actions de
@@ -65,7 +67,8 @@ aucune tentative de connexion n'est rejouée automatiquement.
 **Journal, statistiques et programmations**
 
 - Dernier nettoyage (début, durée, surface, motif de fin, erreur) et panneau d'historique des
-  10 derniers nettoyages, avec bouton de rafraîchissement.
+  10 derniers nettoyages, avec bouton de rafraîchissement. Le dernier nettoyage se met aussi à jour
+  tout seul après la fin d'un nettoyage.
 - Quatre compteurs cumulés historisés par défaut : durée totale, surface totale, nombre de
   nettoyages, nombre de vidages du bac.
 - Programmations créées dans l'application mobile, consultables en lecture seule depuis l'onglet
@@ -87,6 +90,20 @@ aucune tentative de connexion n'est rejouée automatiquement.
 Le plugin n'affiche pas le canal utilisé pour joindre chaque robot (connexion locale ou cloud), et
 ne suit ni ne met à jour le micrologiciel : ces deux fonctions ont été écartées. La mise à jour du
 micrologiciel se fait depuis l'application Roborock.
+
+# 12/10/2026
+
+- Correctif : un robot éteint, déchargé ou hors Wi-Fi n'empêche plus de piloter les autres robots du compte : il s'affiche hors ligne, ses tentatives de reconnexion ne consomment plus le quota Roborock, et il redevient pilotable de lui-même dans les 6 minutes suivant son retour. <!-- UC44 -->
+- Documentation : nouvelle rubrique « Plusieurs robots sur le même compte » dans « Temps réel et fraîcheur ». <!-- UC44 -->
+- Correctif : changer la puissance d'aspiration, le débit d'eau, l'itinéraire de serpillère ou le mode de nettoyage n'affiche plus « non appliqué » à tort quand le robot, par exemple à sa base, prend le réglage quelques secondes plus tard : le plugin lui laisse jusqu'à une douzaine de secondes avant de conclure, sans ralentir la réponse quand le réglage est pris tout de suite. <!-- UC45 -->
+- Documentation : la rubrique « Pilotage fin » explique la vérification des réglages après envoi et le dépannage « non appliqué » est précisé. <!-- UC45 -->
+- Correctif : un ordre de nettoyage (Démarrer, nettoyage par pièce ou de zone, depuis le tableau de bord comme depuis un scénario) envoyé pendant que la station vide le bac à poussière n'est plus annoncé comme transmis alors que le robot l'ignore : il est refusé avec un message invitant à réessayer une fois le vidage terminé <!-- UC46 -->
+- Documentation : la rubrique « État et pilotage de base » et le tableau de dépannage expliquent pourquoi un ordre de nettoyage est refusé pendant le vidage du bac <!-- UC46 -->
+- Correctif : les commandes « dernier nettoyage » se mettent de nouveau à jour d'elles-mêmes après chaque nettoyage, en général en quelques minutes : si le robot n'a pas encore enregistré le nettoyage ou ne répond pas (lavage, vidage), le plugin relit son journal jusqu'à cinq fois en 30 minutes, sans consommer de quota Roborock. <!-- UC47 -->
+- Documentation : section « Journal des nettoyages » : délais de mise à jour automatique du dernier nettoyage (documentation en français). <!-- UC47 -->
+- Correctif : les noms de cartes transmis codés par certains robots (S7 : « %20 » à la place des espaces, « %E9 » à la place de « é ») s'affichent désormais en clair ; pour un robot déjà configuré, cliquez une fois sur « Rafraîchir la liste des cartes » dans l'onglet Équipement. <!-- UC48 -->
+- Évolution : la fiche du plugin annonce désormais la licence GPL v3 ou ultérieure (texte officiel fourni) et exige Jeedom 4.4.7 minimum, première version qui installe les dépendances Python du plugin dans un environnement dédié ; sur Jeedom 4.4, la tuile du robot s'affiche avec l'icône du plugin. <!-- UC50 -->
+- Documentation : version minimale de Jeedom (4.4.7) et licence (GPL v3 ou ultérieure), robot hors ligne avec plusieurs robots, réglages confirmés avec un court délai, refus d'un ordre de nettoyage pendant le vidage du bac, mise à jour automatique du dernier nettoyage, noms de cartes en clair ; limites connues et dépannage complétés. <!-- UC109 -->
 
 # 01/10/2026
 

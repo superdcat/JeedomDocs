@@ -7,6 +7,8 @@ definidas en la aplicación móvil Roborock.
 
 ## Lo que el plugin hace, y lo que no hace
 
+JeeRoborock es software libre, publicado bajo licencia **GPL v3 o posterior**.
+
 - El control pasa por la **nube de Roborock**: Jeedom debe tener acceso a Internet, y tu robot debe
   estar conectado a tu red y a la nube de Roborock para responder. Algunas operaciones dependen
   estrictamente de la nube y **no funcionan sin Internet**: la conexión a la cuenta, el inventario de
@@ -25,7 +27,7 @@ definidas en la aplicación móvil Roborock.
 
 ## Requisitos previos e instalación
 
-1. **Jeedom 4.2 como mínimo**, instalado en un servidor con **Debian 12 o 13**. Esta versión de Debian
+1. **Jeedom 4.4.7 como mínimo**, instalado en un servidor con **Debian 12 o 13**. Esta versión de Debian
    es necesaria para que la dependencia del plugin funcione; por debajo (Debian 11 por ejemplo), la
    activación del plugin se rechaza.
 2. Desde la página del plugin, deja que Jeedom instale su dependencia Python. El indicador de
@@ -122,6 +124,8 @@ dispositivos.
 | Localizar | Hace que el robot emita una señal sonora |
 | Actualizar | Relee inmediatamente el estado del robot |
 
+**Durante el vaciado del depósito de polvo.** Cuando la estación vacía el depósito (estado del robot « Vidage du bac à poussière », es decir, vaciado del depósito de polvo), el robot no tiene en cuenta una orden de limpieza. El plugin la rechaza entonces, en lugar de responder « ok » sin efecto: es el caso de « Iniciar », « Limpiar habitaciones », las órdenes « Limpiar <nombre de la habitación> » y « Limpiar una zona ». El mensaje mostrado es « Le robot vide son bac à poussière : l'ordre de nettoyage n'a pas été envoyé. Réessayez dans un instant, quand le vidage sera terminé (robot de nouveau en charge). » (El robot está vaciando su depósito de polvo: la orden de limpieza no se envió. Vuelve a intentarlo en un momento, cuando termine el vaciado (robot de nuevo en carga).) En un escenario, la acción falla de la misma manera. Las demás órdenes (pausa, parada, volver a la base, localizar, desplazarse a un punto) no se ven afectadas, ni tampoco los usos (rutinas), ejecutados por la nube de Roborock. Si el plugin no logra releer el estado del robot justo antes de la orden, la orden se envía normalmente.
+
 ### Estación de carga, consumibles y mantenimiento
 
 Estas órdenes aparecen **solo si tu estación lo permite**:
@@ -162,7 +166,13 @@ la última sincronización. Un botón **« Actualizar el registro »** relee est
   minuto antes de relanzar);
 - la primera actualización puede traer solo unos pocos registros y completarse en el siguiente clic:
   es un funcionamiento normal, no una avería, ya que la recuperación está acotada en el tiempo;
-- el registro también se actualiza solo al final de cada limpieza, sin acción por tu parte.
+- la última limpieza también se actualiza sola, sin acción por tu parte: el plugin relee el registro en
+  cuanto el robot ha terminado su limpieza (lavado y vaciado en la estación incluidos), y luego, mientras
+  esa limpieza no aparezca en él, aproximadamente 1, 3, 8 y 18 minutos después (al menos 5 minutos de
+  separación tras una relectura fallida). Cuenta desde unos segundos hasta unos minutos, 30 como máximo;
+  si el robot ha permanecido inaccesible durante todo ese tiempo, tiene lugar una última relectura a su
+  regreso. Después el plugin deja de insistir hasta la siguiente limpieza; el botón « Actualizar el
+  registro » sigue disponible.
 
 Si la nube de Roborock no está accesible en el momento de la consulta, los valores ya conocidos de la
 última limpieza y del historial se siguen mostrando tal cual — nunca se ponen a cero. Es la fecha de
@@ -332,6 +342,10 @@ La pestaña « Dispositivo » de un robot ofrece dos paneles adicionales:
   automáticamente la lista de habitaciones y la imagen del mapa mostradas**, que luego se
   resincronizan.
 
+Los nombres de mapas se muestran **en claro**, incluso en los robots que los transmiten codificados
+(Roborock S7: « %20 » en lugar de los espacios, « %E9 » en lugar de « é »). Si un nombre ya guardado
+aparece todavía codificado, haz clic una vez en **« Actualizar la lista de mapas »** (o cambia de mapa): se reescribe en claro, sin ninguna otra manipulación.
+
 La misma pestaña ofrece dos bloques distintos, cada uno con su propio botón:
 
 - **Imagen del mapa** — la imagen del mapa activo, reconstruida automáticamente durante las limpiezas
@@ -377,6 +391,14 @@ Según las capacidades detectadas en tu robot, pueden aparecer las siguientes ó
   correspondiente.
 - **Desplazarse a un punto** — recibe dos coordenadas `x,y` en milímetros.
 
+Tras un ajuste de potencia de aspiración, caudal de agua, ruta de mopa o modo de limpieza, el plugin
+relee el estado del robot para comprobar que lo ha asumido. Le concede hasta una docena de segundos, sin
+reenviar la orden: si el robot la asume enseguida, la respuesta no se ralentiza. El mensaje « no aplicado »
+solo aparece si el robot sigue sin tener el valor al cabo de ese plazo. Si encadenas dos ajustes muy
+rápido en el mismo robot, solo se verifica el último: el anterior se señala como « transmis au robot
+(application non confirmée) » (transmitido al robot, aplicación no confirmada), sin error. El mismo
+mensaje aparece si el robot deja de responder durante la verificación.
+
 Las coordenadas de zona y de punto se expresan en el mismo sistema de referencia que el utilizado para
 el mapa (ver « Mapa y habitaciones »).
 
@@ -400,6 +422,19 @@ Independientemente de este mecanismo, si **ningún** dato ha podido obtenerse de
 **3 minutos**, el plugin pasa los dos indicadores « En línea » **y** « Conectado » a **desconectado**:
 es una señal de robot inaccesible (apagado, fuera de red, o nube de Roborock no disponible), no un
 error del propio plugin.
+
+### Varios robots en la misma cuenta
+
+Un robot apagado, sin batería o sin Wi-Fi ya no impide controlar y seguir a los demás robots de tu
+cuenta: simplemente se muestra **fuera de línea**. Los intentos de reconexión a ese robot **no** consumen
+la cuota de Roborock (ver « Cuotas de Roborock »).
+
+Una vez vuelto a encender, el robot vuelve a ser controlable **por sí solo**, sin nueva autenticación ni
+reinstalación. Cuenta **6 minutos como máximo** tras el regreso de su conexión: la espera entre dos
+intentos se alarga progresivamente, hasta **5 minutos**.
+
+Durante ese breve intervalo, el robot puede aparecer ya **en línea** mientras sus órdenes aún se rechazan
+como **fuera de línea**. Espera unos minutos y vuelve a intentarlo.
 
 ## Reautenticación requerida
 
@@ -498,6 +533,7 @@ transmitirse tal cual (ver más arriba).
 | « No se pudo decodificar el mapa del robot. Consulta el registro del demonio. » | El dato recibido de la estación es ilegible (incidente puntual del lado del robot o de la nube) | Vuelve a intentarlo más tarde; consulta el registro del demonio si el problema persiste |
 | « La imagen del mapa es demasiado grande para transferirse. » | El mapa producido por el robot supera el tamaño que el plugin acepta almacenar | Vuelve a intentarlo más tarde; si el problema persiste, este robot no es compatible con esta función |
 | « El robot debe estar en la base para iniciar esta operación. » | Se solicitó una acción de mantenimiento de la estación mientras el robot no estaba en su base | Espera a que el robot vuelva a su base, o lanza « Volver a la base » primero |
+| « Le robot vide son bac à poussière : l'ordre de nettoyage n'a pas été envoyé… » (El robot está vaciando su depósito de polvo: la orden de limpieza no se envió…) | Se dio una orden de limpieza (« Iniciar », « Limpiar habitaciones », « Limpiar <habitación> », « Limpiar una zona ») mientras la estación vacía el depósito; el robot la habría ignorado | Espera a que termine el vaciado (de unos segundos a un minuto) y vuelve a enviar la orden. En un escenario, espera a que el estado del robot haya vuelto a « En charge » (en carga) antes de reenviarla |
 | « Esta operación de mantenimiento no está disponible en la base de este robot: actualiza su estado antes de volver a intentarlo. » | La estación de este robot no admite esta acción | Es normal: la orden no debería aparecer si la estación no lo permite; actualiza el estado del robot |
 | « La lista de rutinas recibida de la nube Roborock está incompleta: por precaución, no se ha eliminado ninguna rutina. » | La respuesta de la nube se truncó, o este robot tiene más de 64 usos | Relanza la sincronización más tarde; no se ha perdido nada mientras tanto |
 | « No se han aceptado las condiciones de uso de Roborock. » (o « Las condiciones de uso de Roborock han cambiado. ») | Roborock pide validar (o revalidar) sus condiciones de uso | Abre la aplicación móvil Roborock, acepta las condiciones propuestas, y vuelve a intentarlo desde Jeedom |
@@ -507,7 +543,8 @@ transmitirse tal cual (ver más arriba).
 | « El robot está ocupado: no puede procesar esta solicitud ahora. », « El robot rechazó la acción en su estado actual. » o « El robot indicó un error al ejecutar el comando. » | El robot no puede ejecutar esta solicitud en su estado actual (limpieza en curso, depósito lleno, incidente mecánico…) | Comprueba el estado del robot (orden « État », o aplicación móvil), resuelve el incidente notificado y vuelve a lanzar la acción |
 | « Esta función no está disponible en este modelo de robot. » o « El robot no reconoce este comando. » | El robot no implementa esta función, aunque la orden exista en Jeedom | Ninguna manipulación desbloqueará la situación: esta función no existe en este equipo, oculta la orden si te molesta |
 | « No hay ninguna solicitud de código en curso (es posible que el demonio se haya reiniciado): solicita un nuevo código. » | El demonio se reinició entre el envío y la validación del código | Haz clic de nuevo en « Enviar un código », y valida el nuevo código recibido |
-| Un ajuste (aspiración, caudal de agua, ruta, modo de limpieza) no se aplica | El robot rechaza este ajuste en su estado actual (por lo general: no está en reposo) | Vuelve a intentarlo cuando el robot esté en reposo o en su base |
+| « … transmis au robot (application non confirmée). » (transmitido al robot, aplicación no confirmada) tras un ajuste | El plugin no pudo comprobar que el robot asumiera el valor: se envió otro ajuste justo después al mismo robot, o el robot dejó de responder durante la verificación. No es un error | Comprueba el valor que muestra la orden de información correspondiente; vuelve a enviar el ajuste si no es el correcto |
+| Un ajuste (aspiración, caudal de agua, ruta, modo de limpieza) no se aplica | El robot sigue sin tener el valor una docena de segundos después de recibirlo: rechaza este ajuste en su estado actual (por lo general: no está en reposo) | Vuelve a intentarlo cuando el robot esté en reposo o en su base |
 | « Esta potencia de aspiración / este caudal de agua / este recorrido de fregado / este modo de limpieza no está disponible en este robot. » | La lista de niveles conocida por Jeedom está desactualizada (el robot ya no anuncia ese valor) | Actualiza el estado del robot y vuelve a intentarlo |
 | « Habitación desconocida en el mapa actualmente activo de este robot. », « No hay ninguna habitación conocida para este robot. » o « Varias habitaciones tienen este nombre en este robot. » | El nombre introducido no corresponde a ninguna habitación detectada, aún no se ha sincronizado ninguna habitación, o el nombre es ambiguo | Resincroniza las habitaciones desde la pestaña Dispositivo, usa el nombre exacto de la aplicación Roborock, o la orden dedicada a esa habitación en lugar de la orden genérica |
 | « Estas coordenadas superan los límites del mapa conocido de este robot. » | La zona o el punto introducido supera el mapa actualmente conocido del robot | Comprueba las coordenadas en el bloque « Zona y punto » de la pestaña Dispositivo, o actualiza la imagen del mapa |
@@ -544,6 +581,17 @@ el gesto a realizar — nunca es necesario abrir los registros técnicos para en
 - La imagen del mapa puede permanecer **ilegible** cuando el robot solo es accesible por la conexión
   local mencionada más arriba, sin pasar por el canal MQTT de la nube (mensaje « La carte du robot n'a
   pas pu être décodée » — No se ha podido decodificar el mapa del robot).
+- Un robot apagado o sin Wi-Fi que se reconecta vuelve a ser controlable por sí solo, pero tras un plazo que
+  puede llegar a **6 minutos** (ver « Varios robots en la misma cuenta »): este plazo no es configurable.
+- El rechazo de una orden de limpieza durante el vaciado del depósito solo afecta al estado « Vidage du bac
+  à poussière » (vaciado del depósito de polvo): los demás estados de la estación (lavado, secado) no
+  provocan este rechazo. No afecta ni a los usos (rutinas) ni a « Desplazarse a un punto ». Ninguna orden
+  se pone en espera: te corresponde a ti (o a tu escenario) reenviarla.
+- La actualización automática de la última limpieza está **acotada**: cinco relecturas como máximo, en los
+  30 minutos posteriores al final de la limpieza. Pasado ese plazo, el plugin deja de insistir; usa
+  « Actualizar el registro ».
+- Un nombre de mapa ya guardado en forma codificada (antes de la actualización del plugin) sigue
+  codificado hasta el primer « Actualizar la lista de mapas » o cambio de mapa.
 - La lectura de los nombres de habitación (panel « Habitaciones » de la pestaña Dispositivo) exige que
   el robot esté **en línea**: falla si el robot es inaccesible en el momento del clic.
 - La vista de mapa (panel « Inicio > JeeRoborock ») no dispara por sí misma ninguna actualización: se

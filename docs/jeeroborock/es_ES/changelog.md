@@ -37,6 +37,8 @@ demanda**, y ningún intento de conexión se relanza automáticamente.
   sensores y el rodillo de mopa.
 - Ajustes habituales en lectura: potencia de aspiración, caudal de agua, ruta de mopa, modo de
   limpieza.
+- Un robot apagado o sin Wi-Fi no bloquea a los demás robots de la cuenta: se muestra fuera de línea y
+  vuelve a ser controlable por sí solo (6 minutos como máximo tras su regreso).
 - Actualización **en tiempo real** por el demonio (30 s en limpieza, 60 s en reposo), y cambio a
   « desconectado » si el dato envejece.
 - Mosaico del panel de control (escritorio y móvil) que reúne foto, estado, batería y acciones de
@@ -65,7 +67,8 @@ demanda**, y ningún intento de conexión se relanza automáticamente.
 **Registro, estadísticas y programaciones**
 
 - Última limpieza (inicio, duración, superficie, motivo de fin, error) y panel de historial de las
-  10 últimas limpiezas, con botón de actualización.
+  10 últimas limpiezas, con botón de actualización. La última limpieza también se actualiza sola tras el
+  fin de una limpieza.
 - Cuatro contadores acumulados historizados por defecto: duración total, superficie total, número
   de limpiezas, número de vaciados del depósito.
 - Programaciones creadas en la aplicación móvil, consultables en solo lectura desde la pestaña
@@ -87,6 +90,20 @@ demanda**, y ningún intento de conexión se relanza automáticamente.
 El plugin no muestra el canal utilizado para contactar con cada robot (conexión local o nube), y no
 sigue ni actualiza el firmware: estas dos funciones se han descartado. La actualización del firmware
 se hace desde la aplicación Roborock.
+
+# 12/10/2026
+
+- Corrección: un robot apagado, sin batería o sin Wi-Fi ya no impide controlar los demás robots de la cuenta: se muestra sin conexión, sus intentos de reconexión ya no consumen la cuota de Roborock y vuelve a ser controlable por sí solo en los 6 minutos siguientes a su regreso. <!-- UC44 -->
+- Documentación: nuevo apartado « Varios robots en la misma cuenta » en « Tiempo real y actualidad » (documentación en francés). <!-- UC44 -->
+- Corrección: cambiar la potencia de aspiración, el caudal de agua, el recorrido de la mopa o el modo de limpieza ya no indica por error « no aplicado » cuando el robot, por ejemplo en su base, toma el ajuste unos segundos más tarde: el plugin le deja ahora hasta unos doce segundos antes de concluir, sin ralentizar la respuesta cuando el ajuste se toma de inmediato. <!-- UC45 -->
+- Documentación: el apartado « Control fino » explica la verificación de los ajustes tras el envío y se precisa la entrada de resolución de problemas « no aplicado » (documentación en francés). <!-- UC45 -->
+- Corrección: una orden de limpieza (Iniciar, limpieza por habitación o por zona, desde el panel o desde un escenario) enviada mientras la base vacía el depósito de polvo ya no se anuncia como transmitida cuando el robot la ignora: se rechaza con un mensaje que invita a reintentarlo cuando termine el vaciado <!-- UC46 -->
+- Documentación: la sección «Estado y control básico» y la tabla de solución de problemas explican por qué se rechaza una orden de limpieza durante el vaciado del depósito <!-- UC46 -->
+- Corrección: los comandos « Última limpieza » vuelven a actualizarse por sí solos después de cada limpieza, normalmente en pocos minutos: si el robot aún no ha registrado la limpieza o no responde (lavado de la mopa, vaciado), el plugin vuelve a leer su registro hasta cinco veces en 30 minutos, sin consumir cuota de Roborock. <!-- UC47 -->
+- Documentación: apartado « Registro de limpiezas »: plazos de la actualización automática de la última limpieza (documentación en francés). <!-- UC47 -->
+- Corrección: los nombres de mapas que algunos robots envían codificados (S7: «%20» en lugar de espacios, «%E9» en lugar de «é») se muestran ahora en claro; para un robot ya configurado, haga clic una vez en «Actualizar la lista de mapas» en la pestaña Equipo. <!-- UC48 -->
+- Evolución: la ficha del plugin indica ahora la licencia GPL v3 o posterior (texto oficial incluido) y exige Jeedom 4.4.7 como mínimo, la primera versión que instala las dependencias Python del plugin en un entorno propio; en Jeedom 4.4, el mosaico del robot se muestra con el icono del plugin. <!-- UC50 -->
+- Documentación: versión mínima de Jeedom (4.4.7) y licencia (GPL v3 o posterior), robot desconectado cuando hay varios robots en la cuenta, ajustes confirmados tras un breve retraso, orden de limpieza rechazada durante el vaciado del depósito, actualización automática de la última limpieza, nombres de mapas legibles; limitaciones conocidas y solución de problemas completadas. <!-- UC109 -->
 
 # 01/10/2026
 

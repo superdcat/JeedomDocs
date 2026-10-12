@@ -6,6 +6,8 @@ zone cleaning, multiple maps, and running the routines ("usages") defined in the
 
 ## What the plugin does, and what it does not
 
+JeeRoborock is free software, released under the **GPL v3 or later** license.
+
 - Control goes through the **Roborock cloud**: Jeedom must have Internet access, and your robot must
   be connected to your network and to the Roborock cloud in order to respond. Some operations strictly
   depend on the cloud and **do not work without Internet**: linking the account, the robot inventory,
@@ -22,7 +24,7 @@ zone cleaning, multiple maps, and running the routines ("usages") defined in the
 
 ## Requirements and installation
 
-1. **Jeedom 4.2 minimum**, installed on a server running **Debian 12 or 13**. This Debian version is
+1. **Jeedom 4.4.7 minimum**, installed on a server running **Debian 12 or 13**. This Debian version is
    required for the plugin's dependency to work; below that (Debian 11, for example), activating the
    plugin is refused.
 2. From the plugin page, let Jeedom install its Python dependency. The dependency indicator on the
@@ -114,6 +116,8 @@ Roborock account and is updated by device synchronization.
 | Localiser (Locate) | Makes the robot emit a sound signal |
 | Rafraîchir (Refresh) | Immediately re-reads the robot's status |
 
+**While the dust bin is being emptied.** When the dock empties the bin (robot status "Vidage du bac à poussière", i.e. emptying the dust bin), the robot does not take a cleaning order into account. The plugin then refuses it, instead of answering "ok" with no effect: this applies to "Start", "Clean rooms", the "Clean <room name>" commands and "Clean a zone". The message shown is "Le robot vide son bac à poussière : l'ordre de nettoyage n'a pas été envoyé. Réessayez dans un instant, quand le vidage sera terminé (robot de nouveau en charge)." (The robot is emptying its dust bin: the cleaning order was not sent. Try again in a moment, when emptying is finished (robot charging again).) In a scenario, the action fails the same way. The other commands (pause, stop, return to base, locate, move to a point) are not affected, nor are routines ("usages"), which are run by the Roborock cloud. If the plugin cannot re-read the robot's status just before the order, the order is sent normally.
+
 ### Dock, consumables and maintenance
 
 These commands only appear **if your dock supports them**:
@@ -153,7 +157,12 @@ Roborock:
   trying again.";
 - the first refresh may only bring back a few records and complete on the next click: this is normal
   behavior, not a failure, since retrieval is time-bounded;
-- the log also updates itself at the end of each cleaning, with no action needed from you.
+- the last cleaning also updates itself, with no action needed from you: the plugin re-reads the log as
+  soon as the robot has finished its cleaning (including washing and emptying at the dock), then, as long
+  as this cleaning does not appear in it, about 1, 3, 8 and 18 minutes later (at least 5 minutes apart
+  after a failed re-read). Allow from a few seconds to a few minutes, 30 minutes at most; if the robot
+  stayed unreachable for that whole time, one last re-read takes place when it comes back. The plugin
+  then stops insisting until the next cleaning; the "Refresh log" button remains available.
 
 If the Roborock cloud is unreachable at the time of viewing, the already-known values of the last
 cleaning and of the history stay displayed as they are — they are never reset to zero. It is the
@@ -313,6 +322,11 @@ A robot's "Device" tab offers two additional panels:
   request for two minutes after the previous one. **Changing the map automatically invalidates the
   displayed room list and map image**, which are then resynchronized.
 
+Map names are displayed **in clear text**, including on robots that transmit them encoded (Roborock S7:
+"%20" in place of spaces, "%E9" in place of "é"). If a name already saved still appears encoded, click
+**"Refresh map list"** once (or change map): it is rewritten in clear
+text, with no other action.
+
 The same tab offers two separate blocks, each with its own button:
 
 - **Map image** — the image of the active map, rebuilt automatically during
@@ -354,6 +368,14 @@ Depending on the capabilities detected on your robot, the following commands may
   cleans the corresponding rectangle.
 - **"Move to a point (x,y in mm)"** — takes two coordinates `x,y` in millimeters.
 
+After a setting of suction power, water flow, mop route or cleaning mode, the plugin re-reads the robot's
+status to check that it has taken it. It allows up to about twelve seconds, without sending the order
+again: if the robot takes it right away, the response is not slowed down. The "not applied" message only
+appears if the robot still does not have the value after this delay. If you chain two settings very
+quickly on the same robot, only the last one is checked: the previous one is reported as "transmis au
+robot (application non confirmée)" (sent to the robot, application not confirmed), without error. The
+same message appears if the robot stops responding during the check.
+
 Zone and point coordinates are expressed in the same frame used for the map (see "Map and rooms").
 
 ## Real time and freshness
@@ -377,6 +399,19 @@ Independently of this mechanism, if **no** data could be obtained for more than 
 plugin switches both the "Online" **and** "Connected" indicators to
 **"Disconnected"**: this signals an unreachable robot (powered off, off the network, or the Roborock
 cloud unavailable), not an error of the plugin itself.
+
+### Several robots on the same account
+
+A robot that is switched off, discharged or off Wi-Fi no longer prevents you from controlling and
+tracking the other robots on your account: it simply shows as **offline**. Reconnection attempts to this
+robot do **not** consume the Roborock quota (see "Roborock quotas").
+
+Once switched back on, the robot becomes controllable **again by itself**, with no new authentication or
+reinstallation. Allow **6 minutes at most** after its connection returns: the wait between two attempts
+gradually lengthens, up to **5 minutes**.
+
+During this short interval, the robot may already appear **online** while its commands are still
+refused as **offline**. Wait a few minutes, then try again.
 
 ## Re-authentication required
 
@@ -470,6 +505,7 @@ as-is (see above).
 | "The robot map could not be decoded." | The data received from the dock is unreadable (one-off incident on the robot or cloud side) | Try again later; check the daemon log if the problem persists |
 | "The map image is too large to be transferred." | The map produced by the robot exceeds the size the plugin accepts to store | Try again later; if the problem persists, this robot is not compatible with this feature |
 | "The robot must be at the dock to start this operation." | A dock maintenance action was requested while the robot is not at its dock | Wait for the robot to return to its dock, or run "Return to base" first |
+| "Le robot vide son bac à poussière : l'ordre de nettoyage n'a pas été envoyé…" (The robot is emptying its dust bin: the cleaning order was not sent…) | A cleaning order ("Start", "Clean rooms", "Clean <room>", "Clean a zone") was given while the dock is emptying the bin; the robot would have ignored it | Wait for the emptying to finish (a few seconds to a minute), then send the order again. In a scenario, wait until the robot status is back to "En charge" (Charging) before retrying |
 | "This maintenance operation is not available on this robot's dock." | This robot's dock does not support this action | This is normal: the command should not appear if the dock does not support it; refresh the robot's status |
 | "The list of routines received from the Roborock cloud is incomplete: as a precaution, no routine was deleted." | The cloud response was truncated, or this robot has more than 64 usages | Run the synchronization again later; nothing was lost in the meantime |
 | "The Roborock terms of use have not been accepted." (or "have changed") | Roborock requires accepting (or re-accepting) its terms of use | Open the Roborock mobile app, accept the terms shown, then try again from Jeedom |
@@ -479,7 +515,8 @@ as-is (see above).
 | "The robot is busy.", "The robot refused the action in its current state." or "The robot reported an error while executing the command." | The robot cannot carry out this request in its current state (cleaning in progress, full bin, mechanical incident…) | Check the robot's status (the "Status" command, or the mobile app), resolve the reported incident then retry the action |
 | "This feature is not available on this robot model." or "The robot does not recognize this command." | The robot does not implement this feature, even though the command exists in Jeedom | No action will fix this: this feature does not exist on this hardware, hide the command if it bothers you |
 | "No code request in progress (the daemon may have restarted): request a new code." | The daemon restarted between sending and validating the code | Click "Send a code" again, then validate the new code received |
-| A setting (suction, water flow, route, cleaning mode) is not applied | The robot refuses this setting in its current state (generally: not at rest) | Try again once the robot is at rest or at its dock |
+| "… transmis au robot (application non confirmée)." (sent to the robot, application not confirmed) after a setting | The plugin could not check that the robot took the value: another setting was sent right after on the same robot, or the robot stopped responding during the check. This is not an error | Check the value shown by the matching information command; send the setting again if it is not the right one |
+| A setting (suction, water flow, route, cleaning mode) is not applied | The robot still does not have the value about twelve seconds after receiving it: it refuses this setting in its current state (generally: not at rest) | Try again once the robot is at rest or at its dock |
 | "This suction power / water flow / route / cleaning mode is not available on this robot." | The list of levels known by Jeedom is outdated (the robot no longer reports this value) | Refresh the robot's status then try again |
 | "Unknown room.", "no known room" or "several rooms share this name" | The entered name does not match any detected room, no room has been synchronized yet, or the name is ambiguous | Resynchronize rooms from the Device tab, use the exact name from the Roborock app, or the command dedicated to this room rather than the generic command |
 | "These coordinates fall outside the known map limits of this robot." | The entered zone or point goes beyond the map currently known for the robot | Check the coordinates in the "Zone and point" block of the Device tab, or refresh the map image |
@@ -515,6 +552,17 @@ action to take — it is never necessary to open technical logs to understand it
 - The map image may stay **unreadable** when the robot is only reachable over the local connection
   mentioned above, without going through the cloud MQTT channel (message "The robot map could not be
   decoded.").
+- A robot that is switched off or off Wi-Fi and reconnects becomes controllable again by itself, but after
+  a delay that can reach **6 minutes** (see "Several robots on the same account"): this delay cannot be
+  configured.
+- Refusing a cleaning order while the bin is being emptied only concerns the "Vidage du bac à poussière"
+  (emptying the dust bin) status: the dock's other states (washing, drying) do not trigger this refusal. It
+  concerns neither routines ("usages") nor "Move to a point". No order is queued: it is up to you (or your
+  scenario) to send it again.
+- The automatic update of the last cleaning is **bounded**: five re-reads at most, within 30 minutes after
+  the end of the cleaning. Beyond that, the plugin stops insisting; use "Refresh log".
+- A map name already saved in encoded form (before the plugin update) stays encoded until the first
+  "Refresh map list" or map change.
 - Reading room names (the "Rooms" panel of the Device tab) requires the robot to be **online**: it
   fails if the robot is unreachable at the time of the click.
 - The map view (the "Home > JeeRoborock" panel) does not itself trigger any update: it simply displays,

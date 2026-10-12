@@ -37,6 +37,8 @@ Abruf**, und kein Verbindungsversuch wird automatisch wiederholt.
 - Verbrauchsmaterial: verbleibender Verschleiß in % für Hauptbürste, Seitenbürste, Filter, Sensoren
   und Wischwalze.
 - Aktuelle Einstellungen als Anzeige: Saugleistung, Wasserdurchfluss, Wischroute, Reinigungsmodus.
+- Ein ausgeschalteter oder vom WLAN getrennter Roboter blockiert die anderen Roboter des Kontos nicht: Er
+  wird als offline angezeigt und ist von selbst wieder steuerbar (höchstens 6 Minuten nach seiner Rückkehr).
 - Aktualisierung **in Echtzeit** durch den Daemon (30 s während der Reinigung, 60 s im Ruhezustand),
   und Umschaltung auf „getrennt“, wenn die Daten veralten.
 - Dashboard-Kachel (Desktop und Mobil), die Foto, Status, Batterie und Steuerungsaktionen
@@ -64,7 +66,8 @@ Abruf**, und kein Verbindungsversuch wird automatisch wiederholt.
 **Protokoll, Statistiken und Zeitpläne**
 
 - Letzte Reinigung (Beginn, Dauer, Fläche, Endgrund, Fehler) und Verlaufspanel der 10 letzten
-  Reinigungen, mit Aktualisierungsschaltfläche.
+  Reinigungen, mit Aktualisierungsschaltfläche. Die letzte Reinigung aktualisiert sich auch von selbst
+  nach dem Ende einer Reinigung.
 - Vier standardmäßig historisierte kumulierte Zähler: Gesamtdauer, Gesamtfläche, Anzahl der
   Reinigungen, Anzahl der Behälterentleerungen.
 - In der mobilen App erstellte Zeitpläne, schreibgeschützt über den Reiter Gerät einsehbar.
@@ -85,6 +88,20 @@ Abruf**, und kein Verbindungsversuch wird automatisch wiederholt.
 Das Plugin zeigt nicht den Kanal an, über den jeder Roboter erreicht wird (lokale Verbindung oder
 Cloud), und verfolgt oder aktualisiert die Firmware nicht: Diese beiden Funktionen wurden
 zurückgestellt. Die Firmware-Aktualisierung erfolgt über die Roborock-App.
+
+# 12.10.2026
+
+- Korrektur: Ein ausgeschalteter, entladener oder vom WLAN getrennter Roboter verhindert nicht mehr die Steuerung der anderen Roboter des Kontos: Er wird als offline angezeigt, seine Wiederverbindungsversuche verbrauchen kein Roborock-Kontingent mehr, und er ist innerhalb von 6 Minuten nach seiner Rückkehr von selbst wieder steuerbar. <!-- UC44 -->
+- Dokumentation: neuer Abschnitt „Mehrere Roboter im selben Konto“ unter „Echtzeit und Aktualität“ (französische Dokumentation). <!-- UC44 -->
+- Korrektur: das Ändern der Saugleistung, der Wassermenge, der Wischroute oder des Reinigungsmodus meldet nicht mehr fälschlich „nicht angewendet“, wenn der Roboter, zum Beispiel an seiner Station, die Einstellung erst einige Sekunden später übernimmt: Das Plugin wartet jetzt bis zu etwa zwölf Sekunden, bevor es entscheidet, ohne die Antwort zu verlangsamen, wenn die Einstellung sofort übernommen wird. <!-- UC45 -->
+- Dokumentation: der Abschnitt „Feinsteuerung“ erklärt die Überprüfung der Einstellungen nach dem Senden, und der Fehlerbehebungseintrag „nicht angewendet“ wurde präzisiert (französische Dokumentation). <!-- UC45 -->
+- Korrektur: ein Reinigungsauftrag (Starten, Raum- oder Zonenreinigung, über das Dashboard wie über ein Szenario), der gesendet wird, während die Station den Staubbehälter entleert, wird nicht mehr als übermittelt gemeldet, obwohl der Roboter ihn ignoriert: Er wird mit einer Meldung abgelehnt, die zum erneuten Versuch nach Ende der Entleerung auffordert <!-- UC46 -->
+- Dokumentation: der Abschnitt „Status und grundlegende Steuerung“ und die Fehlerbehebungstabelle erklären, warum ein Reinigungsauftrag während der Behälterentleerung abgelehnt wird <!-- UC46 -->
+- Korrektur: Die Befehle „Letzte Reinigung“ aktualisieren sich nach jeder Reinigung wieder von selbst, in der Regel innerhalb weniger Minuten: Hat der Roboter die Reinigung noch nicht gespeichert oder antwortet er nicht (Wischmopp-Wäsche, Entleerung), liest das Plugin sein Protokoll bis zu fünfmal innerhalb von 30 Minuten erneut, ohne Roborock-Kontingent zu verbrauchen. <!-- UC47 -->
+- Dokumentation: Abschnitt „Reinigungsprotokoll“: Zeitpunkte der automatischen Aktualisierung der letzten Reinigung (französische Dokumentation). <!-- UC47 -->
+- Korrektur: Kartennamen, die von manchen Robotern kodiert übermittelt werden (S7: „%20“ statt Leerzeichen, „%E9“ statt „é“), werden jetzt im Klartext angezeigt; bei einem bereits eingerichteten Roboter einmal auf „Kartenliste aktualisieren“ im Reiter Ausrüstung klicken. <!-- UC48 -->
+- Weiterentwicklung: Die Plugin-Seite nennt jetzt die Lizenz GPL v3 oder neuer (offizieller Text beigefügt) und setzt mindestens Jeedom 4.4.7 voraus, die erste Version, die die Python-Abhängigkeiten des Plugins in einer eigenen Umgebung installiert; unter Jeedom 4.4 wird die Roboter-Kachel mit dem Plugin-Symbol angezeigt. <!-- UC50 -->
+- Dokumentation: Mindestversion von Jeedom (4.4.7) und Lizenz (GPL v3 oder später), Offline-Roboter bei mehreren Robotern im Konto, Einstellungen mit kurzer Verzögerung bestätigt, Reinigungsbefehl während der Behälterentleerung abgelehnt, automatische Aktualisierung der letzten Reinigung, Kartennamen im Klartext; bekannte Einschränkungen und Fehlerbehebung ergänzt. <!-- UC109 -->
 
 # 01.10.2026
 
