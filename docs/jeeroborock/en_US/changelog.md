@@ -108,6 +108,11 @@ from the Roborock app.
 - Documentation: the documentation describes the "Vacuum then mop" action: panel, scenario commands, waiting between passes, cancellation, end reasons and limits (French documentation) <!-- UC64 -->
 - Added: the "Map" page gets a "Daily timeline" tab: a per-robot hourly timeline shows what it did (cleaning, returning to the dock, charging, emptying, washing, drying, error, offline), highlights finished cleanings and marks periods without data as "Unknown"; the last 7 days remain available, without using any quota <!-- UC65 -->
 - Documentation: the documentation describes the "Daily timeline" tab: legend, "Unknown" periods, highlighted cleanings, navigation, retention and limits (French documentation) <!-- UC65 -->
+- Added: panel in the Jeedom mobile app: pick your robot, see the map and start a full or room cleaning from your phone, in light or dark theme; the Station and maintenance page and the day timeline remain desktop-only <!-- UC66 -->
+- Documentation: new section on the mobile panel (access, content, missing features) <!-- UC66 -->
+- Documentation: manual control: step-by-step guide to clean a room from the panel, rights table (administrator, execute, read-only, no access), new troubleshooting rows (rights, offline robot, room and zone selection, dock, day timeline, mobile panel, cancelling "vacuum then mop"), known limitations completed and new "Updating the plugin" section (French page only for now) <!-- UC129 -->
+- Added: welcome message in the Jeedom message center, only once per version, on installation and on each plugin update: installed version, links to the documentation, the Market and the forum topic, and a reminder of the "Assistance" button to report a bug and of the diagnostic report to attach to it <!-- UC67 -->
+- Added: the "Assistance" button pre-fills the Community topic with a collapsed "JeeRoborock information" block: daemon and account status, model and firmware of each robot (numbered, without name or identifier), versions, last error and any quota refusal, without any personal data <!-- UC68 -->
 
 # 10/12/2026
 

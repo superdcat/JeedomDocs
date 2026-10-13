@@ -117,6 +117,11 @@ micrologiciel se fait depuis l'application Roborock.
 - Documentation : la documentation décrit l'action « Aspirer puis laver » : panneau, commandes de scénario, attente entre les passages, annulation, motifs de fin et limites (documentation en français) <!-- UC64 -->
 - Ajout : la page « Carte » gagne un onglet « Déroulé de la journée » : une frise horaire par robot montre ce qu'il a fait (nettoyage, retour à la base, charge, vidage, lavage, séchage, erreur, hors ligne), surligne les nettoyages terminés et signale « Inconnu » les périodes sans donnée ; les 7 derniers jours restent consultables, sans aucun quota consommé <!-- UC65 -->
 - Documentation : la documentation décrit l'onglet « Déroulé de la journée » : légende, périodes « Inconnu », nettoyages surlignés, navigation, conservation et limites (documentation en français) <!-- UC65 -->
+- Ajout : panneau dans l'application mobile Jeedom : choisir son robot, voir la carte et lancer un nettoyage total ou par pièces depuis le téléphone, en thème clair comme sombre ; la page Station et entretien et le déroulé de la journée restent réservés à l'ordinateur <!-- UC66 -->
+- Documentation : nouvelle section sur le panneau mobile (accès, contenu, fonctions absentes) <!-- UC66 -->
+- Documentation : pilotage manuel : pas-à-pas pour nettoyer une pièce depuis le panneau, tableau des droits (administrateur, exécution, lecture seule, sans droit), nouvelles lignes de dépannage (droits, robot hors ligne, sélection de pièces et de zone, station, déroulé de la journée, panneau mobile, annulation d'« aspirer puis laver »), limites connues complétées et section « Mise à jour du plugin » <!-- UC129 -->
+- Ajout : message d'accueil dans le centre de messages de Jeedom, une seule fois par version, à l'installation comme à chaque mise à jour du plugin : version installée, liens vers la documentation, le Market et le sujet du forum, rappel du bouton « Assistance » pour signaler un bug et du rapport de diagnostic à y joindre <!-- UC67 -->
+- Ajout : le bouton « Assistance » pré-remplit le sujet Community avec un bloc replié « Informations JeeRoborock » : état du démon et du compte, modèle et micrologiciel de chaque robot (numérotés, sans nom ni identifiant), versions, dernière erreur et éventuel refus de quota, sans aucune donnée personnelle <!-- UC68 -->
 
 # 12/10/2026
 

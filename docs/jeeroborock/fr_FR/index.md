@@ -719,6 +719,26 @@ Il se met à jour sans recharger la page et ne fait aucune requête supplémenta
   **Retourner à la base**.
 - **Robot hors ligne** : les commandes sont inactives, avec une mention. La dernière carte reste visible.
 
+**Nettoyer une pièce, pas à pas.**
+
+1. Ouvrez **Accueil > JeeRoborock**. Si l'entrée manque, voir plus haut la case **Afficher le panneau
+   desktop**.
+2. Si vous avez plusieurs robots, choisissez le vôtre dans la liste **Robot**, en haut de la page. Avec un
+   seul robot, il n'y a pas de liste.
+3. Attendez que la carte et l'état s'affichent. Si une mention signale que le robot est hors ligne ou que
+   vous n'avez pas le droit de le piloter, les boutons resteront inactifs (voir Dépannage).
+4. Dans le panneau de pilotage, ouvrez l'onglet **Pièce**.
+5. Cochez la pièce dans la liste, ou touchez-la sur la carte : elle est mise en évidence. Cochez-en
+   plusieurs si besoin. Rien n'est envoyé au robot à cette étape.
+6. Si vous le souhaitez, réglez la puissance d'aspiration, le débit d'eau et le parcours.
+7. Cliquez sur le bouton principal, **Nettoyer 1 pièce** (ou **Nettoyer N pièces**). C'est ce clic, et lui
+   seul, qui envoie l'ordre.
+8. Suivez l'état et l'avancement en haut du panneau. Utilisez **Pause**, **Arrêter** ou **Retourner à la
+   base** si nécessaire.
+
+Si la pièce n'apparaît pas dans la liste, ou si le bouton reste inactif, consultez le tableau de
+Dépannage.
+
 **Carte interactive.** La carte elle-même sert à choisir et à tracer. Rien n'est envoyé au robot tant que
 vous n'avez pas cliqué sur le bouton principal.
 
@@ -750,11 +770,20 @@ vous n'avez pas cliqué sur le bouton principal.
 - **Écran tactile** : toucher, tracer et déplacer fonctionnent sur tablette et téléphone.
 
 **Droits.** Un ordre n'est envoyé qu'à votre clic, et seulement si Jeedom vous autorise à exécuter les
-commandes du robot. Si vous pouvez voir le robot sans pouvoir l'exécuter, tout est grisé avec une
-mention. Le profil « utilisateur » a tous les droits par défaut : pour limiter, utilisez un profil
-restreint. Un code d'accès ou une confirmation posés sur une commande sont respectés. Avec le seul droit
-de lecture, vous pouvez quand même sélectionner des pièces et tracer une zone sur la carte, mais le
-lancement est refusé.
+commandes du robot. Les droits se règlent dans la gestion des utilisateurs de Jeedom, robot par robot.
+Le profil « utilisateur » a tous les droits par défaut : pour limiter, utilisez un profil restreint. Un
+code d'accès ou une confirmation posés sur une commande sont respectés.
+
+| Votre situation | Ce que vous voyez | Ce que vous pouvez faire |
+|---|---|---|
+| Administrateur | Tous les robots activés | Tout |
+| Droit d'exécution sur le robot | Le robot, sa carte, son état, la station et le déroulé | Tout : sélectionner, tracer, lancer, pause, arrêt, station |
+| Lecture seule | Le robot, sa carte, son état, la station et le déroulé, avec la mention « Vous n'avez pas le droit de piloter ce robot. » | Consulter, sélectionner des pièces et tracer une zone (rien n'est envoyé). Tous les boutons d'action sont inactifs. |
+| Aucun droit sur le robot | Rien : le robot n'est pas dans la liste | Rien. Sans aucun robot accessible, la page affiche « Aucun robot Roborock accessible avec votre compte. » |
+
+Un robot **désactivé** dans Jeedom n'est proposé à personne, administrateur compris. Un lien direct vers un
+robot que vous n'avez pas le droit de lire est ignoré. L'affichage de la carte, du panneau et de la frise
+ne coûte aucun appel au cloud Roborock.
 
 **Robot mémorisé.** Le robot choisi est retenu dans votre navigateur (pas d'un appareil à l'autre). Un
 lien direct vers un robot précis (paramètre de l'adresse) l'emporte sur ce choix.
@@ -853,6 +882,37 @@ jours** sont conservés ; les plus anciens sont supprimés automatiquement. Les 
 
 **L'historique commence à l'installation de la mise à jour.** Le plugin n'a aucun moyen de reconstituer
 le passé : les journées antérieures n'ont pas de donnée.
+
+#### Panneau mobile (application et version mobile de Jeedom)
+
+Le panneau de pilotage est aussi disponible sur téléphone, dans l'application mobile Jeedom et dans la
+version mobile web de Jeedom.
+
+**Où le trouver.** Ouvrez **Accueil**, puis **Plugins**, puis **JeeRoborock**. L'onglet dédié du menu
+personnalisé de l'application mobile est réservé aux **administrateurs** : c'est une limite de Jeedom, pas
+du plugin. Après la mise à jour du plugin, si l'entrée n'apparaît pas, **resynchronisez l'application**.
+L'administrateur peut masquer ce panneau dans la configuration du plugin, côté Jeedom.
+
+**Ce qu'il contient :**
+
+- le choix du robot (si vous en avez plusieurs) ;
+- la carte, avec les pièces cliquables et les zones interdites ;
+- les onglets **Total**, **Pièce** et **Zone** : pour une zone, tracez le rectangle au doigt sur la carte,
+  puis déplacez-le ou redimensionnez-le par ses coins ;
+- les réglages (aspiration, débit d'eau, parcours) quand le robot les propose ;
+- les boutons **Pause**, **Reprendre**, **Arrêter** et **Retourner à la base** ;
+- **Aspirer puis laver**, quand le robot le permet.
+
+**Ce qu'il ne contient pas.** La page **Station et entretien**, le **déroulé de la journée** et le tableau
+des pièces détectées ne sont pas disponibles sur mobile : ouvrez la page Carte de Jeedom sur un ordinateur.
+
+**Droits.** Ce sont les mêmes qu'au bureau : avec le seul droit de lecture, le panneau est en consultation.
+
+**Mises à jour.** L'affichage se met à jour tout seul tant que le panneau est à l'écran. Il est suspendu
+quand l'application passe en arrière-plan et reprend à votre retour.
+
+**Après une mise à jour du plugin.** Si le panneau se comporte bizarrement, fermez complètement
+l'application puis rouvrez-la : une ancienne version est peut-être restée en cache.
 
 ## Pilotage fin
 
@@ -1089,13 +1149,17 @@ quel (voir ci-dessus).
 | « Le robot a accepté l'ordre de nettoyage mais n'a pas démarré. » | Aucun démarrage constaté sous 2 minutes | Vérifiez l'état du robot (bac, vidage en cours…), puis relancez |
 | « Le premier passage ne s'est pas terminé normalement selon le journal du robot… » | Le journal du robot ne classe pas le premier passage comme terminé normalement | Le second passage n'est pas lancé par précaution : consultez le journal des nettoyages, relancez si besoin |
 | « La fin normale du premier passage n'a pas pu être confirmée par le journal du robot dans le délai d'attente… » (« Le second passage n'a pas pu démarrer ») | Le journal du robot n'a pas confirmé la fin du premier passage dans les 15 minutes | Le plugin ne lance jamais le lavage sans cette confirmation : relancez la séquence, ou lancez un lavage seul à la main |
-| « Le robot n'est pas redevenu disponible dans le délai maximal d'attente… » | Après le premier passage, le robot n'est pas revenu en charge stable à sa base en 15 minutes (retiré de la base, vidage bloqué…) | Remettez le robot à sa base, puis relancez la séquence |
+| « Le robot n'est pas redevenu disponible dans le délai maximal d'attente… » | Après le premier passage, le robot n'est pas revenu en charge à sa base (stable depuis au moins 30 secondes) en 15 minutes (retiré de la base, vidage bloqué…) | Remettez le robot à sa base, puis relancez la séquence |
 | « Le robot a été relancé en dehors de la séquence… » | Un nettoyage a été lancé (par exemple depuis l'application mobile) pendant l'attente de la base | Le second passage n'est pas lancé : relancez la séquence une fois le robot à la base |
 | « Le passage en cours n'a pas abouti dans la durée maximale prévue… » | Un passage dure plus de 6 heures | La séquence est arrêtée : vérifiez le robot |
 | « Le plugin n'a pas pu suivre le robot pendant plusieurs minutes… » | Robot ou réseau injoignable pendant plusieurs minutes | Le robot a pu continuer son passage ; ses réglages d'origine ne sont pas rétablis : vérifiez son mode de nettoyage |
 | « Les réglages d'origine du robot n'ont pas pu être rétablis… » | Le rétablissement a échoué en fin de séquence | Vérifiez et corrigez le mode de nettoyage du robot |
 | « Séquence abandonnée » : « La séquence n'est plus suivie par le démon… » | Le démon a été arrêté ou redémarré pendant la séquence (ou le démon est mort) | Le second passage ne sera pas lancé ; le robot a pu poursuivre son passage, et ses réglages d'origine ne sont pas rétablis : vérifiez-les, puis relancez si besoin |
 | « La session Roborock du plugin a changé pendant la séquence… » | Le compte a été changé ou retiré pendant la séquence | Même conséquence : réglages non rétablis, à vérifier |
+| « Aucune séquence « aspirer puis laver » en cours sur ce robot : rien à annuler. » | **Annuler la séquence** a été demandé alors qu'aucune séquence n'est active (elle s'était déjà terminée) | Rien à faire : consultez la ligne **Séquence** |
+| « Annulation enregistrée : le robot sera arrêté… » | L'annulation est prise en compte, mais un ordre est encore en cours d'envoi | Normal : patientez quelques secondes ; l'état passe à « Séquence annulée » |
+| « Séquence annulée, mais l'arrêt du robot a échoué… » ou « Séquence annulée ; les réglages d'origine du robot n'ont pas pu être rétablis. » | Le robot n'a pas confirmé l'arrêt, ou le rétablissement de ses réglages a échoué | Vérifiez l'état du robot, arrêtez-le depuis le panneau si besoin, et contrôlez ses réglages |
+| Bouton « Aspirer puis laver » absent | Le robot ne sait pas laver, ou l'onglet Zone est ouvert (la séquence n'existe que pour Total et Pièce) | Normal : ouvrez l'onglet Total ou Pièce ; sur un robot sans lavage, la fonction n'existe pas |
 | « Nombre de passages invalide : indiquez un nombre entier de 1 à 3… » | Le champ Titre d'un nettoyage de pièces ou de zone (avec le champ Message rempli) contient un nombre refusé : 0, 4 à 99, signé ou décimal | Saisissez 1, 2 ou 3 en chiffres, ou laissez le champ vide pour un seul passage |
 | « Nombre de passages non supporté par ce robot… » | Un nombre de passages de 2 ou 3 a été donné, mais le robot ne déclare pas gérer la répétition | Videz le champ du nombre de passages : le nettoyage se fait alors en un seul passage |
 | « Plage horaire invalide : indiquez un début et une fin au format HH:MM, entre 00:00 et 23:59. » (ne pas déranger, heures creuses) | Un des deux champs de « Définir la plage… » est vide, mal formé (22h00, 2200, 22:5) ou hors bornes (24:00, 22:60) | Saisissez les deux heures au format HH:MM (7:30 est accepté), entre 00:00 et 23:59, puis relancez |
@@ -1117,6 +1181,25 @@ quel (voir ci-dessus).
 | « … transmis au robot (application non confirmée). » après un réglage | Le plugin n'a pas pu vérifier que le robot a pris la valeur : un autre réglage a été envoyé juste après sur le même robot, ou le robot ne répondait plus pendant la vérification. Ce n'est pas une erreur | Contrôlez la valeur affichée par la commande d'information correspondante ; renvoyez le réglage si elle n'est pas la bonne |
 | Un réglage (aspiration, débit d'eau, itinéraire, mode de nettoyage) n'est pas appliqué | Le robot n'a toujours pas pris la valeur une douzaine de secondes après l'avoir reçue : il refuse ce réglage dans son état actuel (en général : pas au repos) | Réessayez une fois le robot au repos ou à sa base |
 | « Cette puissance d'aspiration / ce débit d'eau / cet itinéraire / ce mode de nettoyage n'est pas disponible sur ce robot » | La liste des paliers connue par Jeedom est périmée (le robot n'annonce plus cette valeur) | Rafraîchissez l'état du robot puis réessayez |
+| « Vous n'avez pas le droit de piloter ce robot. » (panneau de pilotage et onglet Station et entretien), boutons grisés | Votre compte Jeedom n'a que le droit de lecture sur ce robot | Demandez à un administrateur de vous accorder le droit d'exécution sur ce robot (gestion des utilisateurs de Jeedom) |
+| « Aucun robot Roborock accessible avec votre compte. » (ou « Équipement introuvable ou inaccessible. ») | Aucun robot activé sur lequel votre compte a le droit de lecture ; le même message sert aussi pour un robot inexistant ou désactivé | Demandez le droit de lecture à un administrateur, ou vérifiez que le robot est activé |
+| « 401 - Accès non autorisé » à l'ouverture de la page Carte | Votre session Jeedom a expiré | Reconnectez-vous à Jeedom |
+| L'entrée JeeRoborock n'apparaît pas dans Accueil | La case **Afficher le panneau desktop** est décochée dans la gestion du plugin | Cochez-la (voir « Panneau « Carte » (Accueil > JeeRoborock) ») |
+| « Robot hors ligne : les commandes sont inactives jusqu'à son retour. » | Le robot ne répond pas au cloud Roborock | Vérifiez son alimentation et son Wi-Fi ; les boutons redeviennent actifs au retour du robot, sans rien recharger |
+| « Fonction indisponible pour ce robot. » ou un bouton absent du panneau | Le robot ne gère pas ce réglage ou cette action | Normal : le panneau ne propose que ce que votre robot sait faire |
+| « Ordre refusé par le robot. » (sans autre précision) | L'ordre a été refusé sans message plus précis | Vérifiez l'état du robot (bac, erreur, pas à la base), puis relancez |
+| Le bouton principal reste inactif, onglet Pièce : « Aucune pièce disponible pour ce robot : synchronisez ses pièces depuis la page de l'équipement. » | Aucune pièce n'a encore été synchronisée | Cliquez sur « Resynchroniser les pièces » dans l'onglet Équipement |
+| « Trop de pièces choisies : lancez le nettoyage en plusieurs fois. » | Le nombre de pièces par ordre est limité | Décochez des pièces, lancez en plusieurs fois |
+| « Certaines pièces ne peuvent pas être choisies ici… » ou « Cette pièce ne peut pas être choisie ici… » | La pièce n'a pas de nom, son nom est en double ou contient une virgule | Renommez-la dans l'application Roborock, puis resynchronisez les pièces |
+| « Pièce inconnue de la carte actuelle : resynchronisez les pièces depuis la page de l'équipement. » | Une pièce cochée n'existe plus sur la carte (redécoupage, changement d'étage) | Décochez-la, ou resynchronisez les pièces ; le bouton de lancement reste inactif tant qu'elle est cochée |
+| « Carte ancienne : sélection impossible. » ou « La carte ne permet pas de délimiter les pièces : choisissez-les dans la liste. » | La carte affichée est une ancienne image, ou ne contient pas de contours de pièces | Choisissez les pièces dans la liste de l'onglet Pièce ; la carte se renouvelle pendant les nettoyages |
+| « Carte indisponible : tracé de zone impossible. », « Zone trop petite : tracez un rectangle plus grand. » ou « La zone doit être entièrement sur la carte. » | Aucune carte exploitable, ou le rectangle est trop petit ou dépasse de la carte | Tracez un rectangle plus grand, entièrement sur la carte ; sans carte, nettoyez par pièce ou en Total |
+| « Ce robot n'a pas de station. » (onglet Station et entretien) | Le robot n'a pas de station d'accueil | Normal : rien à faire |
+| Boutons **Vider**, **Laver**, **Sécher** inactifs, mention « Opération en cours » | Une opération de station est en cours, ou un ordre vient d'être envoyé (au plus 2 minutes) | Patientez ; **Arrêter le séchage** n'est actif que pendant un séchage |
+| « Incident de la station » ou « Un ou plusieurs consommables sont à changer. » | La station signale un incident, ou un consommable est à 10 % ou moins | Traitez l'incident ; remplacez la pièce puis utilisez **Réinitialiser** |
+| « Aucune donnée ce jour-là. » ou « Déroulé indisponible pour le moment. » (frise) | Aucun état enregistré ce jour-là (plugin installé depuis moins longtemps, ou jour hors des 7 derniers) ; ou la lecture a échoué | Changez de jour ; pour l'indisponibilité, rechargez la page. Le message « Jour invalide ou hors de la période conservée. » signifie qu'un jour de plus de 7 jours a été demandé |
+| Mobile : « Le panneau ne peut pas être chargé : revenez à l'accueil puis rouvrez-le. » ou « Le panneau de commandes ne peut pas être chargé. Rechargez la page. » | La liste des robots ou les scripts du panneau n'ont pas pu être chargés (réseau, session, ancienne version en cache) | Rouvrez le panneau ; au besoin, fermez complètement l'application Jeedom puis rouvrez-la |
+| Mobile : « Non disponible sur mobile » | La page Station et entretien, le déroulé et le tableau des pièces détectées n'existent pas sur mobile | Normal : ouvrez la page Carte de Jeedom sur un ordinateur |
 | « Pièce inconnue », « aucune pièce connue » ou « plusieurs pièces portent ce nom » | Le nom saisi ne correspond à aucune pièce détectée, aucune pièce n'a encore été synchronisée, ou le nom est ambigu | Resynchronisez les pièces depuis l'onglet Équipement, utilisez le nom exact de l'application Roborock, ou la commande dédiée à cette pièce plutôt que la commande générique |
 | La commande « Pièce courante » reste sur « Pièce inconnue » | Les pièces n'ont jamais été synchronisées, ou la carte active a changé | Cliquez sur « Resynchroniser les pièces » dans l'onglet Équipement |
 | « Ces coordonnées sortent des limites de la carte connue » | La zone ou le point saisi dépasse la carte actuellement connue du robot | Vérifiez les coordonnées dans le bloc « Zone et point » de l'onglet Équipement, ou rafraîchissez l'image de la carte |
@@ -1130,6 +1213,14 @@ quel (voir ci-dessus).
 
 Pour tout autre message, le texte affiché par le plugin donne directement la cause et, le cas échéant,
 le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniques pour le comprendre.
+
+## Mise à jour du plugin
+
+Les fonctions de pilotage manuel (panneau, carte interactive, station, « aspirer puis laver », déroulé de
+la journée, panneau mobile) ne demandent **aucune action de votre part** après la mise à jour : aucune
+configuration à refaire, aucun équipement à recréer. Deux gestes peuvent toutefois être utiles :
+redémarrer le démon (sinon les états apparaissent en « Autre état » sur la frise) et, sur mobile,
+resynchroniser ou fermer complètement l'application.
 
 ## Limites connues
 
@@ -1174,8 +1265,27 @@ le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniqu
   contente d'afficher, toutes les 30 secondes, la dernière image déjà connue. Cette image n'est
   reconstruite que pendant les nettoyages ; au repos, elle peut donc dater du dernier passage du
   robot.
-- Il n'existe pas de vue carte sur l'application mobile de Jeedom : le panneau carte n'est disponible
-  que sur l'interface desktop.
+- Panneau mobile : version **réduite** du panneau de pilotage. Ni la page Station et entretien, ni le
+  déroulé de la journée, ni le tableau des pièces détectées ne sont disponibles sur mobile : ils ne le
+  sont que sur ordinateur. L'onglet dédié du menu personnalisé de l'application Jeedom est réservé aux
+  administrateurs. Le panneau n'a pas été éprouvé sur tous les téléphones : un appareil peut présenter
+  des défauts d'affichage.
+- **Zones interdites et murs virtuels** : affichés sur la carte en **lecture seule**. Pour en créer, les
+  déplacer ou les supprimer, utilisez l'application Roborock ; le plugin ne bloque pas une zone tracée
+  sur une zone interdite.
+- **Robot hors ligne** : le panneau, la page Station et entretien et l'enchaînement « aspirer puis
+  laver » n'acceptent aucun nouvel ordre. Seul **Annuler la séquence** reste possible pendant une
+  séquence. Les derniers états et la dernière carte restent affichés.
+- **Deux robots, deux séquences** : chaque robot a sa propre séquence « aspirer puis laver », suivie et
+  annulée indépendamment de l'autre.
+- **Station et entretien** : sur un robot **sans station**, l'onglet n'affiche que « Ce robot n'a pas de
+  station. ». Sur un robot avec station, seules les actions et les états que ce robot sait faire
+  apparaissent.
+- **Déroulé de la journée** : la frise est reconstituée à partir des états que le **plugin a lui-même
+  enregistrés** (rien n'est demandé au cloud Roborock). Elle ne contient aucune donnée antérieure à
+  l'installation de la mise à jour. Seuls les **7 derniers jours** sont conservés ; les plus anciens sont
+  supprimés. Au-delà d'un volume d'enregistrements très élevé pour une même journée, l'enregistrement de
+  cette journée s'arrête : la fin de la frise de ce jour-là reste vide.
 - Frise « Déroulé de la journée » : **« Hors ligne »** signifie que le robot **ne répond pas** ; un seul
   délai dépassé suffit, ce n'est pas forcément une coupure longue.
 - Sur la frise, une **pause** en cours de nettoyage, le **déplacement vers une cible**, la
