@@ -96,6 +96,44 @@ le robot annonce réellement** : deux robots, même de modèles proches, n'ont p
 même liste. Une commande absente signifie une capacité non détectée sur ce robot, pas un défaut du
 plugin.
 
+### Commandes selon le modèle
+
+Le plugin ne connaît pas de liste de commandes « par modèle ». Il crée une commande quand le robot ou sa
+station **déclare** la capacité correspondante, ou **répond** quand le plugin l'interroge. Une commande
+absente veut donc dire « ce matériel ne l'annonce pas (ou pas encore) », pas « le plugin est en panne ».
+Un robot avec une station complète n'a pas la même liste qu'un robot sans station, ni qu'un robot plus
+ancien du même fabricant.
+
+**Faire apparaître une commande qui manque :**
+
+1. Vérifiez que le démon est démarré, que le compte est lié et que le robot est **en ligne** : tant que
+   le robot n'a pas répondu une première fois, aucune commande dépendant de ses capacités n'est créée.
+2. Lancez la commande **« Rafraîchir »** de l'équipement, ou patientez : l'état est relu tout seul
+   toutes les 60 secondes au repos (30 secondes pendant un nettoyage). Les commandes se créent à cette
+   relecture. Rechargez ensuite la page de l'équipement.
+3. Après une mise à jour du micrologiciel du robot (depuis l'application Roborock) ou du plugin, faites
+   la même chose. N'utilisez **pas** « Synchroniser les équipements » pour cela : ce bouton sert à
+   découvrir les robots du compte et consomme du quota Roborock.
+4. Si le robot a répondu qu'il ne connaît pas un réglage lu par interrogation (ne pas déranger, volume),
+   le plugin ne réinterroge qu'**une fois par heure** ; en cas d'échec de lecture (robot injoignable), il
+   réessaie au bout de 5 minutes. La commande « Rafraîchir » force une lecture immédiate.
+5. Juste après « Rafraîchir », les derniers réglages de la liste (volume, modes de la station) peuvent
+   manquer si la relecture a manqué de temps : relancez « Rafraîchir » ou attendez une minute.
+
+Le plugin ne supprime pas de lui-même une commande déjà créée.
+
+| Capacité | Commandes concernées | Condition d'apparition |
+|---|---|---|
+| Consommables de la station | « Usure filtre station », « Usure brosse de nettoyage », « Usure sac à poussière » et, sauf pour le sac, leur action « Réinitialiser… » | La station possède l'équipement (lavage de la serpillière pour le filtre, brosse de nettoyage, vidage automatique pour le sac) **et** le robot remonte le compteur. Relus environ toutes les heures, ou à « Rafraîchir » |
+| Bacs et serpillière | « Réservoir d'eau propre vide », « Bac d'eau sale plein ou absent », « Serpillière installée » | Réservoir et bac : la station lave les serpillières. Serpillière : le robot déclare gérer le mode eau. Créées à la relecture suivante de l'état |
+| Verrou enfant | « Verrou enfant », « Activer… », « Désactiver… » | Le robot déclare gérer ce réglage. Créées à la relecture suivante de l'état |
+| Ne pas déranger | Information, début, fin, trois actions | Le robot répond à la lecture du mode. Relu toutes les minutes ; à « Rafraîchir » immédiatement |
+| Heures creuses | Information, début, fin, trois actions | Le robot déclare la fonction. Créées à la relecture suivante de l'état |
+| Volume | « Volume », « Régler le volume » | Le robot répond à la lecture du volume. Relu toutes les minutes ; à « Rafraîchir » immédiatement |
+| Modes de la station | « Mode de vidage » et « Régler le mode de vidage » ; « Mode de lavage serpillère » et « Régler le mode de lavage » | La station déclare le vidage automatique (mode de vidage) ou le lavage de la serpillière (mode de lavage). Créées à la relecture suivante de l'état |
+| Nombre de passages | Aucune commande propre : un paramètre des actions « Nettoyer des pièces » et « Nettoyer une zone » | Le robot indique, dans son état, gérer la répétition. Alors le champ est libellé « Nombre de passages (1 à 3) » ; sans cela, le champ n'est pas libellé et un nombre de 2 ou 3 est en principe refusé par le plugin |
+| Pièce courante | « Pièce courante » | Une image de la carte a été lue, la carte est découpée en pièces et la position du robot est exploitable. Première image : à la première relecture, puis pendant un nettoyage ou après un changement d'état |
+
 ### Informations générales
 
 L'onglet « Équipement » affiche en lecture seule le modèle, le micrologiciel, la version de protocole, le
@@ -137,6 +175,266 @@ Ces commandes n'apparaissent **que si votre station le permet** :
 L'usure des consommables détectés par votre robot (brosse principale, brosse latérale, filtre, capteurs,
 rouleau de serpillière) est publiée en pourcentage restant, chacune avec une action « Réinitialiser… » à
 utiliser après un remplacement physique. Cette action demande une confirmation avant de s'exécuter.
+
+Selon l'équipement de votre station, et si le robot remonte le compteur, trois usures supplémentaires
+apparaissent, elles aussi en pourcentage restant :
+
+- « Usure filtre station » : stations qui lavent la serpillière ;
+- « Usure brosse de nettoyage » : stations qui en possèdent une (en pratique, certaines stations haut de
+  gamme) ;
+- « Usure sac à poussière » : stations à vidage automatique.
+
+Sans station, ou avec une station basique, ces commandes n'apparaissent pas. Le filtre de la station et la
+brosse de nettoyage ont chacun une action « Réinitialiser le filtre station » ou « Réinitialiser la brosse
+de nettoyage », avec confirmation, comme les autres. Le sac à poussière n'a pas de réinitialisation dans le
+plugin (lecture seule) : si vous le remettez à zéro ailleurs (application Roborock), la valeur suit à la
+relecture suivante.
+
+Ces valeurs sont relues environ une fois par heure, immédiatement avec la commande « Rafraîchir », et après
+une réinitialisation. Les pourcentages peuvent différer légèrement de ceux de l'application Roborock.
+
+**Exemple de scénario** : déclencheur sur la commande « Usure filtre station », condition « inférieure à
+10 », action « Envoyer une notification » (« Pensez à remplacer le filtre de la station »). Après le
+remplacement, lancez l'action « Réinitialiser le filtre station » (elle demande confirmation) : ne la
+mettez pas dans un scénario automatique, le compteur reviendrait à 100 % sans que la pièce ait été changée.
+
+Trois informations oui/non, utilisables dans un scénario, décrivent aussi l'état de l'eau et de la
+serpillière :
+
+- « Réservoir d'eau propre vide » et « Bac d'eau sale plein ou absent » : uniquement si votre station lave
+  les serpillières. « Oui » signale une situation à vérifier (remplir le réservoir, vider ou remettre en
+  place le bac). Le robot ne distingue pas un bac sale plein d'un bac absent, d'où le libellé ;
+- « Serpillière installée » : uniquement si votre robot est équipé d'une serpillière.
+
+Ces informations sont distinctes de « Manque d'eau » : le robot les remonte séparément, et elles peuvent
+se signaler en même temps. Elles sont rafraîchies avec l'état du robot (environ une minute au repos),
+ou immédiatement avec « Rafraîchir ». Si une valeur est momentanément indisponible, la dernière valeur
+connue est conservée.
+
+**Exemple de scénario** : déclencheur sur « Réservoir d'eau propre vide » ou « Bac d'eau sale plein ou
+absent » (valeur « Oui »), action « Envoyer une notification » (« Vérifiez le réservoir ou le bac de la
+station »). Une condition sur « Serpillière installée » (valeur « Non ») permet de ne pas lancer un
+nettoyage avec lavage quand la serpillière n'est pas posée.
+
+### Réglages de l'appareil
+
+Le **verrou enfant** désactive les boutons physiques du robot (pratique contre un enfant ou un animal trop curieux). Trois commandes lui sont consacrées :
+
+- « Verrou enfant » : information oui/non, utilisable en condition de scénario (par exemple pour n'activer le verrou que s'il ne l'est pas déjà) ;
+- « Activer le verrou enfant » et « Désactiver le verrou enfant » : deux actions.
+
+Ces commandes n'apparaissent **que si votre robot déclare gérer ce réglage**. Sinon, aucune des trois n'existe : ce n'est pas une panne, deux robots n'ont pas la même liste de commandes.
+
+Après un ordre, le plugin relit l'état du robot pour vérifier qu'il l'a bien pris, comme pour les réglages décrits dans « Pilotage fin » (jusqu'à une douzaine de secondes, sans renvoyer l'ordre). La commande « Verrou enfant » n'affiche que ce que le robot a réellement adopté, jamais la valeur demandée. Les messages possibles :
+
+| Message | Signification |
+| --- | --- |
+| « Verrou enfant activé. » / « Verrou enfant désactivé. » | Le robot a pris l'ordre : l'état relu correspond. |
+| « Activation (ou Désactivation) du verrou enfant transmise au robot (application non confirmée). » | L'ordre est parti, mais l'état n'a pas pu être relu, ou un autre ordre de verrou enfant l'a remplacé pendant la vérification. L'état affiché reste l'ancien. |
+| « Le robot n'a pas appliqué l'ordre de verrou enfant : l'état relu ne correspond pas à la demande. » | Le robot répond, mais n'a pas adopté le réglage au bout du délai. L'état affiché est celui relu sur le robot. |
+| Refus du robot | Le robot a refusé l'ordre ; le message l'indique. |
+| Robot hors ligne | Le robot ne répond pas (éteint, hors de portée) ; l'ordre n'est pas pris. |
+
+Le plugin ne renvoie jamais un ordre tout seul : en cas d'échec, relancez-le vous-même.
+
+**Exemple de scénario** : à la fin du nettoyage (« En nettoyage » passe à « Non »), si la condition « Verrou enfant » vaut « Non », lancez l'action « Activer le verrou enfant ».
+
+Un changement fait depuis l'application Roborock (ou la touche du robot) n'est pas signalé au plugin : il apparaît dans « Verrou enfant » sous environ une minute, ou immédiatement avec la commande « Rafraîchir ».
+
+**Patientez quelques secondes entre deux ordres de verrou enfant.** Un ordre envoyé moins de 5 secondes après la fin du précédent (vérification comprise), sur le même robot, est refusé avec le message « Un ordre de verrou enfant vient d'être envoyé à ce robot : patientez quelques secondes avant d'en envoyer un autre. » Dans un scénario, prévoyez une pause d'au moins 5 secondes entre deux actions de verrou enfant.
+
+#### Ne pas déranger
+
+Le mode **ne pas déranger** empêche le robot de démarrer ou de parler pendant une plage horaire (la nuit, par exemple). Six commandes lui sont consacrées :
+
+| Commande | Type | Rôle |
+| --- | --- | --- |
+| Ne pas déranger | Information oui/non | Indique si le mode est activé, utilisable en condition de scénario |
+| Début ne pas déranger | Information texte | Heure de début de la plage, au format HH:MM |
+| Fin ne pas déranger | Information texte | Heure de fin de la plage, au format HH:MM |
+| Activer ne pas déranger | Action | Active le mode avec la plage enregistrée par le robot |
+| Désactiver ne pas déranger | Action | Désactive le mode |
+| Définir la plage ne pas déranger | Action avec deux champs, Début et Fin | Enregistre la plage et active le mode |
+
+Ces commandes n'apparaissent **que si le robot répond à la lecture du mode**. Elles sont créées au plus tard environ une minute après que le robot est joignable, ou immédiatement avec « Rafraîchir ». Si elles manquent, ce n'est pas une panne : deux robots n'ont pas la même liste de commandes.
+
+Les heures sont exprimées dans l'**heure locale du robot**, comme dans l'application Roborock.
+
+**Définir la plage** : renseignez les champs Début et Fin au format HH:MM, entre 00:00 et 23:59. Une heure sur un chiffre comme 7:30 est acceptée et normalisée en 07:30. L'action est utilisable dans un scénario : le champ **Titre** reçoit le début, le champ **Message** la fin (leurs aides de saisie sont libellées « Début (HH:MM) » et « Fin (HH:MM) »). Une plage qui franchit minuit est acceptée (par exemple 22:00 → 07:00). Un début égal à la fin est refusé. Définir la plage **active aussi le mode**.
+
+| Saisie (début → fin) | Résultat |
+|---|---|
+| 22:00 → 07:00, ou 7:30 → 22:15 | Valide (plage qui franchit minuit, ou heure sur un chiffre normalisée en 07:30) |
+| 00:00 → 23:59 | Valide |
+| 24:00 → 07:00, 22:60 → 07:00 | Refusée : heure ou minute hors bornes |
+| 22h00 → 07h00, 2200 → 0700, 22:5 → 07:00 | Refusée : le format doit être HH:MM (minutes sur deux chiffres, séparateur « : ») |
+| (champ vide) → 07:00 | Refusée : un champ est vide |
+| 22:00 → 22:00 | Refusée : début égal à la fin |
+
+**Exemple de scénario** : tous les soirs à 21 h, lancez l'action « Définir la plage ne pas déranger » avec le début 22:00 et la fin 07:00. Pour couper les annonces en journée, utilisez plutôt « Activer ne pas déranger » / « Désactiver ne pas déranger » sur la plage déjà enregistrée.
+
+**Activer** réapplique la plage déjà enregistrée par le robot. Si le robot n'en renvoie aucune, l'action est refusée : utilisez alors « Définir la plage ». **Désactiver** conserve normalement la plage enregistrée, mais ce comportement dépend du robot et reste à confirmer : si vous comptez sur « Activer » ensuite, contrôlez « Début ne pas déranger » et « Fin ne pas déranger ».
+
+Après un ordre, le plugin relit l'état du robot pour vérifier qu'il l'a bien pris (quelques secondes, sans renvoyer l'ordre). Les commandes d'information n'affichent que ce que le robot a réellement adopté. Les messages possibles :
+
+| Message | Signification |
+| --- | --- |
+| « Ne pas déranger activé. » / « Ne pas déranger désactivé. » / « Plage ne pas déranger appliquée. » | Le robot a pris l'ordre : l'état relu correspond. |
+| « Activation (ou Désactivation) de ne pas déranger transmise au robot (application non confirmée). » / « Plage ne pas déranger transmise au robot (application non confirmée). » | L'ordre est parti, mais l'état n'a pas pu être relu. L'état affiché reste l'ancien. |
+| « Le robot n'a pas appliqué l'ordre ne pas déranger : l'état relu ne correspond pas à la demande. » | Le robot répond, mais n'a pas adopté le réglage au bout du délai. |
+| « Plage horaire invalide : indiquez un début et une fin au format HH:MM, entre 00:00 et 23:59. » | Un champ est vide ou mal formé. Corrigez-le. |
+| « Plage horaire invalide : le début et la fin de la plage ne pas déranger doivent être différents. » | Début et fin identiques. |
+| « Le robot n'a renvoyé aucune plage ne pas déranger exploitable : définissez la plage, ce qui active aussi le mode. » | « Activer » n'a aucune plage à réappliquer : utilisez « Définir la plage ». |
+| « Un ordre ne pas déranger vient d'être envoyé à ce robot : patientez quelques secondes avant d'en envoyer un autre. » | Deux ordres trop rapprochés. |
+| Refus du robot / robot hors ligne | Le robot a refusé l'ordre ou ne répond pas ; l'ordre n'est pas pris. |
+
+Le plugin ne renvoie jamais un ordre tout seul : en cas d'échec, relancez-le vous-même.
+
+Un changement fait depuis l'application Roborock n'est pas signalé au plugin : il apparaît dans Jeedom sous environ une minute, ou immédiatement avec « Rafraîchir ».
+
+**Patientez au moins 5 secondes entre deux ordres ne pas déranger** sur le même robot, sinon le dernier est refusé (message « patientez »). Dans un scénario, prévoyez une pause d'au moins 5 secondes entre deux actions ne pas déranger.
+
+#### Heures creuses
+
+La **recharge en heures creuses** fait attendre au robot la plage horaire choisie (la nuit, par exemple, en tarif réduit d'électricité) pour **recharger sa batterie**. Elle retarde la recharge uniquement : elle ne bloque pas un nettoyage que vous demandez. Six commandes lui sont consacrées :
+
+| Commande | Type | Rôle |
+| --- | --- | --- |
+| Recharge en heures creuses | Information oui/non | Indique si la fonction est activée, utilisable en condition de scénario |
+| Début des heures creuses | Information texte | Heure de début de la plage, au format HH:MM |
+| Fin des heures creuses | Information texte | Heure de fin de la plage, au format HH:MM |
+| Activer la recharge en heures creuses | Action | Active la fonction avec la plage enregistrée par le robot |
+| Désactiver la recharge en heures creuses | Action | Désactive la fonction |
+| Définir la plage des heures creuses | Action avec deux champs, Début (HH:MM) et Fin (HH:MM) | Enregistre la plage et active la fonction |
+
+Ces commandes n'apparaissent **que si le robot déclare la fonction**. Elles sont créées au plus tard environ une minute après que le robot est joignable, ou immédiatement avec « Rafraîchir ». Si elles manquent, ce n'est pas une panne : deux robots n'ont pas la même liste de commandes.
+
+Les heures sont exprimées dans l'**heure locale du robot**, comme dans l'application Roborock.
+
+**Définir la plage** : renseignez les champs Début et Fin au format HH:MM, entre 00:00 et 23:59. Une heure sur un chiffre comme 7:30 est acceptée et normalisée en 07:30. L'action est utilisable dans un scénario, avec ces deux champs. Une plage qui franchit minuit est acceptée (par exemple 23:00 → 07:00). Un début égal à la fin est refusé. Définir la plage **active aussi la recharge en heures creuses**. Dans un scénario, le champ **Titre** reçoit le début et le champ **Message** la fin (aides de saisie « Début (HH:MM) » et « Fin (HH:MM) »). Mêmes règles de saisie que « Ne pas déranger » :
+
+| Saisie (début → fin) | Résultat |
+|---|---|
+| 23:00 → 07:00, ou 7:30 → 22:15 | Valide (la seconde est normalisée en 07:30) |
+| 24:00 → 07:00, 23:60 → 07:00 | Refusée : heure ou minute hors bornes |
+| 23h00 → 07h00, 2300 → 0700, 23:5 → 07:00 | Refusée : le format doit être HH:MM |
+| (champ vide) → 07:00 | Refusée : un champ est vide |
+| 23:00 → 23:00 | Refusée : début égal à la fin |
+
+**Exemple de scénario** : une fois par semaine, lancez « Définir la plage des heures creuses » avec le début 23:00 et la fin 07:00 pour réaligner la plage sur votre contrat d'électricité ; ou déclenchez « Activer la recharge en heures creuses » quand votre scénario de départ du domicile s'exécute.
+
+**Activer** réapplique la plage déjà enregistrée par le robot. Si le robot n'en renvoie aucune, l'action est refusée : utilisez alors « Définir la plage des heures creuses ». **Désactiver** conserve normalement la plage enregistrée, mais ce comportement dépend du robot et reste à confirmer : si vous comptez sur « Activer » ensuite, contrôlez « Début des heures creuses » et « Fin des heures creuses ».
+
+Après un ordre, le plugin relit l'état du robot pour vérifier qu'il l'a bien pris (quelques secondes, sans renvoyer l'ordre). Les commandes d'information n'affichent que ce que le robot a réellement adopté. Les messages possibles :
+
+| Message | Signification |
+| --- | --- |
+| « Recharge en heures creuses activée. » / « Recharge en heures creuses désactivée. » / « Plage des heures creuses appliquée. » | Le robot a pris l'ordre : l'état relu correspond. |
+| « Activation (ou Désactivation) de la recharge en heures creuses transmise au robot (application non confirmée). » / « Plage des heures creuses transmise au robot (application non confirmée). » | L'ordre est parti, mais l'état n'a pas pu être relu. L'état affiché reste l'ancien. |
+| « Le robot n'a pas appliqué l'ordre de recharge en heures creuses : l'état relu ne correspond pas à la demande. » | Le robot répond, mais n'a pas adopté le réglage au bout du délai. |
+| « Plage horaire invalide : indiquez un début et une fin au format HH:MM, entre 00:00 et 23:59. » | Un champ est vide ou mal formé. Corrigez-le. |
+| « Plage horaire invalide : le début et la fin des heures creuses doivent être différents. » | Début et fin identiques. |
+| « Le robot n'a renvoyé aucune plage d'heures creuses exploitable : définissez la plage, ce qui active aussi la recharge en heures creuses. » | « Activer » n'a aucune plage à réappliquer : utilisez « Définir la plage des heures creuses ». |
+| « Un ordre de recharge en heures creuses vient d'être envoyé à ce robot : patientez quelques secondes avant d'en envoyer un autre. » | Deux ordres trop rapprochés. |
+| Refus du robot / robot hors ligne | Le robot a refusé l'ordre ou ne répond pas ; l'ordre n'est pas pris. |
+
+Le plugin ne renvoie jamais un ordre tout seul : en cas d'échec, relancez-le vous-même.
+
+Un changement fait depuis l'application Roborock n'est pas signalé au plugin : il apparaît dans Jeedom sous environ une minute, ou immédiatement avec « Rafraîchir ».
+
+**Patientez au moins 5 secondes entre deux ordres d'heures creuses** sur le même robot, sinon le dernier est refusé (message « patientez »). Cette pause est indépendante de celle de « Ne pas déranger » : un ordre ne pas déranger ne retarde pas un ordre heures creuses. Dans un scénario, prévoyez une pause d'au moins 5 secondes entre deux actions heures creuses.
+
+#### Volume
+
+Le **volume** est celui des annonces vocales du robot (« Début du nettoyage », « Retour à la station »…), de 0 à 100 %. Deux commandes lui sont consacrées :
+
+| Commande | Type | Rôle |
+| --- | --- | --- |
+| Volume | Information numérique (%) | Volume relu sur le robot, utilisable en condition de scénario |
+| Régler le volume | Action avec curseur de 0 à 100 | Envoie le volume demandé au robot |
+
+Dans un scénario, « Régler le volume » accepte une valeur (par exemple 40) ou une expression (par exemple un calcul à partir d'une autre commande).
+
+Ces commandes n'apparaissent **que si le robot répond à la lecture du volume**. Elles sont créées au plus tard environ une minute après que le robot est joignable, ou immédiatement avec « Rafraîchir ». Si elles manquent, ce n'est pas une panne : deux robots n'ont pas la même liste de commandes.
+
+**Valeurs acceptées** : un nombre entier de 0 à 100, 0 compris (0 coupe les annonces). Une valeur vide, décimale (50.5) ou hors bornes (-1, 101) est refusée avec le message « Volume invalide : indiquez un nombre entier entre 0 et 100. », sans rien envoyer au robot.
+
+Après un ordre, le plugin relit le volume du robot pour vérifier qu'il l'a bien pris (quelques secondes, sans renvoyer l'ordre). La commande « Volume » n'affiche que ce que le robot a réellement adopté. Les messages possibles :
+
+| Message | Signification |
+| --- | --- |
+| « Volume appliqué. » | Le robot a pris l'ordre : le volume relu correspond. |
+| « Réglage du volume transmis au robot (application non confirmée). » | L'ordre est parti, mais le volume n'a pas pu être relu. La valeur affichée reste l'ancienne. |
+| « Le robot n'a pas appliqué le volume demandé : le volume relu ne correspond pas à la demande. » | Le robot répond, mais a retenu une autre valeur. « Volume » affiche la valeur relue. |
+| « Un réglage du volume vient d'être envoyé à ce robot : patientez quelques secondes avant d'en envoyer un autre. » | Deux réglages trop rapprochés. |
+| Refus du robot / robot hors ligne | Le robot a refusé l'ordre ou ne répond pas ; l'ordre n'est pas pris. |
+
+Le plugin ne renvoie jamais un ordre tout seul : en cas d'échec, relancez-le vous-même. Pour entendre le nouveau volume, lancez la commande « Localiser ».
+
+**Exemple de scénario** : à 22 h, lancez « Régler le volume » avec la valeur 20 ; à 8 h, avec la valeur 50. Pour baisser le volume de moitié, passez une expression à partir de la commande d'information « Volume » (par exemple `round(#[Salon][Robot][Volume]#/2)`, nom d'équipement fictif : le résultat doit être un nombre entier de 0 à 100, sinon l'ordre est refusé, d'où le `round`).
+
+**La position du curseur de « Régler le volume » montre la dernière valeur envoyée depuis Jeedom, pas forcément le volume réel du robot, et ne suit pas un changement fait dans l'application Roborock. La référence est l'information « Volume ».**
+
+Un changement fait depuis l'application Roborock n'est pas signalé au plugin : il apparaît dans « Volume » sous environ une minute, ou immédiatement avec « Rafraîchir ».
+
+**Patientez au moins 5 secondes entre deux réglages du volume** sur le même robot, sinon le dernier est refusé (message « patientez »). Dans un scénario, prévoyez une pause d'au moins 5 secondes entre deux actions « Régler le volume ».
+
+#### Mode de vidage
+
+Le **mode de vidage** règle l'intensité avec laquelle la station vide le bac à poussière du robot. Deux commandes lui sont consacrées :
+
+| Commande | Type | Rôle |
+| --- | --- | --- |
+| Mode de vidage | Information texte | Mode relu sur la station, utilisable en condition de scénario |
+| Régler le mode de vidage | Action de type liste | Envoie le mode choisi à la station |
+
+Ces commandes n'apparaissent **que si la station déclare ce réglage** (vidage automatique du bac) : un robot sans station, ou avec une station qui ne vide pas le bac, n'en a aucune. Elles sont créées au plus tard environ une minute après que le robot est joignable, ou immédiatement avec « Rafraîchir ». Si elles manquent, ce n'est pas une panne : deux robots n'ont pas la même liste de commandes.
+
+**Modes proposés** : Intelligent, Léger, Équilibré, Max. Cette liste vient de la bibliothèque utilisée par le plugin et est identique pour toutes les stations : comparez-la avec celle de l'application Roborock. Si la station renvoie un code que le plugin ne connaît pas, « Mode de vidage » affiche « Mode inconnu (N) », où N est ce code.
+
+Dans un scénario, « Régler le mode de vidage » se choisit par le **code du mode** (et non par son libellé), comme pour les autres commandes de type liste du plugin.
+
+Après un ordre, le plugin relit le mode de la station pour vérifier qu'il a été pris (quelques secondes, sans renvoyer l'ordre). « Mode de vidage » n'affiche que ce que la station a réellement adopté. Les messages possibles :
+
+| Message | Signification |
+| --- | --- |
+| « Mode de vidage réglé sur « … ». » | La station a pris l'ordre : le mode relu correspond. |
+| « Mode de vidage « … » transmis au robot (application non confirmée). » | L'ordre est parti, mais le mode n'a pas pu être relu. La valeur affichée reste l'ancienne. |
+| « La station n'a pas appliqué le mode de vidage demandé : le mode relu ne correspond pas à la demande. » | La station répond, mais a retenu un autre mode. « Mode de vidage » affiche le mode relu. |
+| « Ce mode de vidage n'est pas disponible sur la station de ce robot : rafraîchissez son état avant de réessayer. » | Le mode demandé n'est pas connu pour cette station. |
+| « Un réglage du mode de vidage vient d'être envoyé à ce robot : patientez quelques secondes avant d'en envoyer un autre. » | Deux réglages trop rapprochés. |
+| Refus du robot / robot hors ligne | Le robot a refusé l'ordre ou ne répond pas ; l'ordre n'est pas pris. |
+
+Le plugin ne renvoie jamais un ordre tout seul : en cas d'échec, relancez-le vous-même. Le réglage du vidage n'a pas pu être vérifié sur tous les robots : si votre station ne l'accepte pas, le message de refus ci-dessus vous l'indique.
+
+**Exemple de scénario** : déclencheur « Mode de vidage » qui vaut « Max » ; action « Régler le mode de vidage » avec le code du mode « Équilibré » (les codes sont ceux de la liste de la commande), pour repasser en mode courant.
+
+Un changement fait depuis l'application Roborock n'est pas signalé au plugin : il apparaît dans « Mode de vidage » sous environ une minute, ou immédiatement avec « Rafraîchir ».
+
+**Patientez au moins 5 secondes entre deux réglages du mode de vidage** sur le même robot, sinon le dernier est refusé (message « patientez »). Dans un scénario, prévoyez une pause d'au moins 5 secondes entre deux actions « Régler le mode de vidage ».
+
+#### Mode de lavage de la serpillère
+
+Le **mode de lavage** règle l'intensité du lavage de la serpillère par la station. Deux commandes lui sont consacrées :
+
+| Commande | Type | Rôle |
+| --- | --- | --- |
+| Mode de lavage serpillère | Information texte | Mode relu sur la station, utilisable en condition de scénario |
+| Régler le mode de lavage | Action de type liste | Envoie le mode choisi à la station |
+
+Ces commandes n'apparaissent **que si la station déclare ce réglage** : un robot sans station de lavage n'en a aucune. Elles sont créées au plus tard environ une minute après que le robot est joignable, ou immédiatement avec « Rafraîchir ». Si elles manquent, ce n'est pas une panne.
+
+**Modes proposés** : Léger, Équilibré, Profond, plus **Très profond** ou **Intelligent** selon le robot. Comme pour le vidage, comparez avec l'application Roborock. Un code non reconnu s'affiche « Mode inconnu (N) ».
+
+Dans un scénario, « Régler le mode de lavage » se choisit par le **code du mode**, pas par son libellé.
+
+Après un ordre, le plugin relit le mode de la station. Les messages possibles sont les mêmes que pour le vidage, avec « lavage » à la place de « vidage » : « Mode de lavage réglé sur « … ». », « Mode de lavage « … » transmis au robot (application non confirmée). », « La station n'a pas appliqué le mode de lavage demandé… », « Ce mode de lavage n'est pas disponible sur la station de ce robot… » et « Un réglage du mode de lavage vient d'être envoyé à ce robot : patientez quelques secondes… ». Le plugin ne renvoie jamais un ordre tout seul. Ce réglage n'a pas été vérifié sur tous les robots : en cas de refus, le message l'indique.
+
+**Exemple de scénario** : après un nettoyage avec lavage, si « Mode de lavage serpillère » vaut « Léger », lancez « Régler le mode de lavage » avec le code du mode « Équilibré » avant le prochain nettoyage programmé.
+
+Un changement fait depuis l'application Roborock apparaît sous environ une minute, ou immédiatement avec « Rafraîchir ».
+
+**Patientez au moins 5 secondes entre deux réglages du mode de lavage** sur le même robot, sinon le dernier est refusé. Cette pause est indépendante de celle du mode de vidage.
 
 ### Journal des nettoyages
 
@@ -355,6 +653,36 @@ Le même onglet propose deux blocs distincts, chacun avec son propre bouton :
   l'équipement**, pas des champs de ce panneau. Sans image de carte récupérée, seules des bornes
   générales sont connues.
 
+### Pièce où se trouve le robot
+
+La commande d'information **« Pièce courante »** indique le nom de la pièce où se trouve le robot.
+
+- **D'où vient la valeur** : elle est déduite de la position du robot sur l'image de la carte déjà
+  lue par le plugin. Elle ne demande aucun appel supplémentaire au robot ni au cloud Roborock.
+- **Délai** : pendant un nettoyage, la valeur est recalculée environ toutes les 30 secondes. Au repos,
+  elle est relue au plus une minute environ après un changement d'état (par exemple le retour à la
+  base).
+- **Valeurs particulières** (fixes, toujours en français, utilisables telles quelles comme constantes
+  dans une condition de scénario) :
+  - **« Aucune pièce »** : le robot est hors de toute pièce connue (couloir non découpé, base placée
+    hors d'une pièce…).
+  - **« Pièce inconnue »** : la position ou la carte active n'est pas connue, les pièces n'ont pas
+    encore été synchronisées, ou la carte vient de changer.
+- **Ancienneté** : survolez la tuile pour lire les deux dates. La date de valeur est celle de l'entrée
+  dans la pièce ; la date de collecte est celle de la dernière image de carte traitée. Un robot
+  immobile paraît donc « ancien » : c'est normal.
+- **Scénarios** : un scénario ne se déclenche que sur un **vrai changement de pièce**, pas à chaque
+  relecture.
+  **Exemple de scénario** : déclencheur sur la commande « Pièce courante », condition « vaut Cuisine »
+  (nom fictif : utilisez le nom exact de votre pièce), action « Envoyer une notification ». Le scénario
+  ne part qu'à l'entrée du robot dans la pièce.
+- **Commande absente** : elle n'est pas créée si la carte n'est pas découpée en pièces ou si la
+  position du robot n'est pas exploitable. Elle apparaît d'elle-même dès la première image exploitable.
+- **Robot hors ligne** : la dernière valeur connue est conservée.
+- **Après un changement de carte**, la valeur passe à « Pièce inconnue » jusqu'à un clic sur
+  **« Resynchroniser les pièces »**. Faites de même après avoir redécoupé vos pièces dans l'application
+  Roborock.
+
 ### Panneau « Carte » (Accueil > JeeRoborock)
 
 La carte est un **panneau**, pas une page du menu Plugins : elle s'ouvre depuis le menu
@@ -366,6 +694,165 @@ toutes les 30 secondes tant que la page reste ouverte.
 Si l'entrée n'apparaît pas dans **Accueil**, vérifiez que la case **Afficher le panneau desktop** est
 cochée sur la page de gestion du plugin (**Plugins > Gestion des plugins > JeeRoborock**) : elle est
 cochée automatiquement à l'installation, mais reste modifiable.
+
+La page comporte trois onglets : **Carte et pilotage** (ouvert par défaut), **Station et entretien** et
+**Déroulé de la journée**.
+
+#### Panneau de pilotage
+
+À droite de la carte, un panneau permet de **piloter le robot sélectionné** sans quitter la page.
+Il se met à jour sans recharger la page et ne fait aucune requête supplémentaire au cloud Roborock.
+
+- **État** : état du robot, batterie et, pendant un nettoyage, avancement.
+- **Onglets Total, Pièce et Zone** : changer d'onglet ne lance rien.
+  - **Total** : nettoie tout le logement.
+  - **Pièce** : cochez une ou plusieurs pièces. Une pièce n'est pas proposée si son nom est absent, en
+    double ou contient une virgule : renommez-la dans l'application Roborock, puis resynchronisez les
+    pièces. Le nombre de pièces par ordre est limité : au-delà, lancez le nettoyage en plusieurs fois.
+  - **Zone** : cliquez et glissez sur la carte pour tracer un rectangle. Une zone trop petite ou qui
+    sort de la carte est refusée avant l'envoi. L'onglet est inactif si la carte est indisponible.
+- **Réglages** : puissance d'aspiration, débit d'eau et parcours. Seules les valeurs de **votre** robot
+  sont proposées, et un réglage qu'il ne gère pas n'est pas affiché. La valeur affichée est celle que le
+  robot a réellement adoptée.
+- **Bouton principal** : « Nettoyer tout », « Nettoyer N pièces » ou « Nettoyer la zone », selon
+  l'onglet. Pendant un nettoyage, il laisse place à **Pause** (ou **Reprendre**), **Arrêter** et
+  **Retourner à la base**.
+- **Robot hors ligne** : les commandes sont inactives, avec une mention. La dernière carte reste visible.
+
+**Carte interactive.** La carte elle-même sert à choisir et à tracer. Rien n'est envoyé au robot tant que
+vous n'avez pas cliqué sur le bouton principal.
+
+- **Noms des pièces** : chaque pièce porte son nom, écrit sur la carte. Une pièce sans nom s'affiche
+  « Pièce sans nom ». Si la carte ne permet pas de délimiter les pièces, un message l'indique : choisissez
+  alors les pièces dans la liste de l'onglet Pièce.
+- **Choisir une pièce** : touchez ou cliquez une pièce pour la sélectionner (elle est mise en évidence),
+  touchez-la de nouveau pour la désélectionner. La sélection est la même que celle de la liste de l'onglet
+  Pièce : cocher ou décocher d'un côté met l'autre à jour. Vous pouvez choisir plusieurs pièces.
+- **Pièces non choisissables** : une pièce sans nom, en double ou dont le nom contient une virgule garde son
+  étiquette, mais la sélectionner est refusée, avec une explication. Renommez-la dans l'application
+  Roborock, puis resynchronisez les pièces depuis la page de l'équipement.
+- **Pièce inconnue de la carte actuelle** : après un redécoupage des pièces ou un changement d'étage, une
+  pièce déjà cochée peut ne plus exister sur la carte. Elle est signalée « Pièce inconnue de la carte
+  actuelle » et le bouton de lancement reste inactif tant qu'elle est cochée. Décochez-la, ou
+  resynchronisez les pièces depuis la page de l'équipement.
+- **Carte ancienne** : si la carte affichée est une ancienne image (robot injoignable), la sélection sur la
+  carte est impossible (« Carte ancienne : sélection impossible »). Sans carte du tout, les onglets Pièce
+  et Zone sont inactifs.
+- **Tracer une zone** (onglet Zone) : cliquez et glissez pour tracer un rectangle. Faites-le glisser pour le
+  déplacer, tirez un de ses coins pour le redimensionner, ou cliquez sur **Effacer la zone** pour le
+  supprimer. Le rectangle est conservé quand la carte se rafraîchit, sauf si le robot change d'étage de
+  carte ou si vous changez de robot.
+- **Zones interdites et murs virtuels** : ceux que vous avez définis dans l'application Roborock sont
+  dessinés sur la carte, avec une légende. Ils sont en **lecture seule** : on ne les crée ni ne les modifie
+  ici. Une modification faite dans l'application n'apparaît qu'à la prochaine récupération de la carte.
+  Si votre robot n'en a pas, ou n'en fournit pas, rien n'est dessiné et aucun message n'apparaît. Une zone
+  que vous tracez sur une zone interdite n'est pas bloquée par le plugin.
+- **Écran tactile** : toucher, tracer et déplacer fonctionnent sur tablette et téléphone.
+
+**Droits.** Un ordre n'est envoyé qu'à votre clic, et seulement si Jeedom vous autorise à exécuter les
+commandes du robot. Si vous pouvez voir le robot sans pouvoir l'exécuter, tout est grisé avec une
+mention. Le profil « utilisateur » a tous les droits par défaut : pour limiter, utilisez un profil
+restreint. Un code d'accès ou une confirmation posés sur une commande sont respectés. Avec le seul droit
+de lecture, vous pouvez quand même sélectionner des pièces et tracer une zone sur la carte, mais le
+lancement est refusé.
+
+**Robot mémorisé.** Le robot choisi est retenu dans votre navigateur (pas d'un appareil à l'autre). Un
+lien direct vers un robot précis (paramètre de l'adresse) l'emporte sur ce choix.
+
+**Précaution.** Si vous venez d'arrêter un nettoyage par pièce, évitez de lancer aussitôt « Nettoyer
+tout » : le robot peut reprendre le nettoyage interrompu au lieu de repartir sur tout le logement.
+Vérifiez ce qu'il fait ; au besoin, arrêtez-le puis relancez.
+
+**Aspirer puis laver.** Ce bloc enchaîne deux nettoyages sur la même portée : un **premier passage en
+aspiration seule**, puis un **second passage en lavage seul**. Il n'apparaît que si votre robot sait laver
+(sinon, ni le bloc ni les commandes correspondantes ne sont créés).
+
+- **Lancer** : dans l'onglet **Total**, le bouton **Aspirer puis laver** traite tout le logement ; dans
+  l'onglet **Pièce**, il traite les pièces cochées. Il n'existe pas pour l'onglet Zone. Le nombre de
+  passages demandé (voir « Pilotage fin ») s'applique aux deux passages.
+- **État affiché** : la ligne **Séquence** indique où en est l'enchaînement : « Passage 1 sur 2 :
+  aspiration », « En attente de la base », « Passage 2 sur 2 : lavage », puis, à la fin, « Séquence
+  terminée », « Séquence annulée », « Séquence interrompue », « Le second passage n'a pas pu démarrer » ou
+  « Séquence abandonnée ». Quand la séquence s'arrête sans aller au bout, le **motif** est affiché dessous
+  (voir Dépannage).
+- **Annuler** : le bouton **Annuler la séquence** apparaît tant qu'une séquence est active. Il arrête le
+  robot, rétablit ses réglages d'origine et empêche le second passage.
+- **Fermer le panneau n'interrompt rien** : la séquence est suivie en arrière-plan par le plugin, pas par
+  votre navigateur. Rouvrez le panneau pour retrouver l'état.
+- Avec le seul droit de lecture, l'état est visible mais les boutons sont inactifs.
+
+#### Onglet « Station et entretien »
+
+Cet onglet regroupe, pour le robot sélectionné, la station d'accueil et l'entretien. Il se met à jour
+comme le panneau de pilotage et **ne consomme aucun quota** du cloud Roborock. Le détail de chaque
+commande est dans la section « Station d'accueil, consommables et entretien » plus haut.
+Il se compose de trois blocs ; **seul ce que votre robot sait faire apparaît**.
+
+- **Actions** : **Vider le bac**, **Laver la serpillère**, **Sécher la serpillère** et **Arrêter le
+  séchage**, ainsi que les listes **Mode de vidage** et **Mode de lavage de la serpillère**.
+- **État** : vidage du bac, lavage et séchage de la serpillère, eau propre, eau sale, serpillère
+  installée, manque d'eau et **incident de la station**. Cet incident est distinct de l'erreur du robot :
+  une erreur du robot ne s'y affiche pas. Il est aussi rappelé en bandeau rouge, et la **dernière mise à
+  jour** est indiquée en haut de l'onglet.
+- **Consommables** : durée de vie restante en pourcentage. À **10 % ou moins**, la mention **À changer**
+  apparaît, avec un bandeau d'alerte. Le bouton **Réinitialiser** remet le compteur à zéro après
+  confirmation, à faire une fois la pièce remplacée. Il n'existe pas pour le sac.
+
+Si le robot n'a pas de station, l'onglet affiche **Ce robot n'a pas de station.**
+
+**Opération en cours.** Tant qu'une opération de station est en cours, **Vider**, **Laver** et **Sécher**
+sont inactifs et portent la mention « Opération en cours ». Il en va de même juste après l'envoi d'un
+ordre : le bouton reste inactif jusqu'à ce que l'état change, et au plus pendant **2 minutes**.
+**Arrêter le séchage** n'est actif que **pendant un séchage**.
+
+**Refus « robot pas à la base ».** Une opération de station exige que le robot soit à sa base. Sinon, le
+plugin la refuse et l'indique (voir le tableau de dépannage). Il ne relance **jamais** l'ordre de
+lui-même : ramenez le robot à la base, puis recommencez.
+
+**Robot hors ligne.** Les boutons sont inactifs, avec une mention. Les derniers états connus restent
+affichés, avec la date de leur dernière mise à jour.
+
+**Droits.** Avec le seul droit de lecture, l'onglet est en consultation : aucun bouton n'est actif et une
+mention l'explique.
+
+#### Onglet « Déroulé de la journée »
+
+Cet onglet montre, sur une **frise horaire**, ce que le robot a fait au fil d'une journée : une bande de
+couleur, une couleur par état. Il est en **lecture seule** et **ne consomme aucun quota** du cloud
+Roborock : il relit seulement ce que le plugin a déjà enregistré. Il n'est visible que si vous avez le
+droit de **lecture** sur le robot.
+
+**Légende.** Chaque couleur correspond à une catégorie :
+
+| Catégorie | Signification |
+|---|---|
+| **Nettoyage** | Le robot aspire ou lave. |
+| **Retour à la base** | Le robot rentre à sa base. |
+| **En charge** | Le robot est posé sur sa base. |
+| **Vidage du bac** | La station vide le bac. |
+| **Lavage de la serpillère** | La station lave la serpillère. |
+| **Séchage de la serpillère** | La station sèche la serpillère. |
+| **En erreur** | Le robot est en erreur. |
+| **Hors ligne** | Le robot ne répond pas. |
+| **Autre état** | Tout état qui n'a pas sa propre couleur. |
+| **Inconnu** | Aucune information reçue pendant cette période. |
+
+**« Inconnu ».** Cette zone hachurée couvre une période **sans donnée** : démon arrêté, Jeedom éteint. Le
+plugin ne prolonge **jamais** le dernier état connu. Une période est « Inconnue » au-delà de **15
+minutes** sans nouvelle du robot.
+
+**Nettoyages terminés.** Sous la frise, une fine bande sombre (**Nettoyage terminé**) surligne les
+nettoyages du **journal des nettoyages** qui rencontrent la journée affichée.
+
+**Détail.** Survolez (souris) ou touchez (écran tactile) une période pour afficher son détail sous la
+frise.
+
+**Navigation.** Les boutons **Jour précédent** et **Jour suivant** changent de jour. Les **7 derniers
+jours** sont conservés ; les plus anciens sont supprimés automatiquement. Les heures sont celles du
+**fuseau horaire de Jeedom**. Un jour sans enregistrement affiche **Aucune donnée ce jour-là.**
+
+**L'historique commence à l'installation de la mise à jour.** Le plugin n'a aucun moyen de reconstituer
+le passé : les journées antérieures n'ont pas de donnée.
 
 ## Pilotage fin
 
@@ -382,9 +869,80 @@ Selon les capacités détectées sur votre robot, les commandes suivantes peuven
   l'application Roborock à la synchronisation suivante — y compris quand le nom de la pièce contient une
   apostrophe, une esperluette, un dièse ou un pourcentage (« Salle d'eau », par exemple) — sauf si vous
   avez personnalisé ce nom à la main dans Jeedom, auquel cas votre nom personnalisé est conservé.
+  Pour nettoyer en plusieurs passages, voir « Nombre de passages » ci-dessous.
 - **Nettoyer une zone** — reçoit quatre coordonnées `x1,y1,x2,y2` en millimètres et nettoie le
-  rectangle correspondant.
+  rectangle correspondant. Le nombre de passages se règle comme pour les pièces (voir ci-dessous).
+- **Nombre de passages** (commandes « Nettoyer des pièces » et « Nettoyer une zone ») — renseignez le
+  champ **Message** de la commande, puis indiquez 1, 2 ou 3 (en chiffres) dans le champ **Titre**.
+  - **C'est un paramètre de l'ordre en cours, pas un réglage.** Il n'existe aucune commande « Nombre de
+    passages » à régler une fois pour toutes : indiquez-le à chaque ordre, sinon c'est un seul passage.
+    Il n'est jamais mémorisé par le robot ni par le plugin.
+  - Champ Titre vide : un seul passage, comme avant.
+  - Un nombre de trois chiffres ou plus (« 100 », « 2024 ») ou du texte (« deux ») est ignoré : le
+    nettoyage se fait en un passage, sans message.
+  - 0, un nombre de 4 à 99, un nombre signé ou décimal sont refusés (voir Dépannage).
+  - Le même nombre s'applique à chaque pièce de l'ordre ; pour une zone, il s'applique à la zone.
+
+  | Champ Titre | Résultat |
+  |---|---|
+  | (vide), 1 | Un passage |
+  | 2, 3 | Deux ou trois passages |
+  | 0, 4, 10, 99 | Refusé : nombre entier de 1 à 3 attendu |
+  | -1, +2, 2.5, 2,5 | Refusé : nombre signé ou décimal |
+  | 100, 2024, deux, x2 | Ignoré : un seul passage, sans message |
+
+  **Exemple de scénario** : action « Nettoyer des pièces » avec, dans le champ Message, « Cuisine,
+  Salon » (noms fictifs) et, dans le champ Titre, 2 : les deux pièces sont nettoyées en deux passages.
+  Pour la zone, le champ Message reçoit `x1,y1,x2,y2` et le champ Titre 2 ou 3.
+  - Les boutons « Nettoyer <pièce> » font toujours un seul passage.
+  - Quand le champ Message est vide, le champ Titre garde son rôle habituel (noms de pièces ou
+    coordonnées), malgré son libellé.
+  - Le champ est libellé « Nombre de passages (1 à 3) » seulement si le robot déclare gérer la
+    répétition.
+  - Le réglage de répétition de l'application Roborock n'est jamais modifié. Sans nombre de passages,
+    le robot applique son propre réglage, comme avant.
+  - Un nombre de passages de 2 ou 3 est refusé par le plugin si le robot, relu juste avant l'ordre, ne
+    déclare pas gérer la répétition. Si la relecture échoue, l'ordre part et c'est le robot qui décide.
 - **Se déplacer vers un point** — reçoit deux coordonnées `x,y` en millimètres.
+- **Aspirer puis laver** — enchaîne un passage en aspiration seule puis un passage en lavage seul. Quatre
+  commandes, créées seulement si le robot sait laver :
+  - **Aspirer puis laver (pièces séparées par des virgules, vide pour tout le logement)** (action) :
+    champ **Message** vide = tout le logement ; sinon, noms de pièces séparés par des virgules (comme
+    « Nettoyer des pièces »). Le **nombre de passages** se met dans le champ **Titre** (1 à 3), pour la
+    portée « pièces » seulement ; il s'applique aux deux passages. Pour tout le logement, il n'y a pas
+    de nombre de passages : un seul passage par étape.
+  - **Annuler la séquence** (action) : arrête la séquence en cours. Sans séquence active, elle répond
+    qu'il n'y a rien à annuler.
+  - **État de la séquence** (information) : « Aucune séquence », « Passage 1 sur 2 : aspiration », « En
+    attente de la base », « Passage 2 sur 2 : lavage », « Séquence terminée », « Séquence annulée »,
+    « Séquence interrompue », « Le second passage n'a pas pu démarrer » ou « Séquence abandonnée ».
+  - **Motif de fin de séquence** (information) : « Aucun », ou la raison pour laquelle la séquence s'est
+    arrêtée (voir Dépannage). Ces deux informations ne sont pas historisées.
+
+  **Exemple de scénario** : action « Aspirer puis laver » avec « Cuisine, Salon » (noms fictifs) dans le
+  champ Message ; un second bloc peut attendre que « État de la séquence » vaille « Séquence terminée ».
+
+  **Comment la séquence se déroule.**
+  - Le second passage ne part que lorsque la **fin normale du premier passage est confirmée par le
+    journal du robot** et que le robot est **en charge de façon stable depuis 30 secondes** à sa base
+    (le temps du vidage ou du lavage éventuel). Un robot en vidage n'est jamais relancé : le plugin
+    attend.
+  - **Attente maximale de la base : 15 minutes** après la fin du premier passage. Au-delà, le second
+    passage n'est pas lancé.
+  - Le plugin vérifie que le robot **a bien démarré** : sans démarrage constaté sous **2 minutes**, le
+    passage est déclaré sans effet.
+  - **Durée maximale d'un passage : 6 heures.** Au-delà, la séquence est arrêtée.
+  - À chaque fin (réussie, annulée ou interrompue), les **réglages d'origine** du robot (aspiration,
+    débit d'eau, itinéraire) sont **rétablis**. Pendant la séquence, le plugin les remplace par des
+    réglages « aspiration seule » puis « lavage seul ».
+  - **Pendant une séquence, les autres nettoyages sont refusés** : nettoyer des pièces, une zone, lancer
+    un usage, ou « Démarrer » (sauf pour **reprendre** un nettoyage mis en pause). Annulez d'abord la
+    séquence.
+  - **Arrêter** ou **Retour à la base**, depuis Jeedom ou depuis l'application mobile, mettent fin à la
+    séquence : le second passage n'est pas lancé.
+  - **Aucune nouvelle tentative automatique** : si le second passage ne peut pas démarrer, rien n'est
+    renvoyé. Relancez la séquence vous-même.
+  - Lancer une séquence sur un robot qui nettoie déjà (ou est en pause) est refusé.
 
 Après un réglage de puissance d'aspiration, de débit d'eau, d'itinéraire de serpillère ou de mode de
 nettoyage, le plugin relit l'état du robot pour vérifier qu'il l'a bien pris. Il lui laisse jusqu'à une
@@ -524,6 +1082,29 @@ quel (voir ci-dessus).
 | « L'image de la carte est trop volumineuse pour être transférée » | La carte produite par le robot dépasse la taille que le plugin accepte de stocker | Réessayez plus tard ; si le problème persiste, ce robot n'est pas compatible avec cette fonction |
 | « Le robot doit être à la base pour lancer cette opération » | Une action d'entretien de la station a été demandée alors que le robot n'est pas à sa base | Attendez que le robot retourne à sa base, ou lancez « Retour à la base » d'abord |
 | « Le robot vide son bac à poussière : l'ordre de nettoyage n'a pas été envoyé… » | Un ordre de nettoyage (« Démarrer », « Nettoyer des pièces », « Nettoyer <pièce> », « Nettoyer une zone ») a été donné pendant que la station vide le bac ; le robot l'aurait ignoré | Patientez la fin du vidage (quelques secondes à une minute), puis relancez l'ordre. Dans un scénario, attendez que l'état du robot soit revenu à « En charge » avant de relancer |
+| « Une séquence « aspirer puis laver » est en cours sur ce robot : annulez-la avant de lancer un autre nettoyage. » | Un nettoyage (pièces, zone, usage, « Démarrer ») a été demandé pendant une séquence | Cliquez sur « Annuler la séquence », ou attendez sa fin, puis relancez |
+| « Le robot a déjà un nettoyage en cours ou en pause : arrêtez-le avant de lancer « aspirer puis laver ». » | La séquence a été lancée alors que le robot nettoyait ou était en pause | Arrêtez le nettoyage, puis relancez la séquence |
+| Séquence interrompue : « Le robot a été arrêté ou renvoyé à la base pendant la séquence… » | Vous (ou l'application mobile) avez utilisé Arrêter ou Retour à la base | Normal : le second passage n'est pas lancé. Relancez la séquence si besoin |
+| Séquence interrompue : « Le robot s'est arrêté en erreur pendant la séquence… » | Le robot a signalé une erreur (bloqué, bac manquant…) | Consultez l'état du robot, traitez l'incident, relancez |
+| « Le robot a accepté l'ordre de nettoyage mais n'a pas démarré. » | Aucun démarrage constaté sous 2 minutes | Vérifiez l'état du robot (bac, vidage en cours…), puis relancez |
+| « Le premier passage ne s'est pas terminé normalement selon le journal du robot… » | Le journal du robot ne classe pas le premier passage comme terminé normalement | Le second passage n'est pas lancé par précaution : consultez le journal des nettoyages, relancez si besoin |
+| « La fin normale du premier passage n'a pas pu être confirmée par le journal du robot dans le délai d'attente… » (« Le second passage n'a pas pu démarrer ») | Le journal du robot n'a pas confirmé la fin du premier passage dans les 15 minutes | Le plugin ne lance jamais le lavage sans cette confirmation : relancez la séquence, ou lancez un lavage seul à la main |
+| « Le robot n'est pas redevenu disponible dans le délai maximal d'attente… » | Après le premier passage, le robot n'est pas revenu en charge stable à sa base en 15 minutes (retiré de la base, vidage bloqué…) | Remettez le robot à sa base, puis relancez la séquence |
+| « Le robot a été relancé en dehors de la séquence… » | Un nettoyage a été lancé (par exemple depuis l'application mobile) pendant l'attente de la base | Le second passage n'est pas lancé : relancez la séquence une fois le robot à la base |
+| « Le passage en cours n'a pas abouti dans la durée maximale prévue… » | Un passage dure plus de 6 heures | La séquence est arrêtée : vérifiez le robot |
+| « Le plugin n'a pas pu suivre le robot pendant plusieurs minutes… » | Robot ou réseau injoignable pendant plusieurs minutes | Le robot a pu continuer son passage ; ses réglages d'origine ne sont pas rétablis : vérifiez son mode de nettoyage |
+| « Les réglages d'origine du robot n'ont pas pu être rétablis… » | Le rétablissement a échoué en fin de séquence | Vérifiez et corrigez le mode de nettoyage du robot |
+| « Séquence abandonnée » : « La séquence n'est plus suivie par le démon… » | Le démon a été arrêté ou redémarré pendant la séquence (ou le démon est mort) | Le second passage ne sera pas lancé ; le robot a pu poursuivre son passage, et ses réglages d'origine ne sont pas rétablis : vérifiez-les, puis relancez si besoin |
+| « La session Roborock du plugin a changé pendant la séquence… » | Le compte a été changé ou retiré pendant la séquence | Même conséquence : réglages non rétablis, à vérifier |
+| « Nombre de passages invalide : indiquez un nombre entier de 1 à 3… » | Le champ Titre d'un nettoyage de pièces ou de zone (avec le champ Message rempli) contient un nombre refusé : 0, 4 à 99, signé ou décimal | Saisissez 1, 2 ou 3 en chiffres, ou laissez le champ vide pour un seul passage |
+| « Nombre de passages non supporté par ce robot… » | Un nombre de passages de 2 ou 3 a été donné, mais le robot ne déclare pas gérer la répétition | Videz le champ du nombre de passages : le nettoyage se fait alors en un seul passage |
+| « Plage horaire invalide : indiquez un début et une fin au format HH:MM, entre 00:00 et 23:59. » (ne pas déranger, heures creuses) | Un des deux champs de « Définir la plage… » est vide, mal formé (22h00, 2200, 22:5) ou hors bornes (24:00, 22:60) | Saisissez les deux heures au format HH:MM (7:30 est accepté), entre 00:00 et 23:59, puis relancez |
+| « Plage horaire invalide : le début et la fin … doivent être différents. » | Le début et la fin de la plage sont identiques | Choisissez deux heures différentes (une plage qui franchit minuit, comme 22:00 → 07:00, est acceptée) |
+| « Le robot n'a renvoyé aucune plage … exploitable : définissez la plage… » | « Activer » (ne pas déranger ou heures creuses) n'a aucune plage enregistrée à réappliquer | Lancez « Définir la plage… » avec un début et une fin : cela active aussi la fonction |
+| « Volume invalide : indiquez un nombre entier entre 0 et 100. » | La valeur est vide, décimale (50.5), négative ou supérieure à 100 | Indiquez un entier de 0 à 100 ; dans une expression de scénario, arrondissez avec `round(...)` |
+| « Ce mode de vidage (ou de lavage) n'est pas disponible sur la station de ce robot : rafraîchissez son état avant de réessayer. » | Le code de mode demandé n'est pas connu pour cette station (liste périmée, ou code erroné dans un scénario) | Lancez « Rafraîchir », rechargez la page de l'équipement, puis choisissez un mode dans la liste de la commande |
+| « Un ordre (ou un réglage) … vient d'être envoyé à ce robot : patientez quelques secondes avant d'en envoyer un autre. » (verrou enfant, ne pas déranger, heures creuses, volume, mode de vidage, mode de lavage) | Deux ordres du même type sur le même robot à moins de 5 secondes d'intervalle | Patientez au moins 5 secondes ; dans un scénario, intercalez une pause de 5 secondes entre les deux actions |
+| « Le robot (ou la station) n'a pas appliqué … : l'état relu ne correspond pas à la demande. » (verrou enfant, ne pas déranger, heures creuses, volume, mode de vidage, mode de lavage) | Le robot répond mais n'a pas adopté le réglage au bout du délai de vérification (quelques secondes, jusqu'à une douzaine) | Contrôlez la valeur affichée par la commande d'information correspondante (elle montre ce que le robot a réellement adopté), relancez l'ordre ; si cela se répète, essayez robot au repos ou à sa base |
 | « Cette opération d'entretien n'est pas disponible sur la station de ce robot » | La station de ce robot ne prend pas en charge cette action | C'est normal : la commande ne devrait pas apparaître si la station ne le permet pas ; rafraîchissez l'état du robot |
 | « La liste des usages reçue du cloud Roborock est incomplète : par précaution, aucun usage n'a été supprimé. » | La réponse du cloud a été tronquée, ou ce robot a plus de 64 usages | Relancez la synchronisation plus tard ; rien n'a été perdu entre-temps |
 | « Les conditions d'utilisation Roborock n'ont pas été acceptées » (ou « ont changé ») | Roborock demande de valider (ou revalider) ses conditions d'utilisation | Ouvrez l'application mobile Roborock, acceptez les conditions proposées, puis réessayez depuis Jeedom |
@@ -537,6 +1118,7 @@ quel (voir ci-dessus).
 | Un réglage (aspiration, débit d'eau, itinéraire, mode de nettoyage) n'est pas appliqué | Le robot n'a toujours pas pris la valeur une douzaine de secondes après l'avoir reçue : il refuse ce réglage dans son état actuel (en général : pas au repos) | Réessayez une fois le robot au repos ou à sa base |
 | « Cette puissance d'aspiration / ce débit d'eau / cet itinéraire / ce mode de nettoyage n'est pas disponible sur ce robot » | La liste des paliers connue par Jeedom est périmée (le robot n'annonce plus cette valeur) | Rafraîchissez l'état du robot puis réessayez |
 | « Pièce inconnue », « aucune pièce connue » ou « plusieurs pièces portent ce nom » | Le nom saisi ne correspond à aucune pièce détectée, aucune pièce n'a encore été synchronisée, ou le nom est ambigu | Resynchronisez les pièces depuis l'onglet Équipement, utilisez le nom exact de l'application Roborock, ou la commande dédiée à cette pièce plutôt que la commande générique |
+| La commande « Pièce courante » reste sur « Pièce inconnue » | Les pièces n'ont jamais été synchronisées, ou la carte active a changé | Cliquez sur « Resynchroniser les pièces » dans l'onglet Équipement |
 | « Ces coordonnées sortent des limites de la carte connue » | La zone ou le point saisi dépasse la carte actuellement connue du robot | Vérifiez les coordonnées dans le bloc « Zone et point » de l'onglet Équipement, ou rafraîchissez l'image de la carte |
 | « Ce consommable n'est pas suivi pour ce robot » | La commande de réinitialisation a été utilisée avant que l'usure de ce consommable ait été remontée au moins une fois | Rafraîchissez l'état du robot avant de réinitialiser ce consommable |
 | « Une synchronisation (ou une lecture) vient d'être effectuée, patientez » (usages, pièces ou programmations) | Une resynchronisation a déjà eu lieu il y a moins d'une minute | Patientez une minute avant de relancer la même resynchronisation |
@@ -554,12 +1136,15 @@ le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniqu
 - Le plugin ne pilote que des robots compatibles avec le protocole V1 de Roborock, via le cloud. Les
   robots plus anciens (protocole A01) ne sont pas pris en charge.
 - Les libellés produits par le robot lui-même (état, erreur, état de la station, noms de consommables)
-  restent **toujours en français**, quelle que soit la langue choisie pour l'interface Jeedom.
+  restent **toujours en français**, quelle que soit la langue choisie pour l'interface Jeedom. Il en va
+  de même des valeurs « Aucune pièce » et « Pièce inconnue » de la commande « Pièce courante ».
 - Un changement de carte fait depuis l'application mobile est désormais détecté automatiquement, en
   tâche de fond, dans la minute environ : la carte active, l'image et le repère de la carte se mettent
   à jour sans action de votre part (la liste des pièces, elle, est vidée et attend un clic sur
   « Resynchroniser les pièces »). Pendant ce court délai, la configuration peut encore afficher
-  l'ancien étage, et une page Équipement déjà ouverte ne se rafraîchit pas seule : rechargez-la.
+  l'ancien étage, et une page Équipement déjà ouverte ne se rafraîchit pas seule : rechargez-la. De même,
+  la commande « Pièce courante » peut brièvement (une minute au plus) désigner une pièce de l'ancien
+  étage, puis passe à « Pièce inconnue » jusqu'à la resynchronisation des pièces.
 - La connexion locale évoquée plus haut (« Ce que le plugin fait, et ce qu'il ne fait pas ») ne peut pas
   être désactivée depuis Jeedom.
 - Le plugin affiche la version du **micrologiciel** du robot (onglet « Équipement », mise à jour à la
@@ -584,17 +1169,65 @@ le geste à faire — il n'est jamais nécessaire d'ouvrir les journaux techniqu
   premier « Rafraîchir la liste des cartes » ou changement de carte.
 - La lecture des noms de pièces (panneau « Pièces » de l'onglet Équipement) exige que le robot soit
   **en ligne** : elle échoue si le robot est injoignable au moment du clic.
-- La vue carte (panneau « Accueil > JeeRoborock ») ne déclenche elle-même aucune mise à jour : elle se
+- La vue carte (panneau « Accueil > JeeRoborock ») ne déclenche rien d'elle-même (un ordre ne part que
+  sur votre clic dans le panneau de pilotage) et ne lance aucune mise à jour : elle se
   contente d'afficher, toutes les 30 secondes, la dernière image déjà connue. Cette image n'est
   reconstruite que pendant les nettoyages ; au repos, elle peut donc dater du dernier passage du
   robot.
 - Il n'existe pas de vue carte sur l'application mobile de Jeedom : le panneau carte n'est disponible
   que sur l'interface desktop.
+- Frise « Déroulé de la journée » : **« Hors ligne »** signifie que le robot **ne répond pas** ; un seul
+  délai dépassé suffit, ce n'est pas forcément une coupure longue.
+- Sur la frise, une **pause** en cours de nettoyage, le **déplacement vers une cible**, la
+  **cartographie** et la **pose ou le retrait de la serpillère** apparaissent en **Autre état**. Le
+  **séchage** qui a lieu pendant la charge apparaît **En charge** : « Séchage de la serpillère » ne
+  couvre que le séchage signalé comme tel par le robot.
+- Après une mise à jour du plugin, tant que le **démon n'a pas redémarré**, les états apparaissent en
+  **Autre état** sur la frise. Redémarrez le démon.
+- La précision d'**« Inconnu »** est de l'ordre de **quelques minutes** : le début peut précéder l'arrêt
+  réel de quelques minutes. Une coupure de **moins de 15 minutes** sans redémarrage du démon n'apparaît
+  pas.
+- Seuls les **10 derniers nettoyages** du journal peuvent être surlignés sur la frise.
 - Les commandes reprises par la tuile de tableau de bord (batterie, en nettoyage, erreur, connecté,
   en ligne et les cinq actions de pilotage) sont masquées une seule fois, à la création de la tuile.
   Si vous en réaffichez une manuellement, le plugin ne la re-masque jamais : votre choix est conservé.
 - Sur une installation mise à jour depuis une version ancienne du plugin, une migration technique
   ponctuelle a pu réactiver l'historisation de la commande « Erreur » : si vous ne souhaitez pas
   historiser cette commande, désactivez-le manuellement sur sa configuration.
+- Seul le **Roborock Qrevo Curv** est testé. Les capacités ajoutées par la parité avec Home Assistant
+  (consommables et bacs de la station, verrou enfant, ne pas déranger, heures creuses, volume, modes de
+  la station, nombre de passages, pièce courante) n'ont **aucune garantie** sur un autre modèle, le
+  Roborock S7 compris : le plugin crée les commandes que le robot déclare ou auxquelles il répond, sans
+  avoir pu vérifier leur effet réel sur chaque matériel. Un ordre accepté peut être refusé par le robot ;
+  c'est alors signalé (voir Dépannage).
+- L'usure du **sac à poussière** de la station est en lecture seule : le plugin n'a pas d'action pour la
+  réinitialiser. Les pourcentages des consommables peuvent différer légèrement de ceux de l'application.
+- Les réglages de l'appareil (verrou enfant, ne pas déranger, heures creuses, volume, modes de la
+  station) ne sont **pas poussés** au plugin : un changement fait depuis l'application Roborock ou la
+  touche du robot n'apparaît dans Jeedom qu'à la relecture suivante (environ une minute, ou « Rafraîchir »).
+- Le plugin ne renvoie **jamais** un ordre de réglage tout seul après un refus ou un échec : relancez-le
+  vous-même. Deux ordres du même type sur le même robot doivent être espacés d'au moins 5 secondes.
+- « Désactiver » ne pas déranger ou les heures creuses conserve normalement la plage enregistrée, mais
+  ce comportement dépend du robot et n'est pas confirmé.
+- Le nombre de passages est un paramètre de chaque ordre de nettoyage par pièce ou par zone, jamais un
+  réglage mémorisé. Pour une zone, la façon dont le robot interprète la valeur de répétition n'a pas pu
+  être confirmée sur tous les modèles : si « 2 » ne donne pas deux passages sur votre robot, signalez-le.
+  Les boutons « Nettoyer <pièce> » restent à un seul passage.
+- Les listes de modes de vidage et de lavage viennent de la bibliothèque utilisée par le plugin, pas de
+  la station : un mode de l'application Roborock peut manquer, un mode proposé peut être refusé par la
+  station. Un code de mode inconnu s'affiche « Mode inconnu (N) ».
+- La commande « Pièce courante » dépend de la dernière image de carte lue : elle peut avoir un retard
+  d'une minute environ au repos, et garde sa dernière valeur si le robot est hors ligne. Après un
+  changement de carte fait depuis l'application, elle peut brièvement désigner une pièce de l'ancien
+  étage avant de passer à « Pièce inconnue » (voir plus haut).
+
+- **Aspirer puis laver** : si vous modifiez un réglage du robot (aspiration, débit d'eau, itinéraire) pendant
+  une séquence, le rétablissement de fin l'**écrase**. Si le plugin cesse de suivre la séquence
+  (« Séquence abandonnée », redémarrage du démon) ou si le compte est changé, les réglages d'origine ne
+  sont **pas rétablis** : vérifiez-les. Un nettoyage lancé depuis l'**application mobile** pendant un
+  passage n'est pas refusé par le plugin : il est constaté après coup et la séquence s'arrête sans
+  lancer le second passage. Si le robot ne signale pas l'état de nettoyage, une fin de passage peut ne
+  pas être détectée : la séquence s'arrête alors à 6 heures. Un mode d'origine personnalisé ou
+  « intelligent » est rétabli sur le réglage standard le plus proche.
 
 Cette page est mise à jour à chaque nouvelle fonctionnalité livrée par le plugin.

@@ -82,6 +82,33 @@ The plugin does not display the channel used to reach each robot (local connecti
 not track or update the firmware: these two features have been set aside. Firmware updates are done
 from the Roborock app.
 
+# 10/13/2026
+
+- Added: "Do not disturb" mode controllable from Jeedom when the robot supports it: enabled or not, start and end times of the time window, and three actions "Enable", "Disable" and "Set the time window" (start and end in HH:MM format, usable in scenarios); the display shows what the robot actually saved <!-- UC54 -->
+- Documentation: the "Device settings" topic describes the "Do not disturb" mode (French documentation) <!-- UC54 -->
+- Added: off-peak charging controllable from Jeedom when the robot supports it: enabled or not, start and end of the time window, and three actions "Enable", "Disable" and "Set the time window" (HH:MM, usable in scenarios); the robot only delays its charging, a requested cleaning is not blocked <!-- UC55 -->
+- Documentation: the "Device settings" topic describes off-peak charging (French documentation) <!-- UC55 -->
+- Added: robot voice prompt volume shown as a percentage and adjustable from 0 to 100 from Jeedom when the robot supports it: "Volume" information and "Set the volume" slider, usable in scenarios; the displayed value is the one read back from the robot <!-- UC56 -->
+- Documentation: the "Device settings" topic describes the volume (French documentation) <!-- UC56 -->
+- Added: dock modes shown and adjustable from Jeedom when the dock offers them: "Emptying mode" and "Mop washing mode" information, "Set the emptying mode" and "Set the washing mode" lists, usable in scenarios; the displayed mode is the one read back from the robot <!-- UC57 -->
+- Documentation: the "Device settings" topic describes the dock emptying and washing modes (French documentation) <!-- UC57 -->
+- Added: cleaning rooms by name and zone cleaning accept a number of passes (1, 2 or 3) in their "Title" field, to go over a room or zone two or three times; with no value, a single pass as before, and the repeat setting of the Roborock app is never changed <!-- UC58 -->
+- Documentation: the "Fine control" chapter explains the number of passes for room and zone cleaning, and troubleshooting covers its two refusal messages (French documentation) <!-- UC58 -->
+- Added: new "Current room" information: the name of the room the robot is in, deduced from its position on the map, with no extra call to the robot or the cloud; it reads "Aucune pièce" (no room) outside any room and "Pièce inconnue" (unknown room) when the position or the map is not known, and a scenario only triggers on an actual change of room <!-- UC60 -->
+- Fix: the map image no longer stays stuck on the old position when the robot returns to its dock shortly after the last read: it is read again within the following minute <!-- UC60 -->
+- Documentation: the "Map and rooms" topic describes the "Current room" information, its values and its delay, and troubleshooting covers the case where it stays on "Pièce inconnue" (French documentation) <!-- UC60 -->
+- Documentation: new "Commands by model" section (why a command is missing and how to make it appear), input formats for time ranges and number of passes, scenario examples for dock consumables and tanks, child lock, do not disturb, off-peak hours, volume, dock modes, number of passes and current room; known limitations and troubleshooting completed (French page only for now). <!-- UC119 -->
+- Added: the "Map" page shows a control panel next to the map: robot choice (remembered in the browser), Total, Room and Zone tabs (rectangle drawn on the map), suction power, water flow and route settings limited to the robot's own values, a large start button then pause, resume, stop and return to dock without leaving the page; a user without execute rights sees everything greyed out, and no extra request is sent to the cloud <!-- UC61 -->
+- Documentation: the "Map" panel topic describes the control panel: tabs, settings, buttons, offline robot, rights and how the chosen robot is remembered (French documentation) <!-- UC61 -->
+- Added: on the "Map" page, room names are shown on the map and tapping or clicking a room ticks it in the Room tab; no-go zones and virtual walls set in the Roborock app are drawn read-only; the Zone tab rectangle can be moved, resized by a corner and cleared before starting, and it is kept when the map refreshes <!-- UC62 -->
+- Documentation: the "Map" panel topic describes the interactive map: room names and room selection on the map, rooms that cannot be chosen or are unknown, movable and resizable zone, read-only no-go zones (French documentation) <!-- UC62 -->
+- Added: the "Map" page gets a "Dock and maintenance" tab: empty the bin, wash and dry the mop, set the emptying and washing modes, follow the dock status, the water tanks and consumable wear, with an alert when a part needs replacing or the dock reports a fault; only your robot's features are shown, and an operation already running cannot be started again <!-- UC63 -->
+- Documentation: the "Map" panel topic describes the "Dock and maintenance" tab: blocks, robot without a dock, operation in progress, offline robot and rights (French documentation) <!-- UC63 -->
+- Added: new "Vacuum then mop" action in the "Map" panel and in scenarios: the robot vacuums only, then goes over the same area again mopping only, on the whole home or the chosen rooms, waits until it is ready again at the dock between the two passes, shows where the sequence stands, can be cancelled at any time and gets its original settings back afterwards; the second pass is never started if the first one was stopped or ended abnormally <!-- UC64 -->
+- Documentation: the documentation describes the "Vacuum then mop" action: panel, scenario commands, waiting between passes, cancellation, end reasons and limits (French documentation) <!-- UC64 -->
+- Added: the "Map" page gets a "Daily timeline" tab: a per-robot hourly timeline shows what it did (cleaning, returning to the dock, charging, emptying, washing, drying, error, offline), highlights finished cleanings and marks periods without data as "Unknown"; the last 7 days remain available, without using any quota <!-- UC65 -->
+- Documentation: the documentation describes the "Daily timeline" tab: legend, "Unknown" periods, highlighted cleanings, navigation, retention and limits (French documentation) <!-- UC65 -->
+
 # 10/12/2026
 
 - Fix: a robot that is switched off, out of battery or off Wi-Fi no longer prevents controlling the other robots of the account: it shows as offline, its reconnection attempts no longer use the Roborock quota, and it becomes controllable again on its own within 6 minutes of coming back. <!-- UC44 -->
@@ -95,6 +122,12 @@ from the Roborock app.
 - Fix: map names sent encoded by some robots (S7: "%20" instead of spaces, "%E9" instead of "é") are now displayed in plain text; for a robot already configured, click "Refresh map list" once in the Equipment tab. <!-- UC48 -->
 - Change: the plugin page now states the GPL v3 or later licence (official text included) and requires Jeedom 4.4.7 or later, the first version that installs the plugin's Python dependencies in a dedicated environment; on Jeedom 4.4, the robot tile is shown with the plugin icon. <!-- UC50 -->
 - Documentation: minimum Jeedom version (4.4.7) and licence (GPL v3 or later), offline robot when several robots are on the account, settings confirmed after a short delay, cleaning order refused while the bin is being emptied, automatic update of the last cleaning, map names shown in plain text; known limitations and troubleshooting completed. <!-- UC109 -->
+- Added: dock consumables now appear as remaining wear percentage (station filter, cleaning brush, dust bag, depending on the dock); the filter and the brush can be reset after confirmation, the dust bag is read-only <!-- UC51 -->
+- Documentation: the "Docking station, consumables and maintenance" topic describes the dock consumables (French documentation) <!-- UC51 -->
+- Added: three yes/no information commands usable in scenarios, created only if the robot and its dock support them: "Clean water tank empty", "Dirty water tank full or missing" and "Mop installed" <!-- UC52 -->
+- Documentation: the "Docking station, consumables and maintenance" topic describes the state of the water tanks and of the mop (French documentation) <!-- UC52 -->
+- Added: child lock controllable from Jeedom when the robot supports it: a yes/no "Child lock" information usable in scenarios and two actions "Enable child lock" / "Disable child lock", the displayed state being the one read back from the robot <!-- UC53 -->
+- Documentation: the new "Device settings" topic describes the child lock (French documentation) <!-- UC53 -->
 
 # 10/01/2026
 

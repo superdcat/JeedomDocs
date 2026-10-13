@@ -91,7 +91,36 @@ Le plugin n'affiche pas le canal utilisé pour joindre chaque robot (connexion l
 ne suit ni ne met à jour le micrologiciel : ces deux fonctions ont été écartées. La mise à jour du
 micrologiciel se fait depuis l'application Roborock.
 
+# 13/10/2026
+
+- Ajout : mode « Ne pas déranger » pilotable depuis Jeedom quand le robot le gère : état activé ou non, heures de début et de fin de la plage, et trois actions « Activer », « Désactiver » et « Définir la plage » (début et fin au format HH:MM, utilisable en scénario) ; l'affichage reprend ce que le robot a réellement enregistré <!-- UC54 -->
+- Documentation : la rubrique « Réglages de l'appareil » décrit le mode « Ne pas déranger » <!-- UC54 -->
+- Ajout : recharge en heures creuses pilotable depuis Jeedom quand le robot la gère : état activé ou non, début et fin de la plage, et trois actions « Activer », « Désactiver » et « Définir la plage » (HH:MM, utilisable en scénario) ; le robot retarde seulement sa recharge, un nettoyage demandé n'est pas bloqué <!-- UC55 -->
+- Documentation : la rubrique « Réglages de l'appareil » décrit la recharge en heures creuses <!-- UC55 -->
+- Ajout : volume des annonces vocales du robot affiché en pourcentage et réglable de 0 à 100 depuis Jeedom quand le robot le gère : information « Volume » et curseur « Régler le volume », utilisable en scénario ; la valeur affichée est celle relue sur le robot <!-- UC56 -->
+- Documentation : la rubrique « Réglages de l'appareil » décrit le volume <!-- UC56 -->
+- Ajout : modes de la station consultables et réglables depuis Jeedom quand la station les propose : informations « Mode de vidage » et « Mode de lavage serpillère », listes « Régler le mode de vidage » et « Régler le mode de lavage », utilisables en scénario ; le mode affiché est celui relu sur le robot <!-- UC57 -->
+- Documentation : la rubrique « Réglages de l'appareil » décrit les modes de vidage et de lavage de la station <!-- UC57 -->
+- Ajout : le nettoyage de pièces par noms et le nettoyage de zone acceptent un nombre de passages (1, 2 ou 3) dans leur champ « Titre », pour repasser deux ou trois fois sur une pièce ou une zone ; sans valeur, un seul passage comme avant, et le réglage de répétition de l'application Roborock n'est jamais modifié <!-- UC58 -->
+- Documentation : le chapitre « Pilotage fin » explique le nombre de passages des nettoyages par pièce et par zone, et le dépannage ses deux messages de refus <!-- UC58 -->
+- Ajout : nouvelle information « Pièce courante » : le nom de la pièce où se trouve le robot, déduit de sa position sur la carte, sans appel supplémentaire au robot ni au cloud ; elle vaut « Aucune pièce » hors de toute pièce et « Pièce inconnue » quand la position ou la carte n'est pas connue, et un scénario ne se déclenche que sur un vrai changement de pièce <!-- UC60 -->
+- Correctif : l'image de la carte n'est plus figée sur l'ancienne position quand le robot rentre à sa base peu après la dernière lecture : elle est relue dans la minute qui suit <!-- UC60 -->
+- Documentation : la rubrique « Carte et pièces » décrit l'information « Pièce courante », ses valeurs et son délai, et le dépannage couvre le cas où elle reste sur « Pièce inconnue » <!-- UC60 -->
+- Documentation : nouvelle section « Commandes selon le modèle » (pourquoi une commande manque et comment la faire apparaître), formats de saisie des plages horaires et du nombre de passages, exemples de scénario pour les consommables et bacs de la station, le verrou enfant, le mode ne pas déranger, les heures creuses, le volume, les modes de la station, le nombre de passages et la pièce courante ; limites connues et dépannage complétés. <!-- UC119 -->
+- Ajout : la page « Carte » affiche un panneau de pilotage à côté de la carte : choix du robot (mémorisé dans le navigateur), onglets Total, Pièce et Zone (rectangle tracé sur la carte), réglage de la puissance d'aspiration, du débit d'eau et du parcours avec les seules valeurs du robot, grand bouton de lancement puis pause, reprise, arrêt et retour à la base sans quitter la page ; un utilisateur sans droit d'exécution voit tout grisé, et aucune requête supplémentaire n'est envoyée au cloud <!-- UC61 -->
+- Documentation : la rubrique du panneau « Carte » décrit le panneau de pilotage : onglets, réglages, boutons, robot hors ligne, droits et mémorisation du robot choisi (documentation en français) <!-- UC61 -->
+- Ajout : sur la page « Carte », le nom des pièces s'affiche sur la carte et un toucher ou un clic sur une pièce la coche dans l'onglet Pièce ; les zones interdites et murs virtuels définis dans l'application Roborock sont dessinés en lecture seule ; le rectangle de l'onglet Zone se déplace, se redimensionne par un coin et s'efface avant le lancement, et il est conservé quand la carte se rafraîchit <!-- UC62 -->
+- Documentation : la rubrique du panneau « Carte » décrit la carte interactive : noms et sélection des pièces sur la carte, pièces non choisissables ou inconnues, zone déplaçable et redimensionnable, zones interdites en lecture seule (documentation en français) <!-- UC62 -->
+- Ajout : la page « Carte » gagne un onglet « Station et entretien » : vider le bac, laver et sécher la serpillière, régler les modes de vidage et de lavage, suivre l'état de la station, des bacs d'eau et l'usure des consommables, avec une alerte quand un élément est à changer ou que la station signale un incident ; seules les fonctions de votre robot apparaissent, et une opération déjà en cours ne peut pas être relancée <!-- UC63 -->
+- Documentation : le panneau « Carte » de la documentation décrit l'onglet « Station et entretien » : blocs, robot sans station, opération en cours, robot hors ligne et droits (documentation en français) <!-- UC63 -->
+- Ajout : nouvelle action « Aspirer puis laver » dans le panneau « Carte » et en scénario : le robot aspire seul puis repasse en lavage seul sur tout le logement ou les pièces choisies, attend d'être de nouveau prêt à la base entre les deux passages, affiche où en est la séquence, peut être annulé à tout moment et retrouve ensuite ses réglages d'origine ; le second passage n'est jamais lancé si le premier a été arrêté ou s'est mal terminé <!-- UC64 -->
+- Documentation : la documentation décrit l'action « Aspirer puis laver » : panneau, commandes de scénario, attente entre les passages, annulation, motifs de fin et limites (documentation en français) <!-- UC64 -->
+- Ajout : la page « Carte » gagne un onglet « Déroulé de la journée » : une frise horaire par robot montre ce qu'il a fait (nettoyage, retour à la base, charge, vidage, lavage, séchage, erreur, hors ligne), surligne les nettoyages terminés et signale « Inconnu » les périodes sans donnée ; les 7 derniers jours restent consultables, sans aucun quota consommé <!-- UC65 -->
+- Documentation : la documentation décrit l'onglet « Déroulé de la journée » : légende, périodes « Inconnu », nettoyages surlignés, navigation, conservation et limites (documentation en français) <!-- UC65 -->
+
 # 12/10/2026
+
+Merci mortyre
 
 - Correctif : un robot éteint, déchargé ou hors Wi-Fi n'empêche plus de piloter les autres robots du compte : il s'affiche hors ligne, ses tentatives de reconnexion ne consomment plus le quota Roborock, et il redevient pilotable de lui-même dans les 6 minutes suivant son retour. <!-- UC44 -->
 - Documentation : nouvelle rubrique « Plusieurs robots sur le même compte » dans « Temps réel et fraîcheur ». <!-- UC44 -->
@@ -104,6 +133,12 @@ micrologiciel se fait depuis l'application Roborock.
 - Correctif : les noms de cartes transmis codés par certains robots (S7 : « %20 » à la place des espaces, « %E9 » à la place de « é ») s'affichent désormais en clair ; pour un robot déjà configuré, cliquez une fois sur « Rafraîchir la liste des cartes » dans l'onglet Équipement. <!-- UC48 -->
 - Évolution : la fiche du plugin annonce désormais la licence GPL v3 ou ultérieure (texte officiel fourni) et exige Jeedom 4.4.7 minimum, première version qui installe les dépendances Python du plugin dans un environnement dédié ; sur Jeedom 4.4, la tuile du robot s'affiche avec l'icône du plugin. <!-- UC50 -->
 - Documentation : version minimale de Jeedom (4.4.7) et licence (GPL v3 ou ultérieure), robot hors ligne avec plusieurs robots, réglages confirmés avec un court délai, refus d'un ordre de nettoyage pendant le vidage du bac, mise à jour automatique du dernier nettoyage, noms de cartes en clair ; limites connues et dépannage complétés. <!-- UC109 -->
+- Ajout : les consommables de la station apparaissent en pourcentage d'usure restant (filtre de la station, brosse de nettoyage, sac à poussière, selon la station) ; le filtre et la brosse se réinitialisent après confirmation, le sac reste en lecture seule <!-- UC51 -->
+- Documentation : la rubrique « Station d'accueil, consommables et entretien » décrit les consommables de la station <!-- UC51 -->
+- Ajout : trois informations oui/non exploitables en scénario, créées seulement si le robot et sa station les gèrent : « Réservoir d'eau propre vide », « Bac d'eau sale plein ou absent » et « Serpillière installée » <!-- UC52 -->
+- Documentation : la rubrique « Station d'accueil, consommables et entretien » décrit l'état des réservoirs d'eau et de la serpillière <!-- UC52 -->
+- Ajout : verrou enfant pilotable depuis Jeedom quand le robot le gère : une information oui/non « Verrou enfant » exploitable en scénario et deux actions « Activer le verrou enfant » / « Désactiver le verrou enfant », l'état affiché étant celui relu sur le robot <!-- UC53 -->
+- Documentation : la nouvelle rubrique « Réglages de l'appareil » décrit le verrou enfant <!-- UC53 -->
 
 # 01/10/2026
 
