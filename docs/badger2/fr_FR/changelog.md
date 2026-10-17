@@ -4,6 +4,11 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 17/10/2026
+
+- Correctif : sécurité : les lecteurs ne sont plus acceptés que depuis une adresse IP locale (réseau privé). Un appel venant d'Internet est refusé et signalé dans le log. <!-- UC101 -->
+- Correctif : sécurité : les appels des lecteurs arrivant par un tunnel ou un reverse proxy (cloudflared, accès distant…) sont désormais refusés, et l'adresse de bouclage ou du serveur n'est plus jamais enregistrée comme IP d'un lecteur. <!-- UC101 -->
+
 # 22/09/2026
 
 - Correctif : les liens de documentation, de changelog et de téléchargement des librairies Arduino pointent de nouveau vers un emplacement valide
