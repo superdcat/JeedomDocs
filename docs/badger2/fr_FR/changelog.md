@@ -15,6 +15,8 @@
 - Documentation : la documentation décrit le mode debug : activation, ce qui est montré ou jamais montré, arrêt automatique, et précautions avec l'observation seule. <!-- UC021 -->
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 décrit le champ facultatif port, qui indique lequel des deux lecteurs Wiegand d'un même boîtier a lu le badge (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC005 -->
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 décrit la saisie de code au clavier : badge suivi d'un code envoyés ensemble et envoi touche par touche, deux options désactivées par défaut (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC006 -->
+- Documentation : la référence du protocole v1 des futurs lecteurs Badger2 précise le sens de l'état des entrées (bouton de sortie, sonnette, autoprotection, entrées analogiques) et les valeurs de l'événement de porte (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC007 -->
+- Documentation : la référence du protocole v1 des futurs lecteurs Badger2 décrit l'annonce de démarrage (capacités, cause du redémarrage), le battement de cœur et son compteur d'événements perdus, ainsi que la période de battement que le plugin peut ajuster (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC008 -->
 
 # 17/10/2026
 

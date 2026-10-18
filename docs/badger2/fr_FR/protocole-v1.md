@@ -121,6 +121,7 @@ signe.
 | `cfg` | `^[0-9a-f]{8}$`, empreinte opaque de la configuration du lecteur | — | `hello` |
 | `mem` | entier 0 à 4294967295 : mémoire libre en octets | — | `hb` |
 | `q` | entier 0 à 65535 : événements en file d'attente | — | `hb` |
+| `lost` | entier 0 à 4294967295 : événements écartés d'une file pleine, refusés définitivement ou impossibles à émettre depuis le démarrage ; un `hb` écarté n'est pas compté ; absent : aucune perte connue | — | `hb` |
 | `door` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`open`, `closed`) | `door`, `offline` (`oev=door`) | `hb` |
 | `rssi` | entier -127 à 0 (Wi-Fi seulement) | — | `hb` |
 | `bits` | entier 1 à 256 : nombre de bits de la trame | `tag`, `tagpin`, `offline` (`oev=tag`), `offline` (`oev=tagpin`) | — |
@@ -145,7 +146,10 @@ Les événements :
 
 - `hello` : premier événement après chaque démarrage (version du firmware, carte, capacités, cause du
   redémarrage) ;
-- `hb` : battement de cœur (uptime, mémoire libre, file d'attente, état de la porte, RSSI si Wi-Fi) ;
+- `hb` : battement de cœur (uptime, mémoire libre, file d'attente, événements perdus depuis le démarrage, état
+  de la porte, RSSI si Wi-Fi). Les mesures sont figées à la création du battement : une réémission est
+  identique octet pour octet. `lost` est absent tant qu'aucune perte n'est connue ; un `hb` écarté n'est pas
+  une perte ;
 - `tag` : badge présenté (nombre de bits, trame brute, parité, valeurs décodées, port Wiegand sur un lecteur
   à deux ports). Le firmware décode `fac` et `card` seulement quand la parité est bonne et que le format
   est connu (26 et 34 bits) : `raw` reste la référence, `fac` et `card` une indication ;
@@ -156,8 +160,12 @@ Les événements :
 - `key` : une touche du clavier, envoyée seulement avec l'option « touche par touche » du lecteur, **en
   plus** du `pin` final. Jeton : `0` à `9`, `star`, `hash`, `f1` à `f4`. **Aucun effet d'accès** : un plugin
   qui l'ignore répond `ok=1` ; le `pin` final décide ;
-- `input` : entrée logique (bouton de sortie, sonnette, autoprotection, entrée analogique) ;
-- `door` : changement d'état de la porte ;
+- `input` : entrée logique (bouton de sortie, sonnette, autoprotection, entrée analogique). `st=1` signifie
+  **contact fermé** : bouton de sortie ou sonnette appuyés, boucle d'autoprotection fermée (au repos) ; **l'ouverture
+  de l'autoprotection donne `st=0`**, y compris au démarrage du lecteur si la boucle est déjà ouverte. Chaque
+  changement est un événement, le relâchement d'un bouton compris (`st=0`). Pour `a1` à `a5`, `st=1` signifie
+  au-dessus du seuil haut réglé du lecteur et `val` porte la lecture brute qui a confirmé le changement ;
+- `door` : changement d'état de la porte, `open` ou `closed` ;
 - `ack` : accusé d'un ordre reçu du plugin (les ordres sont définis plus tard, voir « Ordres ») ;
 - `offline` : événement direct (`tag`, `pin`, `tagpin`, `input`, `door`) qui n'a pas pu être délivré à temps, rejoué
   avec son âge.
@@ -170,10 +178,20 @@ avec `st` (état logique) et `val` (lecture brute).
 jamais dans l'adresse ni, en clair, dans un journal (hors mode de débogage explicite). Un refus nomme le
 champ, jamais sa valeur.
 
-**Hors du contrat initial** (ajouts compatibles, définis par leur propre UC de la feuille de route) : champs `loc`, `lost`, `net`, `qmax`, `wfmt`, `offp`, `wl`, `oport`, format des ordres.
+**Hors du contrat initial** (ajouts compatibles, définis par leur propre UC de la feuille de route) : champs `loc`, `net`, `qmax`, `wfmt`, `offp`, `wl`, `oport`, format des ordres.
 
 Ajouté depuis (compatible, `v=1` inchangé) : champ `port` (UC 005), facultatif pour `tag` ; événements `tagpin`
-(badge puis code) et `key` (touche par touche), champ `key`, et `port` facultatif pour `pin` (UC 006).
+(badge puis code) et `key` (touche par touche), champ `key`, et `port` facultatif pour `pin` (UC 006) ; champ
+`lost`, facultatif pour `hb` (UC 008).
+
+**Capacités informatives du sketch Badger2** (UC 008) : outre `hb` (seul jeton normatif, il autorise la clé de
+réponse `hb`), le `hello` d'un lecteur Badger2 annonce des jetons **informatifs**, que le plugin affiche et
+n'exploite pas : `wdt` (chien de garde matériel), `wg_26`, `wg_34`, `wg_37` (décodage du site et de la carte),
+`wg_port2` (second lecteur Wiegand), `kp` (clavier), `kp_burst` (code en une trame), `kp_tagpin` (badge puis
+code), `kp_key` (touche par touche), puis un jeton `io_*` par entrée ou sortie câblée (`io_strike`, `io_led`,
+`io_buzz`, `io_door`, `io_exit`, `io_exit_open`, `io_tamper`, `io_bell`, `io_a1` à `io_a5`). Aucun n'autorise
+une clé de réponse. Le `rst` d'un lecteur Badger2 vaut `power` (mise sous tension), `ext` (bouton reset),
+`wdt` (chien de garde), `brown` (baisse de tension), `sw` (redémarrage logiciel) ou `unk` (inconnue).
 
 ## Capacités
 
@@ -249,6 +267,13 @@ appel v1 répond `500` sans corps, avec le même traitement côté lecteur.
 - Sont ignorés : une clé inconnue, une clé connue de valeur invalide, une clé dont la capacité n'a pas été
   annoncée, une clé d'action en réponse à un autre événement que `tag`, `pin`, `tagpin` ou `input`, et toute ligne
   après `sig`.
+- **Clé `hb`** (capacité `hb`) : valable en réponse à n'importe quel événement acquitté (`200` et `ok=1`) ; un
+  lecteur muni d'un secret ne l'applique, comme toute clé, que dans une réponse signée valide. La première
+  ligne `hb=` fait foi. Absente, illisible ou hors
+  de 10 à 86400 secondes, la période en cours ne change pas. La période demandée vaut jusqu'au redémarrage du
+  lecteur, qui la ramène à sa valeur de configuration : le plugin la renvoie en réponse au `hello`. Le
+  prochain battement reste dû une période après la création du précédent. Un plugin, ou un intermédiaire
+  HTTP non signé, peut ainsi repousser le battement de 24 heures au plus, jamais le supprimer.
 
 ## Signature de la requête
 
@@ -326,7 +351,9 @@ les deux domaines de signature sont distincts.
   événement après un démarrage est un `hello`. Une réémission est identique octet pour octet ; un
   événement converti en `offline` garde son `boot` et son `seq`.
 - **File strictement FIFO** : un événement n'est émis qu'après la réponse définitive du précédent (au
-  sens de « Côté lecteur »), ou sa conversion en `offline`.
+  sens de « Côté lecteur »), ou sa conversion en `offline`. Exception : un `hb` jamais acquitté et hors envoi
+  peut être abandonné, jamais réémis, quand un autre événement attend derrière lui ; il laisse un trou de
+  `seq`. Le `hello` n'est jamais abandonné.
 - Côté plugin, pour un lecteur appairé : un appel n'est accepté que si son couple est supérieur au
   dernier couple accepté ; un refus n'avance pas le compteur ; un nouvel appairage le remet à zéro.
 - **Remise à zéro de `boot`** (nouveau flash complet) : le secret, `boot` et l'indicateur d'appairage
