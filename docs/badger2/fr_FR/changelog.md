@@ -4,6 +4,11 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 19/10/2026
+
+- Documentation : la référence du protocole v1 des futurs lecteurs Badger2 précise le traitement des réponses non signées ou mal signées et l'usage réservé du secret du lecteur (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC009 -->
+- Évolution : les futurs lecteurs Badger2 en protocole v1 exigeront une Arduino Mega 2560 ou un ESP ; une Uno ou une Nano garde son sketch actuel (BadgerW5100 ou BadgerENC28J60), qui reste pris en charge et fonctionne comme avant (aucun lecteur déjà installé n'est concerné). <!-- UC003 -->
+
 # 18/10/2026
 
 - Correctif : les traductions anglaise, allemande et espagnole de la configuration du plugin et des équipements, et des messages de migration depuis Badger, sont complétées. <!-- UC020 -->

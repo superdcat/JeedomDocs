@@ -188,7 +188,8 @@ Ajouté depuis (compatible, `v=1` inchangé) : champ `port` (UC 005), facultatif
 réponse `hb`), le `hello` d'un lecteur Badger2 annonce des jetons **informatifs**, que le plugin affiche et
 n'exploite pas : `wdt` (chien de garde matériel), `wg_26`, `wg_34`, `wg_37` (décodage du site et de la carte),
 `wg_port2` (second lecteur Wiegand), `kp` (clavier), `kp_burst` (code en une trame), `kp_tagpin` (badge puis
-code), `kp_key` (touche par touche), puis un jeton `io_*` par entrée ou sortie câblée (`io_strike`, `io_led`,
+code), `kp_key` (touche par touche), `bootnp` (UC 009 : le compteur de démarrages `boot` n'a pas pu être
+enregistré, un rejeu est possible au démarrage suivant), puis un jeton `io_*` par entrée ou sortie câblée (`io_strike`, `io_led`,
 `io_buzz`, `io_door`, `io_exit`, `io_exit_open`, `io_tamper`, `io_bell`, `io_a1` à `io_a5`). Aucun n'autorise
 une clé de réponse. Le `rst` d'un lecteur Badger2 vaut `power` (mise sous tension), `ext` (bouton reset),
 `wdt` (chien de garde), `brown` (baisse de tension), `sw` (redémarrage logiciel) ou `unk` (inconnue).
@@ -251,7 +252,7 @@ appel v1 répond `500` sans corps, avec le même traitement côté lecteur.
   pas une perte. **Tout autre `ok=0`** : refus définitif, l'événement est retiré et compté comme perdu.
   Le refus définitif ne vaut que pour un lecteur sans secret.
 - **Lecteur muni d'un secret** : tant qu'il n'a jamais reçu de réponse signée valide avec ce secret, un
-  `ok=1` non signé retire l'événement **sans appliquer aucune clé** (plugin pas encore appairé). À la
+  `ok=1` non signé **ou à signature invalide** retire l'événement **sans appliquer aucune clé** (plugin pas encore appairé). À la
   première réponse signée valide, il mémorise « plugin appairé » (effacé quand le secret change). Avant
   cette première réponse signée, tout `ok=0` non signé est déjà un échec **transitoire** (règle ci-après).
   Ensuite, **seules les réponses signées valides sont définitives** : `ok=1` signé (l'événement est
@@ -277,8 +278,8 @@ appel v1 répond `500` sans corps, avec le même traitement côté lecteur.
 
 ## Signature de la requête
 
-Algorithme : **HMAC-SHA256** (capacité `hs256` ; son empreinte sur un Uno R3 n'est pas mesurée, voir
-« À confirmer »), secret propre au lecteur de **32 octets** (64 chiffres
+Algorithme : **HMAC-SHA256** (capacité `hs256` ; le sketch Badger2 qui l'implémente exige une Mega 2560 ou un ESP : une
+Uno, restée en protocole v0, ne l'embarque pas, voir « À confirmer »), secret propre au lecteur de **32 octets** (64 chiffres
 hexadécimaux). Pas à pas :
 
 1. Décoder le corps selon « Encodage du corps ». Un appel invalide n'est pas signable.
@@ -295,6 +296,10 @@ hexadécimaux). Pas à pas :
 7. `sig` = HMAC-SHA256(clé, chaîne canonique en ASCII), en **64 chiffres hexadécimaux minuscules, sans
    troncature**.
 8. Le récepteur compare en temps constant (`hash_equals`).
+
+Toute autre utilisation du secret, interne au lecteur ou au plugin, signe un message `badger2:<usage>` (ASCII,
+sans `=` ni saut de ligne) : ce n'est jamais une chaîne canonique de requête (qui contient `=`) ni de réponse
+(qui commence par `req=`). Usage réservé : `badger2:appairage`.
 
 Le lecteur émet ses champs dans l'ordre canonique, `sig` en dernier : le corps privé de `&sig=…` est alors
 la chaîne canonique. Le récepteur, lui, reconstruit la chaîne canonique et n'exige aucun ordre.
@@ -412,10 +417,10 @@ Son contrat figé est conservé dans le dépôt du plugin (`.claude/compat/vecte
 
 Ces points ne sont **pas normatifs** : ils se lèvent à la mesure ou à la recette, sans casser le reste.
 
-- **HMAC-SHA256** (étape « Algorithme » de la signature) : son empreinte en mémoire flash et en RAM sur un Arduino Uno R3 avec une carte W5100
-  n'est **pas encore mesurée** (UC 008 et 009 de la feuille de route). Si elle ne tient pas, un
-  algorithme allégé sera **ajouté** sous une capacité distincte ; HMAC-SHA256 et ses vecteurs restent
-  valides.
+- **HMAC-SHA256** (étape « Algorithme » de la signature) : il tient en mémoire flash et en RAM sur une Arduino Mega 2560 avec une
+  carte W5100 (sketch Badger2 0.7.0, UC 009) ; il ne tient pas dans les 32 Ko d'une Uno, qui reste en protocole v0
+  (décision du 2026-10-19). Aucun algorithme allégé n'est prévu. Son temps de calcul sur la
+  carte (quelques dizaines de millisecondes par requête) reste à confirmer au banc.
 - Les tolérances : fraîcheur de 30 secondes, conversion en `offline` à 30 secondes, `act` appliqué au plus
   10 secondes après la survenue. Ajuster ces tolérances reste compatible v1 (ni bornes de champ ni
   ordre d'anti-rejeu).
