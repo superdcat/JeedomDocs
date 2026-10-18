@@ -4,6 +4,18 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 18/10/2026
+
+- Correctif : les traductions anglaise, allemande et espagnole de la configuration du plugin et des équipements, et des messages de migration depuis Badger, sont complétées. <!-- UC020 -->
+- Documentation : publication de la référence technique du protocole v1 des futurs lecteurs Badger2 (en préparation : ni le plugin ni les sketches actuels ne l'utilisent encore ; les lecteurs déjà installés ne sont pas concernés). <!-- UC001 -->
+- Ajout : le plugin reconnaît la version de protocole de chaque appel de lecteur : les lecteurs actuels (sketch d'origine, ancienne ou nouvelle adresse) fonctionnent exactement comme avant, un appel annonçant une version inconnue est refusé avec un avertissement explicite, et les versions prises en charge sont visibles dans Analyse > Santé. <!-- UC002 -->
+- Documentation : la page de présentation et la référence du protocole des lecteurs décrivent la reconnaissance des versions et leur affichage dans Analyse > Santé. <!-- UC002 -->
+- Ajout : nouveau mode debug réservé à l'administrateur, activable 15, 30 ou 60 minutes depuis la page du plugin : il montre en clair ce que les lecteurs envoient et ce que le plugin en fait, avec une option « observation seule » pour mettre au point un lecteur sans rien déclencher. <!-- UC021 -->
+- Évolution : les badges et codes reçus des lecteurs ne sont plus écrits en clair dans le log du plugin, y compris dans le nom d'un badge ou d'un code qui les contiendrait. <!-- UC021 -->
+- Documentation : la documentation décrit le mode debug : activation, ce qui est montré ou jamais montré, arrêt automatique, et précautions avec l'observation seule. <!-- UC021 -->
+- Documentation : la référence du protocole v1 des futurs lecteurs Badger2 décrit le champ facultatif port, qui indique lequel des deux lecteurs Wiegand d'un même boîtier a lu le badge (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC005 -->
+- Documentation : la référence du protocole v1 des futurs lecteurs Badger2 décrit la saisie de code au clavier : badge suivi d'un code envoyés ensemble et envoi touche par touche, deux options désactivées par défaut (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC006 -->
+
 # 17/10/2026
 
 - Correctif : sécurité : les lecteurs ne sont plus acceptés que depuis une adresse IP locale (réseau privé). Un appel venant d'Internet est refusé et signalé dans le log. <!-- UC101 -->
