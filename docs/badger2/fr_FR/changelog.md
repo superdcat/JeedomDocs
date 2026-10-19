@@ -13,6 +13,9 @@
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 décrit les ordres signés que Jeedom pourra envoyer au lecteur (ouverture de la gâche, voyant, buzzer, battement, resynchronisation de la liste blanche, redémarrage) et leur accusé de réception ; le port d'ordres ne doit jamais être joignable depuis Internet (en préparation : les lecteurs déjà installés ne sont pas concernés) <!-- UC012 -->
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 mentionne deux capacités informatives, la console de provisionnement (configuration et diagnostic par le port série du lecteur) et la LED d'état (en préparation : les lecteurs déjà installés ne sont pas concernés) <!-- UC013 -->
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 mentionne la capacité informative de mise à jour à distance du firmware, protégée par mot de passe et réservée aux cartes ESP (en préparation : les lecteurs déjà installés ne sont pas concernés) <!-- UC014 -->
+- Ajout : le plugin reçoit désormais les appels des futurs lecteurs Badger2 en protocole v1 : un lecteur v1 est reconnu par son identifiant et par son adresse enregistrée, ses badges et codes déclenchent les mêmes commandes qu'un lecteur actuel, et Analyse > Santé affiche « v1 : supportée » (les lecteurs déjà installés fonctionnent exactement comme avant). <!-- UC015 -->
+- Ajout : la fiche de chaque lecteur affiche désormais son protocole, son firmware, sa carte et son transport, les capacités qu'il annonce et la date de sa dernière annonce (« v0 (sketch d'origine) » pour un lecteur d'origine, « En attente de l'annonce du lecteur » pour un lecteur v1 qui ne s'est pas encore annoncé). <!-- UC016 -->
+- Documentation : nouvelle section « Version, firmware et capacités de chaque lecteur ». <!-- UC016 -->
 
 # 18/10/2026
 

@@ -91,9 +91,27 @@ Chaque activation et chaque arrêt sont notés dans le log du plugin (qui, jusqu
 
 Le plugin reconnaît la version du protocole de chaque appel d'un lecteur. Les lecteurs actuels (sketches d'origine, qu'ils appellent l'ancienne adresse `/plugins/badger/…` ou la nouvelle `/plugins/badger2/…`) continuent de fonctionner exactement comme avant.
 
-Les versions prises en charge sont visibles dans **Analyse > Santé**, ligne « Versions de protocole supportées » (aujourd'hui : « v0 : supportée ; v1 : prévue (pas encore servie) »).
+Les versions prises en charge sont visibles dans **Analyse > Santé**, ligne « Versions de protocole supportées » (aujourd'hui : « v0 : supportée ; v1 : supportée »).
 
 Un appel qui annonce une version inconnue est refusé, et l'avertissement « version de protocole non supportée : mettre à jour le plugin » apparaît dans le log du plugin.
+
+### Version, firmware et capacités de chaque lecteur
+
+La fiche de chaque lecteur affiche, en lecture seule, ce que le lecteur a annoncé de lui-même : **Protocole**, **Firmware**, **Carte**, **Transport**, **Capacités** et **Dernier hello**. Vous ne pouvez rien modifier à cet endroit. Aucun secret (clé, mot de passe, code) n'y est affiché.
+
+| Affichage | Signification | Action |
+|---|---|---|
+| « Protocole : v0 (sketch d'origine) » seul | Le lecteur utilise le sketch d'origine, qui n'annonce rien. C'est normal : il fonctionne comme avant. | Aucune. |
+| « En attente de l'annonce du lecteur » | Le lecteur a été créé par l'inclusion à son premier appel v1, qui ne sert qu'à le créer. Il est inactif et ne s'est pas encore annoncé. Même cas pour un lecteur désactivé au moment de son démarrage. | Activez le lecteur, puis redémarrez-le pour qu'il s'annonce. |
+| Protocole, firmware, carte, transport, capacités et date renseignés | Le lecteur v1 s'est annoncé. | Aucune. |
+
+Les valeurs se mettent à jour à chaque annonce (« hello »), envoyée au démarrage du lecteur. La date **Dernier hello** indique l'ancienneté de ce que vous voyez :
+- Un lecteur reflashé avec le sketch d'origine garde l'affichage de sa dernière annonce v1 ; seule la date de « Dernier hello » trahit qu'elle est ancienne.
+- Un lecteur créé en v0 puis reflashé en v1 reste affiché en v0 jusqu'à sa première annonce acceptée.
+
+Les capacités s'affichent sous la forme « libellé (nom technique) », par exemple « Battement de cœur (hb) ». Une capacité que le plugin ne connaît pas apparaît sous son seul nom brut : ce n'est pas une erreur, le plugin est simplement plus ancien que le sketch du lecteur.
+
+Une fonction de la fiche qui exige une capacité que le lecteur n'annonce pas est grisée, avec la raison affichée. Aucune fonction n'est concernée pour l'instant : ce mécanisme servira aux fonctions à venir.
 
 ---
 
