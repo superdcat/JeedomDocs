@@ -29,9 +29,9 @@ règles d'évolution.
   l'authenticité et le rejeu, pas la confidentialité (chiffrement facultatif : UC 009 et 110 de la feuille de route) ; isolez
   les lecteurs sur un réseau dédié. Une réponse non signée peut être falsifiée : un lecteur sans secret
   n'annonce la capacité `relay` que si l'installateur a explicitement autorisé les actions non signées
-  (désactivé par défaut). Pour la même raison, tant qu'aucun secret n'est appairé, le sketch applique
+  (désactivé par défaut). Pour la même raison, tant qu'aucun secret n'est configuré, le sketch applique
   `hb`, `led` et `buzz` non authentifiés, mais **ignore** `cfg` et n'applique pas `t` (voir « Côté
-  lecteur »).
+  lecteur »). Un lecteur muni d'un secret n'applique aucune clé d'une réponse non signée.
 
 ## Reconnaître la version
 
@@ -119,11 +119,16 @@ signe.
 | `caps` | 0 à 32 jetons `^[a-z0-9_]{1,16}$` séparés par `,`, 255 caractères au plus ; `caps=` vide permis | `hello` | — |
 | `rst` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`power`, `ext`, `wdt`, `brown`, `sw`, `unk`) | `hello` | — |
 | `cfg` | `^[0-9a-f]{8}$`, empreinte opaque de la configuration du lecteur | — | `hello` |
+| `offp` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`deny`, `list`, `open`) : politique du lecteur quand Jeedom est injoignable | — | `hello` |
+| `oport` | entier 1 à 65535 : port du serveur d'ordres du lecteur ; présent si et seulement si `caps` contient `srv` | — | `hello` |
+| `wl` | entier 0 à 65535 : capacité de la liste blanche locale (nombre d'entrées au plus) ; présent si et seulement si `caps` contient `wl` | — | `hello` |
 | `mem` | entier 0 à 4294967295 : mémoire libre en octets | — | `hb` |
 | `q` | entier 0 à 65535 : événements en file d'attente | — | `hb` |
 | `lost` | entier 0 à 4294967295 : événements écartés d'une file pleine, refusés définitivement ou impossibles à émettre depuis le démarrage ; un `hb` écarté n'est pas compté ; absent : aucune perte connue | — | `hb` |
 | `door` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`open`, `closed`) | `door`, `offline` (`oev=door`) | `hb` |
 | `rssi` | entier -127 à 0 (Wi-Fi seulement) | — | `hb` |
+| `wlv` | `^[0-9a-f]{8}$` : version de la liste blanche active ; absent : aucune liste active | — | `hb` |
+| `wlr` | entier 0 à 65535 : prochain rang attendu d'une liste en cours de réception ; absent : rang 0 | — | `hb` |
 | `bits` | entier 1 à 256 : nombre de bits de la trame | `tag`, `tagpin`, `offline` (`oev=tag`), `offline` (`oev=tagpin`) | — |
 | `raw` | `^[0-9a-f]{1,64}$`, exactement ⌈bits/4⌉ chiffres, valeur strictement inférieure à 2^bits ; bits dans l'ordre de réception, premier reçu en poids fort, complétés à gauche | `tag`, `tagpin`, `offline` (`oev=tag`), `offline` (`oev=tagpin`) | — |
 | `par` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`ok`, `bad`, `na`) | `tag`, `tagpin`, `offline` (`oev=tag`), `offline` (`oev=tagpin`) | — |
@@ -135,7 +140,7 @@ signe.
 | `in` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`exit`, `bell`, `tamper`, `a1` à `a5`) | `input`, `offline` (`oev=input`) | — |
 | `st` | `0` ou `1` (fermé) : état logique, après seuil et hystérésis pour `a1` à `a5` | `input`, `offline` (`oev=input`) | — |
 | `val` | entier 0 à 65535 : lecture analogique brute au changement d'état, dans l'unité de la carte (`a1` à `a5`) | — | `input`, `offline` (`oev=input`) |
-| `oseq` | entier 0 à 4294967295 : `seq` de l'ordre accusé | `ack` | — |
+| `oseq` | entier 0 à 4294967295 : `seq` de l'ordre accusé (`0` : ordre non authentifié) | `ack` | — |
 | `res` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`acc`, `ref`) | `ack` | — |
 | `why` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`sig`, `replay`, `nosecret`, `unknown`, `param`, `busy`, `stale`) | — | `ack` |
 | `oev` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`tag`, `pin`, `tagpin`, `input`, `door`) : événement d'origine | `offline` | — |
@@ -166,7 +171,7 @@ Les événements :
   changement est un événement, le relâchement d'un bouton compris (`st=0`). Pour `a1` à `a5`, `st=1` signifie
   au-dessus du seuil haut réglé du lecteur et `val` porte la lecture brute qui a confirmé le changement ;
 - `door` : changement d'état de la porte, `open` ou `closed` ;
-- `ack` : accusé d'un ordre reçu du plugin (les ordres sont définis plus tard, voir « Ordres ») ;
+- `ack` : accusé d'un ordre reçu du plugin (UC 012, voir « Ordres ») ;
 - `offline` : événement direct (`tag`, `pin`, `tagpin`, `input`, `door`) qui n'a pas pu être délivré à temps, rejoué
   avec son âge.
 
@@ -178,20 +183,27 @@ avec `st` (état logique) et `val` (lecture brute).
 jamais dans l'adresse ni, en clair, dans un journal (hors mode de débogage explicite). Un refus nomme le
 champ, jamais sa valeur.
 
-**Hors du contrat initial** (ajouts compatibles, définis par leur propre UC de la feuille de route) : champs `loc`, `net`, `qmax`, `wfmt`, `offp`, `wl`, `oport`, format des ordres.
+**Hors du contrat initial** (ajouts compatibles, définis par leur propre UC de la feuille de route) : champs `loc`, `net`, `qmax`, `wfmt`.
 
 Ajouté depuis (compatible, `v=1` inchangé) : champ `port` (UC 005), facultatif pour `tag` ; événements `tagpin`
 (badge puis code) et `key` (touche par touche), champ `key`, et `port` facultatif pour `pin` (UC 006) ; champ
-`lost`, facultatif pour `hb` (UC 008).
+`lost`, facultatif pour `hb` (UC 008) ; champs `offp` et `wl` facultatifs du `hello`, champs `wlv` et `wlr` facultatifs du `hb`,
+capacité et clé de réponse `wl`, et l'émission en `offline` d'un passage décidé par le lecteur (UC 011, voir « Mode hors
+ligne et liste blanche ») ; champ `oport` facultatif du `hello`, jeton `srv`, format des ordres du plugin vers le lecteur et
+émission de l'événement `ack` (UC 012, voir « Ordres »).
 
-**Capacités informatives du sketch Badger2** (UC 008) : outre `hb` (seul jeton normatif, il autorise la clé de
-réponse `hb`), le `hello` d'un lecteur Badger2 annonce des jetons **informatifs**, que le plugin affiche et
-n'exploite pas : `wdt` (chien de garde matériel), `wg_26`, `wg_34`, `wg_37` (décodage du site et de la carte),
+**Capacités du sketch Badger2** (UC 008, 009, 010, 011 et 012) : le `hello` d'un lecteur Badger2 annonce des jetons
+**normatifs**, qui autorisent chacun une clé de réponse : `hb` (clé `hb`), `hs256` (clé `sig`, avec un secret),
+`time` (clé `t`, avec un secret seulement), `relay` (clé `act` : gâche câblée **et** secret, ou accusé explicite de
+l'installateur pour des réponses non signées), `led` et `buzz` (clés `led` et `buzz`, sortie câblée) et, depuis l'UC 011, `wl` (clé `wl`, la liste blanche locale :
+politique hors ligne « liste » et secret seulement). Il annonce aussi
+des jetons **informatifs**, que le plugin affiche et n'exploite pas : `wdt` (chien de garde matériel), `wg_26`, `wg_34`, `wg_37` (décodage du site et de la carte),
 `wg_port2` (second lecteur Wiegand), `kp` (clavier), `kp_burst` (code en une trame), `kp_tagpin` (badge puis
 code), `kp_key` (touche par touche), `bootnp` (UC 009 : le compteur de démarrages `boot` n'a pas pu être
-enregistré, un rejeu est possible au démarrage suivant), puis un jeton `io_*` par entrée ou sortie câblée (`io_strike`, `io_led`,
-`io_buzz`, `io_door`, `io_exit`, `io_exit_open`, `io_tamper`, `io_bell`, `io_a1` à `io_a5`). Aucun n'autorise
-une clé de réponse. Le `rst` d'un lecteur Badger2 vaut `power` (mise sous tension), `ext` (bouton reset),
+enregistré, un rejeu est possible au démarrage suivant), `srv` (UC 012 : le lecteur écoute les ordres du plugin, port dans le champ
+`oport`), puis un jeton `io_*` par entrée ou sortie câblée (`io_strike`, `io_led`,
+`io_buzz`, `io_door`, `io_exit`, `io_exit_open`, `io_tamper`, `io_bell`, `io_a1` à `io_a5`). Aucun jeton
+informatif n'autorise une clé de réponse. Le `rst` d'un lecteur Badger2 vaut `power` (mise sous tension), `ext` (bouton reset),
 `wdt` (chien de garde), `brown` (baisse de tension), `sw` (redémarrage logiciel) ou `unk` (inconnue).
 
 ## Capacités
@@ -209,6 +221,7 @@ réponse dont la capacité n'a pas été annoncée.** Les capacités valent dès
 | `buzz` | `buzz` |
 | `hb` | `hb` |
 | `cfg` | `cfg` |
+| `wl` | `wl` |
 
 Toute autre capacité est **informative** : affichée, ignorée par le plugin, définie par l'UC de la feuille de
 route qui l'introduit. Un lecteur peut annoncer une capacité que le plugin ne connaît pas encore.
@@ -232,6 +245,7 @@ route qui l'introduit. Un lecteur peut annoncer une capacité que le plugin ne c
 | `buzz` | commande du buzzer ; mêmes événements que `act` | `accept`, `deny`, `error` (liste ouverte) | `buzz` |
 | `hb` | période de battement voulue | 10 à 86400 secondes | `hb` |
 | `cfg` | empreinte de configuration attendue par le plugin | `^[0-9a-f]{8}$`, opaque | `cfg` |
+| `wl` | fragment de la liste blanche locale du lecteur ; seulement avec `hs256`, pour un lecteur qui annonce `wl` | `<version>,<total>,<rang>` puis 0 à 3 `,<empreinte>` : version 8 chiffres hexadécimaux, empreintes de 16, total et rang de 0 à 65535, `rang` + nombre d'empreintes au plus égal à `total`, aucune empreinte seulement si `total` vaut 0 | `wl` |
 | `sig` | signature de la réponse ; dernière ligne quand elle est présente | 64 chiffres hexadécimaux minuscules | `hs256` |
 <!-- fin:tableau-cles -->
 
@@ -275,6 +289,10 @@ appel v1 répond `500` sans corps, avec le même traitement côté lecteur.
   lecteur, qui la ramène à sa valeur de configuration : le plugin la renvoie en réponse au `hello`. Le
   prochain battement reste dû une période après la création du précédent. Un plugin, ou un intermédiaire
   HTTP non signé, peut ainsi repousser le battement de 24 heures au plus, jamais le supprimer.
+- **Clé `wl`** (capacité `wl`, UC 011) : un fragment de la liste blanche locale (voir « Mode hors ligne et liste
+  blanche »). Valable en réponse à n'importe quel événement acquitté (`200` et `ok=1`), **seulement dans une réponse
+  signée valide** d'un lecteur muni d'un secret, comme toute clé. La première ligne `wl=` fait foi, valide ou non ; une
+  réponse coupée en cours de ligne ne donne aucun fragment. Absente, hors motif ou hors bornes, elle ne change rien.
 
 ## Signature de la requête
 
@@ -365,18 +383,212 @@ les deux domaines de signature sont distincts.
   sont effacés, et la seule sortie est un **nouvel appairage**. Un `replay` en réponse à un `hello`
   signale un `boot` régressé.
 - **Fraîcheur sans horloge** : un lecteur n'a pas d'heure fiable. Un événement direct non délivré 30
-  secondes après sa survenue est émis en `offline`. Le plugin compare, dans un même `boot`, l'écart des
+  secondes après sa survenue est émis en `offline`. Le sketch Badger2 (UC 011) émet aussi en `offline`, **quel que soit son
+  âge**, un passage dont il a pris la décision seul, hors ligne (voir « Mode hors ligne et liste blanche »). Le plugin compare, dans un même `boot`, l'écart des
   `up` à l'écart des heures de réception **par rapport au dernier événement accepté du même `boot`**
   (jamais le `hello` seul) ; au-delà de la tolérance (à confirmer), l'événement n'est jamais traité
   comme un événement direct. Le `hello` n'est soumis à aucun contrôle de fraîcheur.
 - `offline` n'appelle **aucune** clé d'action et ne modifie **aucun** compteur d'échecs ; un `age` au-delà
-  de 4294967 secondes est écarté et compté comme perdu.
+  de 4294967 secondes est écarté et compté comme perdu. Le plugin accepte un `offline` de tout âge (le lecteur a décidé
+  du passage) ; il n'en déduit **aucune décision d'accès ni aucun compteur**. L'`age` est calculé par le lecteur, en
+  secondes entières (`up` de l'émission moins la date de survenue) : sa précision est d'une seconde plus la dérive de
+  son oscillateur.
+
+## Mode hors ligne et liste blanche
+
+Ajout compatible de l'UC 011 (`v=1` inchangé). Un plugin qui ignore `offp`, `wl`, `wlv` et `wlr` répond `ok=1` et le
+lecteur reste nominal en ligne ; l'UC 309 constitue et envoie la liste. L'ordre `sync` de l'UC 012 ne transporte aucun fragment : il provoque un battement
+immédiat (qui porte `wlv` et `wlr`), et le plugin répond par la clé `wl`.
+
+**Politique hors ligne** (champ `offp` du `hello`). Ce que le lecteur fait d'un badge ou d'un code quand Jeedom est
+injoignable, choisi à la compilation du sketch et annoncé à chaque démarrage :
+
+- `deny` (défaut) : rien ne s'ouvre. Le passage est gardé dans la file et rejoué en `offline` ; le lecteur joue le motif
+  d'erreur.
+- `list` : ouvre seulement pour un badge ou un code dont l'**empreinte** figure dans la liste blanche locale (capacité `wl`,
+  qui exige un secret). Une liste vide ou absente refuse tout.
+- `open` : **DANGEREUX, toute présentation ouvre la porte** quand Jeedom est injoignable, y compris un badge inconnu. Réservé à la
+  sécurité incendie, accepté par écrit dans la configuration du lecteur. Le plugin doit afficher ce choix (UC 309). Tant
+  qu'un plugin répond `503` à la v1, le lecteur croit Jeedom injoignable : chaque badge ouvre.
+
+Dans les trois cas, la réponse de Jeedom reste la seule règle en ligne : le mode hors ligne n'ouvre **jamais sur une
+réponse**, seulement par une décision locale du lecteur.
+
+**Détection.** Le lecteur se croit hors ligne après 2 échecs consécutifs (Jeedom injoignable, réponse non conforme ou non
+authentifiée) ou 10 secondes sans réponse alors qu'un événement attend ; il revient en ligne à la première réponse
+définitive (`ok=1`, `replay`, refus). Ces deux seuils se règlent à la compilation.
+
+**Décision locale.** Pour le dernier passage seulement, une fois, tant qu'il a moins de 10 secondes : si le lecteur est
+hors ligne, ou si le passage attend depuis 5 secondes sans être en cours d'envoi **et** qu'au moins un échec n'a pas été
+résolu par une réponse depuis sa survenue, il décide seul : toute décision locale exige une preuve que Jeedom est
+injoignable. Sans cette preuve (un seul délai dépassé, un plugin lent), les 5 secondes ne décident rien et le comportement
+reste celui d'avant (motif d'erreur, événement direct). Un échec isolé d'une tentative ne décide rien. Tant qu'une ouverture
+locale reste possible, le motif d'erreur n'est pas joué au premier échec (pas de signal contradictoire). Ouvrir donne la gâche pendant 3 secondes par défaut (au plus le plafond d'ouverture), la LED verte
+et le motif `accept` ; refuser donne le motif d'erreur. Jamais d'ouverture sur une trame Wiegand dont la parité est fausse.
+Dans les deux cas, le passage est converti sans attendre en `offline` (il part ensuite, dans l'ordre, avec son âge).
+
+**Empreinte** (normative). Les 8 premiers octets, en 16 chiffres hexadécimaux minuscules, de HMAC-SHA256 avec la clé du
+lecteur (les 32 octets du secret) d'un message ASCII dont les valeurs s'écrivent comme dans les champs du même nom (le port
+Wiegand n'y entre pas) :
+
+| Passage | Message |
+|---|---|
+| `tag` | `badger2:wl:tag:<bits>:<raw>` |
+| `pin` | `badger2:wl:pin:<code>` |
+| `tagpin` | `badger2:wl:tagpin:<bits>:<raw>:<code>` |
+
+Avec le secret de test public ci-dessus : `badger2:wl:tag:26:2f47e58` donne `b53c6e4c805d7d77`, `badger2:wl:pin:1234`
+donne `1be3a834e9a43a5e` et `badger2:wl:tagpin:26:2f47e58:1234` donne `42b954195edd72ab`. L'outil
+`tests/harnais/protocole_v1.py empreinte <message>` (secret sur l'entrée standard) les recalcule. Un badge inscrit en
+v0 est reconstitué par le plugin avec sa parité pour obtenir `raw`.
+
+**Clé de réponse `wl`** (capacité `wl`, avec `hs256`) : `wl=<version>,<total>,<rang>` puis 0 à 3 `,<empreinte>`. La
+version a 8 chiffres hexadécimaux, `total` et `rang` valent de 0 à 65535, `rang` plus le nombre d'empreintes ne dépasse pas
+`total`, et il n'y a aucune empreinte seulement si `total` vaut 0 (liste vide). La ligne fait 74 octets au plus et la clé
+n'apparaît qu'une fois. Le `hello` annonce `wl=<capacité>` (nombre d'entrées au plus, 128 par défaut, 200 au maximum) ; le `hb`
+annonce `wlv=<version>` de la liste active (absent : aucune) et `wlr=<rang>` quand une réception est en cours (absent : rang 0).
+
+**Règles du lecteur.** Un fragment n'est lu que dans une réponse signée valide à un événement acquitté, la première ligne fait
+foi. Rang 0 : la réception recommence, refusée en bloc si `total` dépasse la capacité annoncée (la liste en place est
+conservée, jamais tronquée). Le rang attendu (`wlr`) de la même version est rangé ; un autre rang de la même version est
+ignoré ; une autre version à un rang non nul abandonne la réception. Une version égale à celle de la liste active est
+ignorée sans aucune écriture. Au dernier fragment, la nouvelle liste remplace l'ancienne **d'un bloc** (deux banques en
+mémoire non volatile, bascule atomique, un en-tête avec CRC-16), liée au secret : un autre secret efface la liste. Après un
+redémarrage, la réception en cours recommence au rang 0 ; la liste active, elle, est conservée.
+
+**Règles du plugin** (UC 309). N'envoyer `wl` qu'à un lecteur appairé qui annonce `wl` et `hs256`, jamais plus d'entrées que
+la capacité `wl`, au rang `wlr` (0 sans `wlr`), et s'arrêter quand `wlv` égale la version envoyée. Ne jamais envoyer `wl`
+pour une version égale au `wlv` annoncé, et ne relancer une liste que si son contenu a changé. Utiliser une version strictement croissante (jamais réutilisée : le lecteur ne compare pas les versions, voir « Limites
+à connaître »). Ne pas journaliser les
+empreintes. Un fragment par réponse : 3 empreintes par événement acquitté (le battement, par défaut toutes les 60 secondes,
+en est le plus régulier), soit environ 43 battements pour 128 entrées.
+
+**Limites à connaître.**
+
+- « Jamais en clair » n'est pas « confidentiel » : avec la carte en main (secret et liste dans la même puce), un badge de 26
+  bits ou un code court se retrouve par force brute. L'empreinte protège le transit et l'export côté plugin.
+- Après 5 codes faux consécutifs hors ligne (politique `list`), les codes sont refusés pendant 60 secondes, durée doublée à
+  chaque nouveau blocage (3600 secondes au plus). Un code accepté ou le retour en ligne ne remettent pas le compteur à zéro :
+  compteur et doublement retombent à zéro après une heure sans aucun refus. Le compteur est perdu au redémarrage. Préférer
+  un code de 6 chiffres ou plus.
+- **Aucun anti-force-brute pour un badge seul** : le blocage ne compte que les codes. Une injection de trames Wiegand sur le
+  câble, réseau coupé, peut essayer des valeurs sans limite. Pour un accès sensible, inscrire des passages badge + code.
+- **Aucune monotonie de version côté lecteur** : il range toute version différente de la sienne. Une ancienne réponse signée
+  rejouée pourrait réinstaller une ancienne liste (un badge retiré depuis y figurerait). Le plugin (UC 309) doit utiliser une
+  version strictement croissante et ne jamais en réutiliser une ; le format ne change pas. Un clavier qui envoie le code en une seule trame perd les zéros de tête
+  (`0123` devient `123`).
+- Un badge retiré reste accepté hors ligne jusqu'à l'envoi de la liste suivante.
+- La bascule atomique est garantie sur Mega (EEPROM) ; sur ESP32 elle repose sur l'enregistrement du bloc par le cœur (à
+  confirmer en recette) ; la politique `list` est refusée à la compilation sur ESP8266, dont `commit()` efface un secteur.
 
 ## Ordres
 
-Les ordres du plugin vers le lecteur (serveur d'ordres, capacité informative `srv`) seront définis par
-une UC ultérieure de la feuille de route, qui précisera leur format, la séparation de leur domaine de signature et les
-motifs `t` et `stale`. L'accusé `ack` (`oseq`, `res`, `why`) est déjà défini ici.
+Ajout compatible de l'UC 012 (`v=1` inchangé) : le plugin peut envoyer au lecteur des **ordres signés** (ouvrir la
+gâche, commander la LED ou le buzzer, demander un battement, resynchroniser la liste blanche, redémarrer). Un plugin qui
+n'en envoie aucun laisse le lecteur nominal : le port d'ordres reste muet. Le sketch Badger2 n'écoute que s'il a un
+**secret** (sans secret, aucun port n'est ouvert), si son compteur de démarrages `boot` est enregistré, si le serveur
+n'est pas coupé dans sa configuration et si le module réseau le permet (Mega avec W5100, W5200 ou W5500, ESP ; **jamais**
+avec un module ENC28J60). Quand il écoute, il annonce le jeton informatif `srv` dans `caps` et le champ `oport` du `hello`
+(l'un ne va pas sans l'autre).
+
+**Le port d'ordres ne doit jamais être joignable depuis Internet** (aucune redirection de port du routeur) : isolez le
+réseau des lecteurs. L'ordre voyage en clair : il ne contient aucun secret, mais une écoute du réseau montre l'opération
+demandée (la signature empêche seulement de l'inventer, de le modifier ou de le rejouer).
+
+### Transport
+
+- `POST /ordre HTTP/1.1` (`HTTP/1.0` accepté) sur le port `oport` (80 par défaut), avec `Content-Length` exact de 1 à
+  192 et `Connection: close`. Ni `Transfer-Encoding: chunked`, ni chaîne de requête ; les autres en-têtes sont ignorés.
+- Le corps est `<message>:<sig>`, un saut de ligne (`\n` ou `\r\n`) final toléré.
+
+### Message signé
+
+Message ASCII : `badger2:ordre:<rid>:<boot>:<seq>:<t>:<op>[:<arg>]`.
+
+- `rid` : celui du lecteur, **casse comprise**. `boot` : le `boot` du dernier événement reçu du lecteur ; un ordre n'est valable
+  que pour un démarrage donné. `seq` : de 0 à 4294967295, **strictement croissant** par (`rid`, `boot`), à partir de 1
+  (le `seq` 0 est refusé : `oseq=0` est réservé à « ordre non authentifié »). `t` : l'heure Unix UTC du plugin.
+- Les nombres suivent `(0|[1-9][0-9]{0,9})` et tiennent sur 32 bits.
+- `sig` = HMAC-SHA256 des 32 octets du secret du lecteur et du message, en 64 chiffres hexadécimaux minuscules, comparée
+  par le lecteur **en temps constant**. Le préfixe `badger2:ordre:` sépare ce domaine de signature de ceux des requêtes
+  (chaîne canonique), des réponses (`req=`), de `badger2:appairage` et de `badger2:wl:`.
+
+| Opération | Argument | Capacité annoncée qu'elle exige |
+|---|---|---|
+| `open` | durée en millisecondes, 100 à 60000 | `relay` |
+| `led` | `<couleur>,<ms>` (couleurs de la clé `led`, durée de 1 à 60000) | `led` |
+| `buzz` | `<motif>` (motifs de la clé `buzz`) | `buzz` |
+| `hb` | aucun | `hb` |
+| `sync` | aucun | `wl` |
+| `reboot` | aucun | `wdt` |
+
+L'argument reprend le motif de la clé de réponse homonyme. **Durée effective de `open`** : le plus petit de l'argument et du
+**plafond d'ouverture du lecteur** (`BADGER2_OUVERTURE_MAX_MS`, 10 secondes par défaut) ; le plugin ne suppose jamais plus que ce
+plafond. Une ouverture ne se cumule jamais avec une autre en cours : la plus longue des fins l'emporte. `hb` provoque un
+battement immédiat, et `sync` aussi (le `hb` porte `wlv` et `wlr` : le plugin répond par la clé `wl`, aucun fragment de liste ne
+voyage dans l'ordre). `reboot` répond 200 et un `ack`, puis le lecteur redémarre dès que sa file est vide et que l'envoi, le
+serveur et la gâche sont au repos, **au plus 10 secondes après l'ordre et jamais pendant une impulsion de gâche** ; les
+événements encore en file à ce moment sont perdus. Les badges présentés pendant l'attente du chien de garde (environ 2 secondes)
+et le redémarrage ne sont pas lus. Le `hello` qui suit porte `rst=sw` et un `boot` augmenté de un.
+
+Exemple, avec le secret de test public (lecteur `TEST-V1-SIGNE`, `boot` 5, `seq` 1, heure `1792310400`, ouvrir 3 secondes) :
+
+<!-- debut:exemple-ordre -->
+```
+badger2:ordre:TEST-V1-SIGNE:5:1:1792310400:open:3000:8220f9d1a0ea0bf55071d2b667063a02a708f2547a53275c46459d450c8ddd4f
+```
+<!-- fin:exemple-ordre -->
+
+L'outil `tests/harnais/protocole_v1.py ordre <message>` (secret sur l'entrée standard) signe un message et recalcule cet exemple.
+
+### Ordre d'évaluation (côté lecteur)
+
+| # | Contrôle | Refus `why` | HTTP | `ack` |
+|---|---|---|---|---|
+| 0 | une connexion acceptée par 250 ms au plus (la suivante attend dans la file d'écoute) | — | — | — |
+| 1 | moins de 1000 ms depuis le dernier ordre traité | `busy` | 503 | non |
+| 2 | requête HTTP lisible : ligne, `Content-Length` jusqu'à 192, en-têtes jusqu'à 1024 octets, complète en 2 secondes | `param` | 400 | non |
+| 3 | le dernier `:` est suivi de 64 chiffres hexadécimaux minuscules | `sig` | 403 | oui, `oseq=0` |
+| 4 | syntaxe du message | `param` | 400 | oui, `oseq=0` |
+| 5 | HMAC | `sig` | 403 | oui, `oseq=0` |
+| 6 | `rid` identique, `seq` non nul (l'ordre est authentifié dès ici) | `param` | 400 | oui |
+| 7 | `boot` différent du démarrage courant | `stale` | 403 | oui |
+| 8 | `seq` inférieur ou égal au dernier accepté de ce démarrage | `replay` | 403 | oui |
+| 9 | heure du lecteur inconnue, ou écart avec `t` de plus de 10 secondes ; **sauf `hb` et `sync`** (effet bénin, ils servent à resynchroniser l'heure) | `stale` | 403 | oui |
+| 10 | opération inconnue, ou capacité non annoncée | `unknown` | 400 | oui |
+| 11 | argument hors motif ou bornes : `param` ; couleur ou motif inconnu : `unknown` | `param` ou `unknown` | 400 | oui |
+| — | accepté | — | 200 `ok=1` | oui |
+
+- Un refus répond `ok=0` puis `why=<motif>` ; la réponse HTTP **n'est pas signée** et reste informative : seul l'`ack` (signé par le
+  canal du lecteur) fait foi. Le `seq` n'avance que pour un ordre accepté. L'heure du lecteur est celle de la clé de réponse `t`
+  (signée) : sans elle, `open`, `led`, `buzz` et `reboot` sont refusés `stale`.
+- Le rejeu est évalué avant la fraîcheur : le rejeu d'un ordre accepté est `replay` quel que soit le délai ; un ordre **neuf** dont
+  l'heure est périmée est `stale`, comme tout ordre d'un autre démarrage.
+- **Un refus ne produit un `ack` qu'une fois par 10 secondes** (deux fenêtres : refus authentifiés, refus non authentifiés ; un flot
+  de signatures bidon ne fait pas taire un `stale` ou un `replay` légitime). Un `ack` n'entre dans la file que s'il reste au moins
+  deux places : sinon le lecteur répond 503 `busy`, n'exécute rien et n'avance pas `seq`. **Pas d'`ack`, pas d'action.**
+- `busy` n'est jamais dans un `ack`. Tout ordre lisible traité arme l'intervalle de 1000 ms, authentifié ou non : un flot de requêtes
+  peut rendre le canal d'ordres indisponible (503), il ne gêne jamais la lecture des badges. Le canal d'ordres n'est donc pas un chemin
+  de sûreté : l'ouverture d'urgence d'une porte ne doit pas en dépendre.
+
+### Accusé `ack`
+
+Chaque ordre authentifié ou refusé (dans la limite des fenêtres ci-dessus) est accusé par un événement `ack` signé comme les autres
+événements : `oseq` est le `seq` de l'ordre authentifié, **`0` sinon** (le lecteur ne renvoie jamais une valeur choisie par un tiers) ;
+`res` vaut `acc` ou `ref` ; `why` n'accompagne que `ref` (`sig`, `replay`, `stale`, `unknown`, `param`). Le motif `nosecret` n'est pas
+émis par Badger2 (sans secret, aucun serveur). Un `ack` ne se perd jamais au détriment d'un badge : en file pleine, il est écarté
+avant tout événement d'accès (et compté dans `lost`).
+
+### Règles du plugin (UC 305 et 309)
+
+N'envoyer un ordre qu'à un lecteur appairé qui annonce `srv` et `hs256` ; envoyer l'heure `t` signée dans la réponse au `hello` et à
+chaque `hb` ; espacer les ordres d'au moins une seconde ; ne considérer un ordre exécuté que sur un `ack res=acc` portant le bon `oseq`
+(la réponse HTTP ne vaut rien seule) ; sur `stale`, envoyer `hb` puis recommencer avec un nouveau `seq` ; ne jamais exposer le port d'ordres
+à Internet. Après la restauration de la base du plugin, les `seq` repartent bas : le lecteur répond `replay` jusqu'à son redémarrage.
+
+### Évolution
+
+Une nouvelle opération est un ajout compatible (`v=1`). Changer la grammaire du message impose un autre préfixe : une v2 des ordres.
 
 ## Règles d'évolution
 
@@ -425,11 +637,21 @@ Ces points ne sont **pas normatifs** : ils se lèvent à la mesure ou à la rece
   10 secondes après la survenue. Ajuster ces tolérances reste compatible v1 (ni bornes de champ ni
   ordre d'anti-rejeu).
 - La méthode de calcul de l'empreinte `cfg` (UC 018 de la feuille de route).
+- Mode hors ligne (UC 011) : le coût du calcul d'une empreinte (une dizaine de millisecondes sur une Mega), la dérive de
+  l'`age` d'un `offline` sur 24 heures, et la bascule atomique de la liste sur ESP32.
+- Ordres (UC 012) : la tolérance de 10 secondes sur l'heure `t` d'un ordre ; les débits (une connexion par 250 millisecondes, un
+  ordre par seconde, un `ack` de refus par 10 secondes) et le temps de traitement d'un ordre (un calcul HMAC, quelques dizaines
+  de millisecondes sur une Mega) ; le serveur avec un module ENC28J60, non pris en charge faute de matériel de recette ; la prise
+  en charge du port par les ESP après une reconnexion Wi-Fi ; le redémarrage logiciel d'une Mega selon son chargeur d'amorçage
+  (délai de 2 secondes du chien de garde). **Exposition** : le port d'ordres ne doit jamais être joignable depuis Internet, et
+  le canal d'ordres peut être rendu indisponible (503) par un flot de requêtes sans jamais gêner les badges.
 
 ## Vecteurs de référence
 
 Le fichier `.claude/compat/vecteurs-v1.json` du dépôt contient des requêtes et des réponses exactes que le
 sketch et le plugin doivent tous deux reproduire : un cas valide par événement, des requêtes signées
 (avec chaîne canonique et signature calculées), un rejeu, une version inconnue, un champ inconnu, des
-appels invalides, une réponse signée. Ces vecteurs sont **figés** : on en ajoute, on n'en modifie ni n'en
+appels invalides, une réponse signée, (UC 011) un `hello` et un `hb` de liste blanche avec leur réponse `wl` signée et (UC 012)
+un `hello` annonçant le serveur d'ordres et un `ack` de refus signé. Ces vecteurs
+sont **figés** : on en ajoute, on n'en modifie ni n'en
 retire jamais.

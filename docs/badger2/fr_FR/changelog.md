@@ -8,6 +8,9 @@
 
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 précise le traitement des réponses non signées ou mal signées et l'usage réservé du secret du lecteur (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC009 -->
 - Évolution : les futurs lecteurs Badger2 en protocole v1 exigeront une Arduino Mega 2560 ou un ESP ; une Uno ou une Nano garde son sketch actuel (BadgerW5100 ou BadgerENC28J60), qui reste pris en charge et fonctionne comme avant (aucun lecteur déjà installé n'est concerné). <!-- UC003 -->
+- Documentation : la référence du protocole v1 des futurs lecteurs Badger2 précise les retours que le lecteur sait appliquer (ouverture de la gâche, voyant, buzzer, heure) et les conditions de leur prise en compte selon qu'un secret est configuré ou non (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC010 -->
+- Documentation : la référence du protocole v1 des futurs lecteurs Badger2 décrit le mode hors ligne : refus par défaut quand Jeedom est injoignable, liste blanche locale d'empreintes signée par le plugin ou, à vos risques, ouverture libre, et remise des passages à Jeedom à son retour (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC011 -->
+- Documentation : la référence du protocole v1 des futurs lecteurs Badger2 décrit les ordres signés que Jeedom pourra envoyer au lecteur (ouverture de la gâche, voyant, buzzer, battement, resynchronisation de la liste blanche, redémarrage) et leur accusé de réception ; le port d'ordres ne doit jamais être joignable depuis Internet (en préparation : les lecteurs déjà installés ne sont pas concernés) <!-- UC012 -->
 
 # 18/10/2026
 
