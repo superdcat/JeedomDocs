@@ -190,9 +190,10 @@ Ajouté depuis (compatible, `v=1` inchangé) : champ `port` (UC 005), facultatif
 `lost`, facultatif pour `hb` (UC 008) ; champs `offp` et `wl` facultatifs du `hello`, champs `wlv` et `wlr` facultatifs du `hb`,
 capacité et clé de réponse `wl`, et l'émission en `offline` d'un passage décidé par le lecteur (UC 011, voir « Mode hors
 ligne et liste blanche ») ; champ `oport` facultatif du `hello`, jeton `srv`, format des ordres du plugin vers le lecteur et
-émission de l'événement `ack` (UC 012, voir « Ordres »).
+émission de l'événement `ack` (UC 012, voir « Ordres ») ; jetons informatifs `console` et `status_led` du `hello` (UC 013, voir
+« Capacités du sketch Badger2 »).
 
-**Capacités du sketch Badger2** (UC 008, 009, 010, 011 et 012) : le `hello` d'un lecteur Badger2 annonce des jetons
+**Capacités du sketch Badger2** (UC 008, 009, 010, 011, 012 et 013) : le `hello` d'un lecteur Badger2 annonce des jetons
 **normatifs**, qui autorisent chacun une clé de réponse : `hb` (clé `hb`), `hs256` (clé `sig`, avec un secret),
 `time` (clé `t`, avec un secret seulement), `relay` (clé `act` : gâche câblée **et** secret, ou accusé explicite de
 l'installateur pour des réponses non signées), `led` et `buzz` (clés `led` et `buzz`, sortie câblée) et, depuis l'UC 011, `wl` (clé `wl`, la liste blanche locale :
@@ -201,7 +202,8 @@ des jetons **informatifs**, que le plugin affiche et n'exploite pas : `wdt` (chi
 `wg_port2` (second lecteur Wiegand), `kp` (clavier), `kp_burst` (code en une trame), `kp_tagpin` (badge puis
 code), `kp_key` (touche par touche), `bootnp` (UC 009 : le compteur de démarrages `boot` n'a pas pu être
 enregistré, un rejeu est possible au démarrage suivant), `srv` (UC 012 : le lecteur écoute les ordres du plugin, port dans le champ
-`oport`), puis un jeton `io_*` par entrée ou sortie câblée (`io_strike`, `io_led`,
+`oport`), `console` (UC 013 : la console de provisionnement du lecteur est compilée ; elle permet de changer l'identité et le secret
+par le port série du lecteur), `status_led` (UC 013 : une LED d'état est câblée), puis un jeton `io_*` par entrée ou sortie câblée (`io_strike`, `io_led`,
 `io_buzz`, `io_door`, `io_exit`, `io_exit_open`, `io_tamper`, `io_bell`, `io_a1` à `io_a5`). Aucun jeton
 informatif n'autorise une clé de réponse. Le `rst` d'un lecteur Badger2 vaut `power` (mise sous tension), `ext` (bouton reset),
 `wdt` (chien de garde), `brown` (baisse de tension), `sw` (redémarrage logiciel) ou `unk` (inconnue).
