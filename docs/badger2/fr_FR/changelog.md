@@ -12,6 +12,7 @@
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 décrit le mode hors ligne : refus par défaut quand Jeedom est injoignable, liste blanche locale d'empreintes signée par le plugin ou, à vos risques, ouverture libre, et remise des passages à Jeedom à son retour (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC011 -->
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 décrit les ordres signés que Jeedom pourra envoyer au lecteur (ouverture de la gâche, voyant, buzzer, battement, resynchronisation de la liste blanche, redémarrage) et leur accusé de réception ; le port d'ordres ne doit jamais être joignable depuis Internet (en préparation : les lecteurs déjà installés ne sont pas concernés) <!-- UC012 -->
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 mentionne deux capacités informatives, la console de provisionnement (configuration et diagnostic par le port série du lecteur) et la LED d'état (en préparation : les lecteurs déjà installés ne sont pas concernés) <!-- UC013 -->
+- Documentation : la référence du protocole v1 des futurs lecteurs Badger2 mentionne la capacité informative de mise à jour à distance du firmware, protégée par mot de passe et réservée aux cartes ESP (en préparation : les lecteurs déjà installés ne sont pas concernés) <!-- UC014 -->
 
 # 18/10/2026
 
