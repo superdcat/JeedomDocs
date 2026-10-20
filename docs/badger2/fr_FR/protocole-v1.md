@@ -1,9 +1,13 @@
 # Protocole v1 des lecteurs : référence technique
 
-> **Statut : le plugin reçoit la v1 ; le sketch et la signature sont en préparation.** Le plugin sert
-> désormais ce protocole : il valide chaque appel, identifie le lecteur par son `rid`, applique aux `tag` et
-> `pin` les mêmes effets qu'un badge ou un code v0 et répond `ok=1` sans clé d'action. La signature, l'appairage
-> et la détection du rejeu sont en préparation, comme le sketch unifié `Badger2` (non publié). **Vos
+Retour à la [référence technique](reference.md) · [Cartes et sketch v1](cartes-et-sketch-v1.md) · [tutoriel pas à pas](debuter.md).
+
+> **Statut : le plugin reçoit la v1 ; la signature, l'appairage et le rejeu sont en service pour les lecteurs
+> appairés ; le sketch est en préparation.** Le plugin sert désormais ce protocole : il valide chaque appel,
+> identifie le lecteur par son `rid`, applique aux `tag` et `pin` les mêmes effets qu'un badge ou un code v0 et
+> répond `ok=1` sans clé d'action. Pour un lecteur **appairé** (action de l'administrateur sur la fiche du
+> lecteur), il vérifie la signature, refuse le rejeu et le plancher de version, et signe ses réponses ; pour un
+> lecteur jamais appairé, rien ne change. Le sketch unifié `Badger2` est non publié. **Vos
 > lecteurs actuels ne sont pas concernés** : ils continuent d'appeler le plugin exactement comme avant
 > (voir « Le protocole v0 reste inchangé »). Cette page fixe le contrat que le sketch unifié `Badger2` et le
 > plugin respectent tous les deux ; elle s'adresse aux utilisateurs avancés et aux contributeurs.
@@ -79,10 +83,10 @@ Refuser un appel v0 conforme parce que son adresse porte un `v` le casserait : l
    inclusion), un `rid` de casse différente ou qui désigne un équipement qui n'est pas un lecteur, une adresse
    de connexion interdite (bouclage ou adresse du serveur, **même en inclusion**), une adresse de connexion
    différente de celle enregistrée pour le lecteur (hors inclusion), un lecteur sous son plancher de version,
-   une signature fausse. Tant que l'appairage n'existe pas (UC 017), le plugin contrôle l'adresse enregistrée
-   du lecteur ; un appel v0 sous le même nom peut aujourd'hui mettre cette adresse à jour (la verrouiller relève de
-   l'UC 101, le secret de l'UC 017) : ce contrôle n'est donc pas une authentification. Prévoyez une réservation
-   d'adresse (DHCP) pour chaque lecteur. En inclusion, un `rid` inconnu crée un lecteur **inactif** et l'appel qui le
+   une signature fausse. Pour un lecteur non appairé, le plugin contrôle l'adresse enregistrée du lecteur ; un
+   appel v0 sous le même nom peut mettre cette adresse à jour (la verrouiller relève de l'UC 101) : ce contrôle n'est
+   donc pas une authentification. Un lecteur appairé est authentifié par sa signature, et le contrôle de l'adresse
+   reste appliqué en plus. Prévoyez une réservation d'adresse (DHCP) pour chaque lecteur. En inclusion, un `rid` inconnu crée un lecteur **inactif** et l'appel qui le
    crée n'a aucun autre effet ; les appels suivants restent sans effet jusqu'à son activation.
 4. Rejeu : 403 `err=replay` (réponse signée).
 5. Fraîcheur : jamais un refus, mais un message non frais n'est pas traité comme un événement direct.

@@ -82,7 +82,9 @@ firmware de l'Arduino** : ils n'iront pas chercher la nouvelle tout seuls. Deux 
 ### Solution A — Reflasher les Arduino (recommandée à terme)
 
 Les sketches à jour sont téléchargeables depuis la page de configuration du plugin. C'est la solution
-propre : une seule adresse, plus de fichier de compatibilité à maintenir.
+propre : une seule adresse, plus de fichier de compatibilité à maintenir. Il s'agit des sketches d'origine
+à jour (`BadgerW5100`, `BadgerENC28J60`), qui appellent la nouvelle adresse : passer au sketch v1 n'est
+**jamais obligatoire** (il exige une Mega 2560 ou un ESP, voir [Compatibilité](reference.md#compatibilite-v0)).
 
 ### Solution B — Activer l'URL de compatibilité
 

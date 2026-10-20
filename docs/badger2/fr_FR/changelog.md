@@ -4,6 +4,14 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 20/10/2026
+
+- Ajout : un lecteur Badger2 en protocole v1 peut désormais être appairé depuis sa fiche : le plugin génère son secret (affiché une seule fois), vérifie la signature de chacun de ses appels, refuse les appels rejoués ou repassés en v0 à son nom, et l'administrateur peut régénérer le secret ou rabaisser le lecteur à v0 ; les lecteurs jamais appairés, dont tous les lecteurs déjà installés, fonctionnent exactement comme avant. <!-- UC017 -->
+- Documentation : la documentation explique l'appairage d'un lecteur Badger2 en protocole v1 : où le trouver dans la fiche, l'affichage unique du secret, ce qui est refusé ensuite, la régénération du secret et le retour à v0. <!-- UC017 -->
+- Ajout : un administrateur peut télécharger depuis la fiche d'un lecteur un fichier de configuration du sketch Badger2 déjà rempli (carte, adresse de Jeedom, identifiant et secret du lecteur) ; le secret d'appairage n'est plus affiché à l'écran, il n'est fourni que dans ce fichier, et un lecteur d'origine n'est en rien modifié par ce téléchargement. <!-- UC018 -->
+- Documentation : la documentation explique le téléchargement de la configuration du sketch d'un lecteur v1 (choix de la carte, adresse de Jeedom, Wi-Fi, emplacement du fichier, cas d'un lecteur d'origine) et la nouvelle façon de récupérer le secret après l'appairage. <!-- UC018 -->
+- Documentation : la documentation est réorganisée en deux entrées : un tutoriel pas à pas pour débutants, de l'achat du matériel à la première porte ouverte, et une référence technique complète (cartes et capacités, câblage, appairage, compatibilité des anciens lecteurs, console, dépannage détaillé) ; vos anciens lecteurs continuent de fonctionner sans rien changer, et le nouveau sketch exige une Mega 2560 ou un ESP. <!-- UC099 -->
+
 # 19/10/2026
 
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 précise le traitement des réponses non signées ou mal signées et l'usage réservé du secret du lecteur (en préparation : les lecteurs déjà installés ne sont pas concernés). <!-- UC009 -->

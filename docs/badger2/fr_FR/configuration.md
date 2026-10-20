@@ -17,6 +17,8 @@ Ces lecteurs sont disponibles dans différents designs à bas prix sur les sites
 
 Des exemples de sketch Arduino sont fourni (voir la page de configuration du plug-in)
 
+> Les deux sections ci-dessous décrivent les sketchs d'origine (**v0**), qui restent maintenus et fonctionnent avec une Arduino Uno. Pour une nouvelle installation sur Mega 2560 ou ESP (sketch **v1**), voir le [tutoriel pas à pas](debuter.md) et la page [Cartes et sketch v1](cartes-et-sketch-v1.md).
+
 ### Arduino + Interface réseau ENC28J
 
 (Testé sur Duemilanove 168/328 et Uno)
