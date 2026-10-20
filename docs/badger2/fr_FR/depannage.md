@@ -11,8 +11,7 @@ Cette page recense les symptômes et les messages que vous pouvez rencontrer, le
 | Symptôme | Cause probable | Entrée détaillée |
 |---|---|---|
 | Rien ne s'affiche à la console série | Mauvaise vitesse ou mauvais port, console désactivée | [Rien à la console](#rien-console) |
-| Le sketch refuse de compiler (« le plugin ne sert pas encore le protocole v1 ») | Garde de développement à `0` | [Compilation refusée : garde](#compilation-refusee-garde) |
-| Le sketch refuse de compiler (autre message) | Carte ou profil incompatible, carte Uno | [Compilation refusée : profil](#compilation-refusee-profil) |
+| Le sketch refuse de compiler | Carte ou profil incompatible, carte Uno, réglage hors limites | [Compilation refusée : profil](#compilation-refusee-profil) |
 | Le lecteur n'apparaît pas dans Jeedom | Inclusion non activée, réseau, adresse de Jeedom | [Lecteur absent de Jeedom](#lecteur-absent) |
 | Lecteur présent mais « En attente de l'annonce du lecteur » | Lecteur créé inactif | [Lecteur en attente d'annonce](#lecteur-attente-hello) |
 | Le badge est lu mais la porte reste fermée | Badge inconnu ou désactivé, lecteur bloqué, aucun scénario | [Badge lu, porte fermée](#badge-porte-fermee) |
@@ -25,19 +24,13 @@ Cette page recense les symptômes et les messages que vous pouvez rencontrer, le
 | Fonction grisée sur la fiche, capacité inconnue | Capacité non annoncée par le lecteur | [Capacité non annoncée](#capacite-non-annoncee) |
 | Appel refusé : adresse d'origine non locale ou en-tête de proxy | Lecteur hors réseau local, tunnel ou proxy | [Origine refusée](#origine-refusee) |
 | Autres refus d'un appel v1 | Identifiant, équipement en double, corps invalide, retard | [Autres refus d'un appel v1](#autres-refus-v1) |
-| Mise à jour à distance sans effet | Mot de passe, port, révocation | [Mise à jour à distance](#depannage-ota) |
+| Mise à jour à distance sans effet | Mot de passe, port, `ota -` | [Mise à jour à distance](#depannage-ota) |
 
 <a id="rien-console"></a>
 ## Rien ne s'affiche à la console série
 
 - **Cause** : vitesse du moniteur différente de 115 200 bauds ; mauvais port série ; fin de ligne qui n'est pas « NL et CR » (les commandes ne passent pas) ; console désactivée dans le fichier de configuration du sketch (`BADGER2_CONSOLE` ou `BADGER2_TRACES` à `0`) ; carte sans puce USB (WT32-ETH01) qui demande un adaptateur série externe.
 - **Action** : réglez 115 200 bauds, choisissez le bon port, appuyez sur le bouton reset de la carte (le démarrage se lit sur la console) et tapez `aide`. Si rien n'apparaît toujours, vérifiez la console dans le fichier de configuration. Le lecteur fonctionne sans console : son absence n'empêche pas de lire les badges.
-
-<a id="compilation-refusee-garde"></a>
-## Compilation refusée : « le plugin ne sert pas encore le protocole v1 »
-
-- **Cause** : le fichier de configuration du dépôt laisse la garde de développement à `0`. **Le message est périmé** : le plugin sert bien la v1 ; la garde signale que le sketch v1 n'est pas recetté sur matériel réel.
-- **Action** : utilisez le fichier de configuration **téléchargé depuis la fiche d'un lecteur appairé** (il lève la garde), ou passez `BADGER2_DEVELOPPEMENT_ACCEPTE` à `1` à la main dans votre fichier. Un fichier téléchargé pour un lecteur **sans secret** laisse la garde à `0` : même action. Voir [La garde de développement](cartes-et-sketch-v1.md#garde-developpement).
 
 <a id="compilation-refusee-profil"></a>
 ## Compilation refusée : profil, carte ou réglage
@@ -156,7 +149,7 @@ Si c'est le **fichier téléchargé** qui est perdu, retéléchargez-le : le sec
 - **Aucun port à l'écoute** : le mot de passe n'est pas enregistré ou le lecteur n'a pas redémarré après `ota mdp` (voir [Mise à jour à distance](cartes-et-sketch-v1.md#mise-a-jour-distance)). La console indique « inactive (aucun mot de passe) ».
 - **Mega** : la fonction est refusée à la compilation ; elle n'existe que sur ESP8266 et ESP32.
 - **Mot de passe refusé** : le port est refermé 10 secondes après un refus.
-- **Après `ota -`** : l'ancien mot de passe reste valide **jusqu'au redémarrage suivant** (limite connue).
+- **Après `ota -`** : la mise à jour à distance est désactivée immédiatement ; pour la réactiver, `ota mdp` puis un redémarrage. Si `ota -` répond par un refus d'écriture, rien n'est effacé et la mise à jour à distance **reste active** : vérifiez avec `ota`.
 - **Lecteur injoignable après la mise à jour** : une configuration réseau fausse dans le binaire en est la cause ; reflashez par câble USB.
 
 ## Une question qui reste sans réponse ?

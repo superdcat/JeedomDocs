@@ -9,7 +9,7 @@ Vous installez votre premier lecteur ? Suivez plutôt le [tutoriel pas à pas](d
 
 | Page | Contenu |
 |---|---|
-| [Cartes et sketch v1](cartes-et-sketch-v1.md) | Tableau des capacités par carte, câblage, bibliothèques, flash, garde de développement, console série, mise à jour à distance. |
+| [Cartes et sketch v1](cartes-et-sketch-v1.md) | Tableau des capacités par carte, câblage, bibliothèques, flash, console série, mise à jour à distance. |
 | [Dépannage détaillé](depannage.md) | Chaque message ou symptôme, sa cause et l'action à mener. |
 | [Protocole v1 des lecteurs](protocole-v1.md) | Contrat complet du protocole v1 (champs, signature, anti-rejeu, mode hors ligne, ordres). |
 | [Configuration du plugin](configuration.md) | Matériel d'origine (v0), équipements, lecteurs, badges et codes. |
@@ -209,8 +209,6 @@ L'adresse et le port sont proposés d'après l'adresse **interne** de Jeedom (R�
 
 Le fichier contient le secret du lecteur : ne le partagez pas, ne le publiez pas, ne le versionnez pas.
 
-**La garde de développement.** Le fichier d'un lecteur **appairé** (avec son secret) lève la garde de développement du sketch ; celui d'un lecteur **sans secret** la laisse à `0`, et le sketch refuse alors de compiler avec un message périmé. Voir [La garde de développement](cartes-et-sketch-v1.md#garde-developpement) et le [dépannage](depannage.md#compilation-refusee-garde).
-
 <a id="rid-lecteur"></a>
 ### L'identifiant du lecteur
 
@@ -310,7 +308,6 @@ Avant chaque publication du plugin, un banc **rejoue sur une vraie installation 
 - **En v1, seules les trames de 26 et 34 bits sont reconnues** : un badge enrôlé en décimal ou lu en 24 ou 32 bits n'est pas reconnu.
 - **Le secret n'est plus affiché** après l'appairage : il ne sort que dans le fichier de configuration téléchargé.
 - **Le trafic reste en HTTP** : la signature protège l'authenticité et le rejeu, pas la confidentialité. Isolez les lecteurs sur un réseau dédié.
-- **Mise à jour à distance** : `ota -` ne coupe l'écoute qu'au redémarrage suivant (voir [Mise à jour à distance](cartes-et-sketch-v1.md#mise-a-jour-distance)).
 - **Pas de nouvelle tentative automatique côté plugin** : c'est le lecteur qui réémet un événement non acquitté ; le plugin n'a aucun service tiers à interroger.
 - **Pas de démon ni de dépendance** : le plugin est entièrement en PHP.
 - **Chiffrement facultatif des badges et des codes** : non réalisé.

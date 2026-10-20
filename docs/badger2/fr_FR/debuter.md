@@ -86,7 +86,6 @@ Pour tous les cas particuliers (autres cartes, second lecteur, autres broches), 
 | Ligne à repérer | Ce qu'il faut écrire |
 |---|---|
 | `BADGER2_PROFIL` | Rien pour la Mega avec shield Ethernet. ESP32 : `BADGER2_PROFIL_ESP32_WIFI`. ESP8266 : `BADGER2_PROFIL_ESP8266_WIFI`. |
-| `BADGER2_DEVELOPPEMENT_ACCEPTE` | `1` (cette ligne est une sécurité : vous confirmez que vous savez que la v1 n'a pas été essayée sur matériel réel). |
 | `BADGER2_JEEDOM_HOTE` | L'adresse de votre Jeedom sur le réseau, par exemple `192.168.1.10`. Vous la trouverez dans Jeedom, Réglages > Système > Configuration > Réseaux. |
 | `BADGER2_JEEDOM_PORT` | `80`, sauf si votre Jeedom répond sur un autre port « HTTP ». |
 | `BADGER2_WIFI_SSID` et `BADGER2_WIFI_MOT_DE_PASSE` | ESP seulement : le nom de votre réseau Wi-Fi et son mot de passe, entre guillemets. |
@@ -101,7 +100,7 @@ Pour tous les cas particuliers (autres cartes, second lecteur, autres broches), 
 
 6. **Cliquez sur la flèche « Téléverser »** (en haut à gauche). Attendez la fin.
 
-**Résultat attendu** : l'IDE affiche un message de fin de téléversement, sans texte en rouge. Si la compilation s'arrête sur un message d'erreur, voir [le sketch refuse de compiler](depannage.md#compilation-refusee-garde) (message sur « le plugin ne sert pas encore le protocole v1 ») ou [profil ou carte](depannage.md#compilation-refusee-profil).
+**Résultat attendu** : l'IDE affiche un message de fin de téléversement, sans texte en rouge. Si la compilation s'arrête sur un message d'erreur, voir [profil, carte ou réglage](depannage.md#compilation-refusee-profil).
 
 <a id="etape-4"></a>
 ## Étape 4 — Configurer le lecteur
@@ -196,7 +195,7 @@ Repérez votre symptôme, appliquez l'action, puis reprenez l'étape concernée.
 | Ce que vous constatez | Cause probable | Quoi faire | Détail |
 |---|---|---|---|
 | Rien ne s'affiche dans la console série | Mauvaise vitesse ou mauvais port | Réglez 115200 bauds, choisissez le bon port, appuyez sur reset | [Rien à la console](depannage.md#rien-console) |
-| L'IDE refuse de compiler | Ligne de sécurité à `0`, carte ou profil qui ne correspondent pas | Mettez `1` à la ligne `BADGER2_DEVELOPPEMENT_ACCEPTE`, vérifiez la carte choisie | [Garde](depannage.md#compilation-refusee-garde), [profil](depannage.md#compilation-refusee-profil) |
+| L'IDE refuse de compiler | Carte ou profil qui ne correspondent pas, réglage hors limites | Vérifiez la carte choisie et le réglage nommé par le message | [Profil](depannage.md#compilation-refusee-profil) |
 | Le lecteur n'apparaît pas dans Jeedom | Inclusion non activée, adresse de Jeedom fausse, câble réseau ou Wi-Fi | Activez le mode inclusion, corrigez l'adresse (`hote …`), contrôlez le réseau, appuyez sur reset | [Lecteur absent](depannage.md#lecteur-absent) |
 | Le lecteur est là mais « En attente de l'annonce du lecteur » | Lecteur créé inactif | Cochez Activer, sauvegardez, appuyez sur reset | [En attente d'annonce](depannage.md#lecteur-attente-hello) |
 | Le badge est lu mais la porte reste fermée | Badge inconnu ou désactivé, lecteur bloqué, aucun scénario | Activez le badge, créez le scénario, vérifiez le log | [Badge lu, porte fermée](depannage.md#badge-porte-fermee) |

@@ -110,15 +110,6 @@ Les entrées analogiques (boutons poussoirs, sonnette de digicode) se câblent v
 
 Le menu peut nommer ces cartes un peu différemment selon la version du cœur.
 
-<a id="garde-developpement"></a>
-### La garde de développement
-
-Le fichier de configuration du dépôt laisse le réglage de garde (`BADGER2_DEVELOPPEMENT_ACCEPTE`) à `0`. Dans ce cas **le sketch refuse de compiler**, avec un message qui dit « le plugin ne sert pas encore le protocole v1 (réponse 503) ». **Ce message est périmé** : le plugin sert la v1. La garde existe parce que la v1 n'est pas recettée sur matériel réel.
-
-- Le fichier généré par le plugin pour un lecteur **appairé** (avec son secret) lève la garde (`1`).
-- Le fichier généré pour un lecteur **sans secret** (premier flash, lecteur d'origine) laisse la garde à `0` : passez-la à `1` à la main, en connaissance de cause.
-- Le fichier du dépôt, modifié à la main, demande la même modification.
-
 <a id="config-manuelle"></a>
 ### Remplir le fichier de configuration à la main
 
@@ -127,7 +118,6 @@ Une ligne par réglage ; une ligne commentée (`//`) est facultative, retirez le
 | Réglage | Valeur à saisir |
 |---|---|
 | `BADGER2_PROFIL` | Le profil de votre carte (tableau plus haut), par exemple `BADGER2_PROFIL_ESP32_WIFI`. |
-| `BADGER2_DEVELOPPEMENT_ACCEPTE` | `1` (voir la garde ci-dessus). |
 | `BADGER2_JEEDOM_HOTE` | Adresse IP de Jeedom sur votre réseau, sans zéro de tête (`192.168.1.10`), ou nom DNS de 63 caractères au plus. Ni `http://`, ni port, ni chemin. Un nom en `.local` n'est pas pris en charge. **Avec un module ENC28J60, une adresse IP seulement.** |
 | `BADGER2_JEEDOM_PORT` | Port HTTP de Jeedom (80 par défaut). Le lecteur parle en HTTP, pas en HTTPS. |
 | `BADGER2_RID` | Identifiant du lecteur dans Jeedom : 1 à 32 caractères parmi lettres, chiffres, `_` et `-`. Facultatif : sans lui, le lecteur s'appelle `BADGER` suivi du dernier octet de son adresse MAC. |
@@ -183,7 +173,7 @@ Pour l'activer, dans l'ordre :
 |---|---|
 | `ota` | Affiche l'état : active (avec le port), inactive (aucun mot de passe) ou mémoire illisible. |
 | `ota mdp` | Enregistre le mot de passe ; actif au prochain redémarrage. |
-| `ota -` | Efface le mot de passe. **L'ancien mot de passe reste valide jusqu'au prochain redémarrage** : la révocation n'est pas immédiate (limite connue, non corrigée). |
+| `ota -` | Efface le mot de passe et **désactive la mise à jour à distance immédiatement** : l'ancien mot de passe ne sert plus, sans redémarrage. |
 
 Pendant un transfert (10 à 60 secondes environ) :
 

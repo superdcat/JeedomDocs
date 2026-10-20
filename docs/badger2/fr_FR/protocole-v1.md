@@ -36,7 +36,7 @@ règles d'évolution.
   les lecteurs sur un réseau dédié. Une réponse non signée peut être falsifiée : un lecteur sans secret
   n'annonce la capacité `relay` que si l'installateur a explicitement autorisé les actions non signées
   (désactivé par défaut). Pour la même raison, tant qu'aucun secret n'est configuré, le sketch applique
-  `hb`, `led` et `buzz` non authentifiés, mais **ignore** `cfg` et n'applique pas `t` (voir « Côté
+  `hb`, `led` et `buzz` non authentifiés, mais n'applique pas `t` (voir « Côté
   lecteur »). Un lecteur muni d'un secret n'applique aucune clé d'une réponse non signée.
 
 ## Reconnaître la version
@@ -130,7 +130,7 @@ signe.
 | `sig` | `^[0-9a-f]{64}$` ; présent si et seulement si le lecteur a un secret ; jamais journalisé en entier | — | tous les événements |
 | `caps` | 0 à 32 jetons `^[a-z0-9_]{1,16}$` séparés par `,`, 255 caractères au plus ; `caps=` vide permis | `hello` | — |
 | `rst` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`power`, `ext`, `wdt`, `brown`, `sw`, `unk`) | `hello` | — |
-| `cfg` | `^[0-9a-f]{8}$`, empreinte opaque de la configuration du lecteur | — | `hello` |
+| `cfg` | `^[0-9a-f]{8}$`, opaque ; **réservé, sans usage** : accepté et ignoré par le plugin, jamais émis par le sketch Badger2 | — | `hello` |
 | `offp` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`deny`, `list`, `open`) : politique du lecteur quand Jeedom est injoignable | — | `hello` |
 | `oport` | entier 1 à 65535 : port du serveur d'ordres du lecteur ; présent si et seulement si `caps` contient `srv` | — | `hello` |
 | `wl` | entier 0 à 65535 : capacité de la liste blanche locale (nombre d'entrées au plus) ; présent si et seulement si `caps` contient `wl` | — | `hello` |
@@ -238,6 +238,10 @@ réponse dont la capacité n'a pas été annoncée.** Les capacités valent dès
 | `cfg` | `cfg` |
 | `wl` | `wl` |
 
+La capacité `cfg` et sa clé sont **réservées, sans usage** : aucune empreinte de configuration n'est prévue, le
+plugin accepte et ignore le champ `cfg` d'un `hello` et n'envoie jamais la clé `cfg`. Elles restent dans le contrat
+pour qu'un appel v1 qui les porte reste conforme.
+
 Toute autre capacité est **informative** : affichée, ignorée par le plugin, définie par l'UC de la feuille de
 route qui l'introduit. Un lecteur peut annoncer une capacité que le plugin ne connaît pas encore.
 
@@ -259,7 +263,7 @@ route qui l'introduit. Un lecteur peut annoncer une capacité que le plugin ne c
 | `led` | commande de la LED ; mêmes événements que `act` | `<couleur>,<ms>` : `green`, `red`, `amber`, `off` (liste ouverte) ; 1 à 60000 | `led` |
 | `buzz` | commande du buzzer ; mêmes événements que `act` | `accept`, `deny`, `error` (liste ouverte) | `buzz` |
 | `hb` | période de battement voulue | 10 à 86400 secondes | `hb` |
-| `cfg` | empreinte de configuration attendue par le plugin | `^[0-9a-f]{8}$`, opaque | `cfg` |
+| `cfg` | **réservée, sans usage** : jamais envoyée par le plugin | `^[0-9a-f]{8}$`, opaque | `cfg` |
 | `wl` | fragment de la liste blanche locale du lecteur ; seulement avec `hs256`, pour un lecteur qui annonce `wl` | `<version>,<total>,<rang>` puis 0 à 3 `,<empreinte>` : version 8 chiffres hexadécimaux, empreintes de 16, total et rang de 0 à 65535, `rang` + nombre d'empreintes au plus égal à `total`, aucune empreinte seulement si `total` vaut 0 | `wl` |
 | `sig` | signature de la réponse ; dernière ligne quand elle est présente | 64 chiffres hexadécimaux minuscules | `hs256` |
 <!-- fin:tableau-cles -->
@@ -289,7 +293,7 @@ appel v1 répond `500` sans corps, avec le même traitement côté lecteur.
   non signé (`auth`, `invalid`, `version`) et tout `ok=1` non signé ou mal signé, est un échec
   **transitoire** : l'événement est réémis à l'identique avec un délai croissant, jamais d'ouverture, et
   le lecteur signale l'état (compteur ou voyant « refus non authentifié »). Sans secret appairé, le
-  lecteur ignore `cfg` et n'applique pas `t` (« Limite connue »). Un intermédiaire peut
+  lecteur n'applique pas `t` (« Limite connue »). Un intermédiaire peut
   retarder un événement, plus le supprimer. Conséquence : un refus déterministe (secret régénéré,
   « Rabaisser à v0 ») bloque la file de façon visible jusqu'à la reconfiguration du lecteur.
 - **Autre cas** (délai dépassé, erreur 5xx, corps illisible, pas de `ok`) : échec transitoire, réémission
@@ -651,7 +655,6 @@ Ces points ne sont **pas normatifs** : ils se lèvent à la mesure ou à la rece
 - Les tolérances : fraîcheur de 30 secondes, conversion en `offline` à 30 secondes, `act` appliqué au plus
   10 secondes après la survenue. Ajuster ces tolérances reste compatible v1 (ni bornes de champ ni
   ordre d'anti-rejeu).
-- La méthode de calcul de l'empreinte `cfg` (UC 018 de la feuille de route).
 - Mode hors ligne (UC 011) : le coût du calcul d'une empreinte (une dizaine de millisecondes sur une Mega), la dérive de
   l'`age` d'un `offline` sur 24 heures, et la bascule atomique de la liste sur ESP32.
 - Ordres (UC 012) : la tolérance de 10 secondes sur l'heure `t` d'un ordre ; les débits (une connexion par 250 millisecondes, un
