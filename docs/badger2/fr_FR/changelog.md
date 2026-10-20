@@ -15,6 +15,7 @@
 - Évolution : le sketch Badger2 (protocole v1) compile désormais tel quel : la ligne de sécurité BADGER2_DEVELOPPEMENT_ACCEPTE n'existe plus, ni dans le sketch ni dans le fichier de configuration téléchargé depuis la fiche d'un lecteur, appairé ou non ; une telle ligne restée dans un ancien fichier est simplement ignorée. Le sketch v1 n'a toujours pas été essayé sur une carte réelle : gardez de quoi revenir au sketch d'origine. Les lecteurs d'origine ne sont pas concernés. <!-- UC099 -->
 - Évolution : sur un lecteur ESP doté de la mise à jour à distance (sketch Badger2), la commande console « ota - » désactive désormais la mise à jour à distance immédiatement : l'ancien mot de passe ne sert plus, sans attendre de redémarrage. Les lecteurs Mega et les lecteurs d'origine ne sont pas concernés. <!-- UC014 -->
 - Documentation : la référence du protocole v1 des futurs lecteurs Badger2 ne promet plus d'empreinte de configuration (cfg) ; ce champ reste accepté mais sans effet (les lecteurs déjà installés ne sont pas concernés). <!-- UC018 -->
+- Évolution : le protocole v1 des futurs lecteurs Badger2 ne comporte plus du tout d'empreinte de configuration : ni champ, ni capacité, ni libellé dans la fiche du lecteur ; un lecteur qui enverrait encore ces données les verrait ignorées comme toute donnée inconnue. Les lecteurs déjà installés ne sont pas concernés. <!-- UC018 -->
 
 # 19/10/2026
 

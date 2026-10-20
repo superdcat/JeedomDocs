@@ -130,7 +130,6 @@ signe.
 | `sig` | `^[0-9a-f]{64}$` ; présent si et seulement si le lecteur a un secret ; jamais journalisé en entier | — | tous les événements |
 | `caps` | 0 à 32 jetons `^[a-z0-9_]{1,16}$` séparés par `,`, 255 caractères au plus ; `caps=` vide permis | `hello` | — |
 | `rst` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`power`, `ext`, `wdt`, `brown`, `sw`, `unk`) | `hello` | — |
-| `cfg` | `^[0-9a-f]{8}$`, opaque ; **réservé, sans usage** : accepté et ignoré par le plugin, jamais émis par le sketch Badger2 | — | `hello` |
 | `offp` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`deny`, `list`, `open`) : politique du lecteur quand Jeedom est injoignable | — | `hello` |
 | `oport` | entier 1 à 65535 : port du serveur d'ordres du lecteur ; présent si et seulement si `caps` contient `srv` | — | `hello` |
 | `wl` | entier 0 à 65535 : capacité de la liste blanche locale (nombre d'entrées au plus) ; présent si et seulement si `caps` contient `wl` | — | `hello` |
@@ -235,12 +234,7 @@ réponse dont la capacité n'a pas été annoncée.** Les capacités valent dès
 | `led` | `led` |
 | `buzz` | `buzz` |
 | `hb` | `hb` |
-| `cfg` | `cfg` |
 | `wl` | `wl` |
-
-La capacité `cfg` et sa clé sont **réservées, sans usage** : aucune empreinte de configuration n'est prévue, le
-plugin accepte et ignore le champ `cfg` d'un `hello` et n'envoie jamais la clé `cfg`. Elles restent dans le contrat
-pour qu'un appel v1 qui les porte reste conforme.
 
 Toute autre capacité est **informative** : affichée, ignorée par le plugin, définie par l'UC de la feuille de
 route qui l'introduit. Un lecteur peut annoncer une capacité que le plugin ne connaît pas encore.
@@ -263,7 +257,6 @@ route qui l'introduit. Un lecteur peut annoncer une capacité que le plugin ne c
 | `led` | commande de la LED ; mêmes événements que `act` | `<couleur>,<ms>` : `green`, `red`, `amber`, `off` (liste ouverte) ; 1 à 60000 | `led` |
 | `buzz` | commande du buzzer ; mêmes événements que `act` | `accept`, `deny`, `error` (liste ouverte) | `buzz` |
 | `hb` | période de battement voulue | 10 à 86400 secondes | `hb` |
-| `cfg` | **réservée, sans usage** : jamais envoyée par le plugin | `^[0-9a-f]{8}$`, opaque | `cfg` |
 | `wl` | fragment de la liste blanche locale du lecteur ; seulement avec `hs256`, pour un lecteur qui annonce `wl` | `<version>,<total>,<rang>` puis 0 à 3 `,<empreinte>` : version 8 chiffres hexadécimaux, empreintes de 16, total et rang de 0 à 65535, `rang` + nombre d'empreintes au plus égal à `total`, aucune empreinte seulement si `total` vaut 0 | `wl` |
 | `sig` | signature de la réponse ; dernière ligne quand elle est présente | 64 chiffres hexadécimaux minuscules | `hs256` |
 <!-- fin:tableau-cles -->
