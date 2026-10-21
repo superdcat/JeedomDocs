@@ -142,6 +142,36 @@ Tant que l'option est décochée, un bandeau rouge s'affiche : « Le contrôle d
 
 > L'option ne concerne que les lecteurs **v0** (sketch d'origine). Les lecteurs **v1** sont toujours limités à leur IP, option cochée ou non.
 
+<a id="acces-direct-dossiers"></a>
+#### Accès direct aux dossiers internes (Apache, nginx)
+
+Le plugin contient des dossiers internes que ni un navigateur ni un lecteur n'ont à appeler. Leur accès direct par une adresse web est fermé :
+
+- `.memory`, `.claude`, `.githooks`, `.github` (documentation de travail et outillage de développement) ;
+- `tests` ;
+- `arduino` ;
+- `core/class` et `core/php` (code interne du plugin).
+
+**Ce qui reste joignable** : l'API des lecteurs, sur ses deux adresses (`plugins/badger2/…` et l'ancienne `plugins/badger/…` servie par le relais de compatibilité), et les pages du plugin. Vos lecteurs continuent de fonctionner sans changement.
+
+**Sous Apache** (installation standard de Jeedom) : la protection est active d'office, il n'y a rien à faire. Elle suppose qu'Apache prenne en compte les fichiers `.htaccess` (`AllowOverride All`, réglage standard de Jeedom) ; pour le vérifier, la commande de l'étape 3 ci-dessous doit aussi répondre **403**.
+
+**Sous nginx** : nginx ignore ces protections. Tant que la règle ci-dessous n'est pas ajoutée, ces dossiers restent lisibles par quiconque joint votre Jeedom. La page de configuration du plugin affiche ce rappel : « La protection de l'accès direct aux dossiers internes dépend du serveur web (Apache : active ; nginx : à configurer) » suivi de « Sous nginx, ajoutez à la configuration du serveur la règle donnée dans la documentation du plugin. »
+
+<!-- Bloc extrait par la CI (tests/harnais/joignabilite.py) : ne pas le déplacer hors de l'ancre acces-direct-dossiers ni le modifier sans le test. -->
+```nginx
+# Badger Fork : dossiers internes du plugin, jamais appelés par un navigateur
+location ~ /plugins/badger2/(\.memory|\.claude|\.githooks|\.github|arduino|tests|core/class|core/php)(/|$) {
+    deny all;
+}
+```
+
+1. Placez cette règle dans le bloc `server` de Jeedom, **avant** la `location` qui traite le PHP.
+2. Testez la configuration avec `nginx -t`, puis rechargez nginx.
+3. Vérifiez avec `curl -sI http://<box>/plugins/badger2/core/php/badger2.inc.php` : la réponse doit être **403**. Une réponse **200** signifie que la règle est placée après la `location` du PHP, ou masquée par une `location ^~` qui couvre `/plugins/` : remontez-la.
+
+**Boutons de téléchargement des sketches d'origine** : ils ouvrent désormais la page du fichier sur GitHub (un accès à Internet est nécessaire), et non plus un lien direct vers le dossier `arduino` du plugin, fermé à l'accès direct.
+
 ### Configuration des lecteurs
 
 La configuration des lecteurs permet d'ajuster certains paramètres du lecteur. Elle doit être effectuée et sauvegardé après chaque ajout de nouveau lecteur.

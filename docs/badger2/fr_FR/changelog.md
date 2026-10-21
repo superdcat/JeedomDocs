@@ -23,6 +23,9 @@
 - Ajout : une mise à jour du plugin applique désormais ses évolutions de données une seule fois et dans l'ordre, et signale dans le centre de messages une évolution qui échoue (elle est retentée automatiquement à la mise à jour ou la réactivation suivante). <!-- UC107 -->
 - Évolution : désactiver puis réactiver le plugin ne débloque plus les lecteurs bloqués : utilisez le bouton « Débloquer » de la fiche du lecteur. <!-- UC107 -->
 - Documentation : la documentation explique les évolutions de données appliquées à la mise à jour, le message affiché en cas d'échec et la conduite à tenir. <!-- UC107 -->
+- Évolution : maintenance interne du plugin (code simplifié, éléments inutilisés retirés), sans aucun changement pour vos lecteurs, badges, codes et scénarios ; aucun lecteur n'est à reflasher. <!-- UC108 -->
+- Évolution : les dossiers internes du plugin (analyses, sketches, code interne) ne sont plus lisibles directement depuis un navigateur sous Apache, la page de configuration indique que cette protection dépend du serveur web, et les boutons de téléchargement des sketches d'origine ouvrent désormais leur page sur GitHub. <!-- UC109 -->
+- Documentation : la documentation de la configuration explique la protection des dossiers internes et donne la règle à ajouter sous nginx. <!-- UC109 -->
 
 # 20/10/2026
 
