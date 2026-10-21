@@ -162,7 +162,7 @@ Votre box (ou routeur) distribue les adresses du réseau avec un système appel�
 
 > Capture à fournir : `images/tuto-appairage.png` — doit montrer la fiche d'un lecteur avec les boutons « Appairer le lecteur » et « Télécharger la configuration du sketch » (sans aucun secret visible).
 
-Tout le détail (régénérer, rabaisser, ce qui est refusé ensuite) : [appairage](reference.md#appairage) et [configuration du sketch](reference.md#configuration-sketch).
+Tout le détail (régénérer, rabaisser, ce qui est refusé ensuite) : [appairage](reference.md#appairage) et [configuration du sketch](reference.md#configuration-sketch). Pour savoir ce que protège le plugin (et ce qu'il ne protège pas), voir [Sécurité de vos lecteurs](securite.md).
 
 > Capture à fournir : `images/tuto-fiche-lecteur.png` — doit montrer la fiche du lecteur avec protocole « v1 », firmware, carte, capacités et « Dernier hello » renseignés.
 

@@ -6,6 +6,8 @@ La page de configuration du plugin donne aussi accès aux sketches Arduino, aux 
 section **Migration depuis Badger** si vous arrivez de l'ancien plugin : voir la
 [procédure de migration](migration.md).
 
+Les réglages de sécurité (inclusion, blocage, contrôle de l'IP d'origine, codes) sont résumés, avec leurs valeurs par défaut, dans la page [Sécurité de vos lecteurs](securite.md#reglages-securite).
+
 ## Configuration du matériel
 
 Ce plug-in s'interface avec des Arduino / ESP connectés en réseau exécutants un sketch spécifique. Sur ces Arduino on connecte le lecteur de badge wiegand. Le protocole wiegand permet une longue distance de câble entre l’Arduino et le lecteur.
@@ -91,7 +93,7 @@ Sélectionnez ce nouveau lecteur pour le configurer (cf. chapitre suivant)
 
 Le mode inclusion est une **fenêtre limitée dans le temps** : il s'arrête tout seul à l'échéance, même si vous fermez la page ou si Jeedom redémarre. Tant qu'il est actif, un bandeau de la page du plugin affiche « Inclusion active, fin dans … » (compte à rebours) et le nombre de créations par rapport à la limite, avec deux boutons :
 
-- **Prolonger** : relance l'inclusion pour la même durée. Le compteur de créations **n'est pas remis à zéro**.
+- **Prolonger** : relance l'inclusion pour la même durée, sans jamais dépasser 60 minutes. Le compteur de créations **n'est pas remis à zéro**.
 - **Arrêter l'inclusion** : ferme la fenêtre immédiatement.
 
 Chaque création est écrite dans le log et signalée dans le centre de messages (une notification regroupée par inclusion). Les réglages se trouvent dans la configuration du **plugin**, bloc **Inclusion**, avec l'état de l'inclusion et un bouton d'arrêt. La case « Autoriser l'inclusion de devices inconnus » n'existe plus : l'inclusion se démarre uniquement par le bouton **Mode inclusion** de la page du plugin.
@@ -107,6 +109,8 @@ Chaque création est écrite dans le log et signalée dans le centre de messages
 L'acceptation de la nouvelle adresse IP d'un lecteur « le temps d'un appel en inclusion » ne vaut que pendant la fenêtre.
 
 Une inclusion qui était active avant la mise à jour du plugin est arrêtée par la mise à jour (un message du centre de messages le signale) : relancez-la au besoin.
+
+La procédure complète, de bout en bout, et la raison pour laquelle un badge inclus n'ouvre rien tant qu'il n'est pas activé ou approuvé sont dans [Inclure, approuver ou refuser](securite.md#proc-inclusion). En cas de refus ou de limite atteinte : [Le lecteur n'apparaît pas dans Jeedom](depannage.md#lecteur-absent).
 
 <a id="blocage-des-lecteurs"></a>
 #### Section « Blocage des lecteurs »
@@ -141,6 +145,10 @@ Cette case par lecteur n'a d'effet que si l'option est activée.
 Tant que l'option est décochée, un bandeau rouge s'affiche : « Le contrôle d'IP d'origine est désactivé : n'importe quel appareil du réseau, ou d'Internet si Jeedom est publié par un tunnel, peut se faire passer pour un lecteur. » Le bandeau apparaît ou disparaît dès que vous cochez ou décochez la case ; sauvegardez ensuite la configuration.
 
 > L'option ne concerne que les lecteurs **v0** (sketch d'origine). Les lecteurs **v1** sont toujours limités à leur IP, option cochée ou non.
+
+**Docker et NAT** : derrière un NAT, ou avec Jeedom sous Docker (proxy intégré), l'adresse que Jeedom voit peut être celle du NAT et non celle du lecteur : plusieurs lecteurs peuvent partager la même adresse, et la case « Refuser les appels venant d'une autre IP » ne les distingue plus. **À confirmer** : cas non essayé sur une installation Docker réelle.
+
+Les refus produits par cette option sont écrits au niveau **Avertissement** du journal, **invisible au niveau par défaut (Erreur)** : voir [Origine refusée](depannage.md#origine-refusee) et [Niveau de log](reference.md#niveau-de-log). Toute la page sécurité : [Corriger l'IP d'un lecteur et régler le filtrage](securite.md#proc-ip).
 
 <a id="acces-direct-dossiers"></a>
 #### Accès direct aux dossiers internes (Apache, nginx)
@@ -219,11 +227,16 @@ Les entrées analogiques apparaissent comme des badges.
 - Le model est purement informatif. Il sert à mieux les reconnaitre dans l'administration du plugin. Un badge créé en mode inclusion reçoit le modèle « Tag RFID » ; une entrée analogique (Analog1 à Analog5) reçoit « Analog Input ». Les badges déjà créés ne changent pas.
 - La valeur (ce paramètre ne peut pas être changé) affiche l'identifiant lu sur le badge en décimal. Pour les entrées analogique, il indique le numéro de l'entrée utilisée
 
+<a id="codes-configuration"></a>
 ### Configuration des codes
 
 La configuration des codes permet d'ajuster certains paramètres. Elle doit être effectuée et sauvegardé après chaque ajout de nouveau code.
 
 ![](images/Screen5.png)
+
+> **Capture antérieure à la mise à jour de sécurité.** Elle montre l'ancien champ « Code », où le code s'affichait en clair. Aujourd'hui le champ **Code (masqué)** est toujours **vide** au chargement de la page, et le bouton **Voir le code** (administrateurs) affiche le code actuel. Les autres champs sont inchangés.
+
+> Capture à fournir : `images/Screen5.png` à refaire — doit montrer la fiche d'un équipement code avec le champ « Code (masqué) » vide, le bouton « Voir le code » et la case « Ajouter une commande info GetPin » décochée (aucun code visible).
 
 - Le nom de l'équipement dans jeedom.
 - L'objet parent jeedom (optionnel).
@@ -231,11 +244,13 @@ La configuration des codes permet d'ajuster certains paramètres. Elle doit êtr
 - Visible / Invisible (dans jeedom)
 - **Code (masqué)** : le code secret. Il est stocké chiffré et le champ est toujours vide au chargement de la page. Laissez-le vide pour conserver le code actuel. Pour le remplacer, saisissez un nouveau code de 1 à 24 chiffres (4 au moins sont conseillés). Ce code doit être différent de celui de tous les autres équipements code.
 - **Voir le code** : affiche le code actuel. Ce bouton est réservé aux administrateurs, et chaque consultation est écrite dans le log.
-- **Ajouter une commande info GetPin** : case décochée par défaut. Voir « Génération d'un code temporaire » dans le fonctionnement.
+- **Ajouter une commande info GetPin** : case décochée par défaut. Cochée, elle crée une commande qui **publie le code en clair**, visible dans les journaux d'événements de Jeedom (hors de tout contrôle du plugin). Décochée, la commande est supprimée : les scénarios qui la lisaient ne la trouvent plus, et le formulaire vous prévient avant. Voir [Génération d'un code temporaire](fonctionement.md#codes-temporaires) et [Gérer les codes](securite.md#proc-codes).
 
 Les codes ne sont pas créés par inclusion automatique. Il faut utiliser le bouton "Ajouter" pour créer un nouveau code. Un nouvel équipement code reçoit un code de 4 chiffres généré automatiquement : cliquez sur **Voir le code** pour le connaître, ou saisissez le vôtre.
 
-Les lecteurs déjà installés n'ont rien à changer : ils envoient le même code qu'avant.
+Les lecteurs déjà installés n'ont rien à changer : ils envoient le même code qu'avant. Attention : un lecteur v0 envoie ce code **en clair** sur votre réseau ; le chiffrement ne protège que ce qui est enregistré dans Jeedom.
+
+Un code refusé à la sauvegarde affiche un message (« Code refusé : de 1 à 24 chiffres », « Ce code est déjà utilisé »…) : voir [Messages sur les codes](depannage.md#messages-codes). Le journal avertit aussi quand un code a moins de 4 chiffres (« facile à deviner »).
 
 #### Mise à jour du plugin et codes existants
 
@@ -245,6 +260,7 @@ Les lecteurs déjà installés n'ont rien à changer : ils envoient le même cod
 - La clé de chiffrement est celle de Jeedom. Elle est incluse dans la sauvegarde complète de Jeedom : conservez cette sauvegarde.
 - **Retour à une version antérieure du plugin** : restaurez d'abord la sauvegarde Jeedom faite avant la mise à jour. Sinon, les codes n'ouvrent plus rien. Un code saisi pendant que l'ancienne version était installée n'est chiffré qu'à la prochaine sauvegarde de cet équipement, après la remontée de version.
 
+<a id="migrations-donnees"></a>
 #### Évolutions de données à chaque mise à jour
 
 - À chaque mise à jour du plugin (ou à son activation, si la mise à jour a été faite plugin désactivé), le plugin applique ses évolutions de données : chiffrement des codes, puis limites de blocage par défaut des lecteurs. Chacune est appliquée une seule fois, dans l'ordre. Désactiver puis réactiver le plugin ne les rejoue pas.

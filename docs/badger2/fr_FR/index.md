@@ -12,13 +12,17 @@ Le plugin n'a **ni dépendance ni démon** : il est entièrement en PHP. Il s'in
 |---|---|
 | **Débutant** : vous n'avez jamais flashé une carte Arduino ni câblé un lecteur de badges | [Débuter pas à pas](debuter.md) : un tutoriel en 8 étapes, de l'achat du matériel à la première porte ouverte |
 | **Utilisateur averti ou contributeur** : vous cherchez un détail (cartes, capacités, appairage, posture de sécurité des lecteurs, protocole, mode debug, compatibilité) | [Référence technique](reference.md) |
+| **Soucieux de sécurité** : vous voulez savoir ce que protège le plugin, débloquer un lecteur, régler l'inclusion ou les codes | [**Sécurité de vos lecteurs**](securite.md) : ce que chaque mesure protège (et ne protège pas), réglages par défaut, mise à jour sans surprise |
 | **En panne** | [Dépannage détaillé](depannage.md) |
 | **Vous utilisez déjà l'ancien plugin Badger** | [Procédure de migration](migration.md) |
 
 > **Vos lecteurs actuels continuent de fonctionner sans rien changer.** Ne désinstallez pas l'ancien plugin Badger avant d'avoir suivi la [procédure de migration](migration.md).
 
+> ⚠️ **Un lecteur v0 (sketch d'origine) reste usurpable depuis le réseau local**, et son code circule en clair : seul un reflash avec le sketch v1 appairé et signé y remédie. Lisez [Sécurité de vos lecteurs](securite.md).
+
 ## Autres pages
 
+- [Sécurité de vos lecteurs](securite.md) : ce que protège chaque mesure, réglages par défaut, mise à jour, débloquer un lecteur, inclusion, codes, filtrage par IP, dossiers (Apache, nginx).
 - [Configuration du plugin](configuration.md) : matériel d'origine, équipements, lecteurs, badges et codes.
 - [Fonctionnement et utilisation des équipements](fonctionement.md) : scénarios, blocage après échecs, codes temporaires.
 - [Infos techniques](techtips.md) : technologie Wiegand, clavier à code, sources.

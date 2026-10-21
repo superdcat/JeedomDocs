@@ -9,6 +9,7 @@ Vous installez votre premier lecteur ? Suivez plutôt le [tutoriel pas à pas](d
 
 | Page | Contenu |
 |---|---|
+| [Sécurité de vos lecteurs](securite.md) | Ce que protège chaque mesure de sécurité, ce qu'elle ne protège pas, réglages par défaut, mise à jour sans surprise, procédures (débloquer, inclusion, codes, exiger v1 signé, IP, dossiers nginx). |
 | [Cartes et sketch v1](cartes-et-sketch-v1.md) | Tableau des capacités par carte, câblage, bibliothèques, flash, console série, mise à jour à distance. |
 | [Dépannage détaillé](depannage.md) | Chaque message ou symptôme, sa cause et l'action à mener. |
 | [Protocole v1 des lecteurs](protocole-v1.md) | Contrat complet du protocole v1 (champs, signature, anti-rejeu, mode hors ligne, ordres). |
@@ -64,7 +65,7 @@ Les sketchs de l'ancien plugin Badger appellent l'adresse `/plugins/badger/…`,
 | Annonce version, firmware, capacités | Non | Oui (fiche du lecteur) |
 | Maintenance | Gelé, jamais modifié, maintenu à vie | Évolue |
 
-Le protocole v0 n'authentifie pas le lecteur : le plugin n'accepte que les appels venant d'une adresse du réseau local et refuse ceux qui passent par un proxy ou un tunnel. Isoler les lecteurs sur un réseau dédié reste conseillé. L'état de sécurité global de la v0 est traité par la documentation de la tranche sécurité.
+Le protocole v0 n'authentifie pas le lecteur : le plugin n'accepte que les appels venant d'une adresse du réseau local et refuse ceux qui passent par un proxy ou un tunnel. Isoler les lecteurs sur un réseau dédié reste conseillé. L'état de sécurité global de la v0 (usurpation possible depuis le réseau local, code en clair sur le réseau) est détaillé dans la page [Sécurité de vos lecteurs](securite.md).
 
 <a id="protocole-versions"></a>
 ## Protocole des lecteurs et versions
@@ -182,6 +183,7 @@ Tous les lecteurs d'un parc ne sont pas protégés de la même façon. La page d
 | Niveau | Protection actuelle (voir ci-dessous). |
 | Version minimale exigée | « v1 » (avec sa date) si le lecteur est appairé, « Aucune » sinon. C'est le plancher posé par l'[appairage](#appairage). |
 | Exiger le protocole v1 signé | État (« Exigé » ou « Non exigé ») et bouton, ou raison pour laquelle l'exigence est indisponible. |
+| Chiffrement des identifiants | État (voir [Exiger le chiffrement des identifiants](#exiger-chiffrement)) et bouton, ou raison pour laquelle l'exigence est indisponible. |
 | Firmware, Carte | Ce que le lecteur a annoncé (voir [fiche du lecteur](#fiche-lecteur)). |
 | Dernière activité | Date du dernier appel enregistré. |
 | Recommandation | Ce qu'il reste à faire. |
@@ -228,6 +230,29 @@ Tant qu'au moins un lecteur **actif** est en v0 (filtré ou non), un bandeau jau
 - Sur un lecteur v0, l'action est **refusée avec un message** (voir [Exiger le protocole v1 signé refusé](depannage.md#exiger-v1-refuse)) : l'accepter couperait le lecteur.
 - Une confirmation avertit : un lecteur encore flashé en v0 ne fonctionnera plus. Un **secret est généré** : tant qu'il n'est pas reporté sur le lecteur (configuration du sketch, depuis la fiche du lecteur qui s'ouvre), tous ses appels sont refusés.
 - Pour un lecteur exigé, la colonne affiche « Exigé » et un bouton **Rabaisser à v0**. D'un clic (après confirmation), il supprime le secret et les appels v0 sont de nouveau acceptés : voir [Rabaisser à v0](#rabaisser-v0). À réserver à un lecteur reflashé avec un ancien sketch.
+
+<a id="exiger-chiffrement"></a>
+### Exiger le chiffrement des identifiants
+
+⚠️ **Aucun sketch publié ne chiffre encore les identifiants.** Le format du chiffrement est fixé et le plugin sait le déchiffrer, mais l'émission par le sketch Badger2 reste à réaliser. Tant que ce n'est pas fait, la colonne affiche « Non annoncé » (ou « Indisponible ») pour tous vos lecteurs. Les lecteurs flashés avec le sketch d'origine (v0) ne sont **jamais** concernés.
+
+La colonne **Chiffrement des identifiants** ne concerne que les lecteurs v1 appairés. Un lecteur peut annoncer qu'il chiffre les badges et codes qu'il envoie. Vous pouvez alors **exiger** ce chiffrement : le plugin refuse ensuite les badges et codes que ce lecteur enverrait en clair. Les annonces et les battements du lecteur restent acceptés.
+
+| Affichage | Signification | Action |
+|---|---|---|
+| Exigé | Les badges et codes en clair de ce lecteur sont refusés. | Bouton **Ne plus exiger le chiffrement** pour lever l'exigence. |
+| Exigé, mais ce lecteur ne l'annonce plus : ses badges et codes sont refusés | L'exigence est posée, mais le lecteur a cessé d'annoncer le chiffrement (autre sketch, par exemple). L'exigence **reste appliquée** : le lecteur est coupé. | Reflashez le lecteur avec un sketch qui chiffre, ou levez l'exigence vous-même. |
+| Ce lecteur chiffre ses identifiants | Le lecteur annonce le chiffrement ; rien n'est encore exigé. | Bouton **Exiger le chiffrement pour ce lecteur**. |
+| Indisponible : son dernier badge ou code est arrivé en clair, l'exiger le couperait | Le lecteur annonce le chiffrement, mais son dernier badge ou code est arrivé en clair. | Attendez qu'il envoie un identifiant chiffré. |
+| Indisponible : aucun badge ni code chiffré reçu de ce lecteur (depuis la mise à jour ou le dernier vidage du cache) | Aucun identifiant chiffré n'a encore été reçu : le plugin ne peut pas savoir si l'exiger coupera le lecteur. | Présentez un badge ou saisissez un code sur ce lecteur. |
+| Indisponible : appairez d'abord ce lecteur | Lecteur non appairé. | [Appairez-le](#appairage-appairer). |
+| Non annoncé : badges et codes signés, envoyés en clair | Le lecteur n'annonce pas le chiffrement. C'est une **information**, pas une alerte : ses appels restent signés. | Aucune. |
+
+Règles à retenir :
+
+- **Lecteur par lecteur, jamais par défaut** : aucun bouton « tout exiger ».
+- Lever l'exigence est toujours possible.
+- La mention **Échecs de déchiffrement répétés : vérifier l'appairage** apparaît après 3 échecs de déchiffrement de suite. Elle signale un lecteur qui envoie des identifiants chiffrés alors que le plugin ne le considère pas comme appairé, ou dont le sketch chiffre mal (signature juste, contenu chiffré illisible) : vérifiez l'appairage du lecteur et la configuration de son sketch. Elle ne signale **pas** un secret erroné : celui-ci rend la signature fausse et apparaît comme une signature refusée dans le log du plugin.
 
 ### Dernière activité
 
@@ -369,6 +394,8 @@ Réglages et procédure : [section Inclusion](configuration.md#inclusion).
 
 Le niveau de log du plugin est **Erreur** par défaut : les avertissements (refus d'un appel, signature invalide, rejeu…) et les informations (badge présenté) n'y sont **pas écrits**. Pour les voir, ouvrez **Plugins > Gestion des plugins > Badger Fork**, réglez le niveau de log sur **Avertissement** (ou **Info**), puis consultez **Analyse > Logs**, log `badger2`. Remettez le niveau par défaut ensuite. Le [dépannage](depannage.md) cite les messages tels qu'ils apparaissent dans ce log.
 
+Au niveau Erreur (par défaut), vous voyez déjà les badges inconnus et les codes faux (sans leur valeur), les lecteurs bloqués, les déblocages, les consultations d'un code (« Voir le code »), l'activation, la prolongation et l'arrêt de l'inclusion, les approbations et refus. Les refus d'appel (origine, format, signature, rejeu) sont à l'Avertissement. Pas à pas : [Lire le journal pour diagnostiquer un refus](securite.md#proc-journal).
+
 <a id="banc-rejeu"></a>
 ## Banc de rejeu de compatibilité (contributeurs)
 
@@ -392,10 +419,11 @@ Avant chaque publication du plugin, un banc **rejoue sur une vraie installation 
 - **Le trafic reste en HTTP** : la signature protège l'authenticité et le rejeu, pas la confidentialité. Isolez les lecteurs sur un réseau dédié.
 - **Pas de nouvelle tentative automatique côté plugin** : c'est le lecteur qui réémet un événement non acquitté ; le plugin n'a aucun service tiers à interroger.
 - **Pas de démon ni de dépendance** : le plugin est entièrement en PHP.
-- **Chiffrement facultatif des badges et des codes** : non réalisé.
+- **Chiffrement facultatif des badges et des codes sur le réseau** : le plugin sait déchiffrer et exiger des identifiants chiffrés, mais **aucun sketch publié ne les émet encore** (voir [Exiger le chiffrement des identifiants](#exiger-chiffrement)). Le code d'un lecteur v0 circule en clair sur le réseau.
+- **Un lecteur v0 reste usurpable depuis le réseau local** : seul un reflash avec le sketch v1 appairé et signé y remédie. Voir [Sécurité de vos lecteurs](securite.md).
 - **Exigence retirable par un utilisateur non administrateur** : un utilisateur Jeedom non administrateur peut retirer une clé de configuration du plugin par l'API du core et lever ainsi l'exigence v1 d'un lecteur appairé. Ne donnez pas de clé d'API ni de compte à des personnes non fiables.
 - **Retour en v0 détecté après un appel seulement** : le tableau de posture ne voit qu'un appel reçu. Un lecteur appairé reflashé avec un ancien sketch n'est signalé qu'après son premier appel refusé.
 
 ---
 
-[Protocole v1 des lecteurs : référence](protocole-v1.md) · [Infos techniques](techtips.md) · [Retour au tutoriel](debuter.md)
+[Sécurité de vos lecteurs](securite.md) · [Protocole v1 des lecteurs : référence](protocole-v1.md) · [Infos techniques](techtips.md) · [Retour au tutoriel](debuter.md)

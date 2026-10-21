@@ -10,6 +10,7 @@ Lorsqu’un lecteur atteint sa limite de code faux, la commande "PinTryLimit" (t
 Lorsqu’un lecteur atteint sa limite de badges inconnu, la commande "TagTryLimit" (type info-string) est déclenchée et une erreur est inscrite dans les logs.
 On peut alors déclencher un scenario sur ces commandes pour prévenir quelqu’un, déclencher une "pré" alarme .. etc.
 
+<a id="blocage-fonctionnement"></a>
 ### Comment fonctionne le blocage
 
 - **Deux compteurs par lecteur** : les badges inconnus et les codes faux se comptent séparément, chacun avec sa limite (voir [Configuration des lecteurs](configuration.md#configuration-des-lecteurs)).
@@ -22,6 +23,8 @@ On peut alors déclencher un scenario sur ces commandes pour prévenir quelqu’
 - **Les commandes** "TagTryLimit" et "PinTryLimit" reçoivent la date et l'heure **à l'entrée dans le blocage**, une seule fois par blocage, pas à chaque appel ignoré. La commande "PinTryLimit" est créée automatiquement au premier blocage sur code si elle n'existe pas encore sur le lecteur.
 
 Le lecteur lui-même n'est pas informé du blocage : le plugin lui répond comme d'habitude.
+
+Pour débloquer un lecteur, voir [Débloquer un lecteur](securite.md#proc-debloquer). **Désactiver puis réactiver le plugin, ou le mettre à jour, ne débloque pas les lecteurs** : seul le bouton **Débloquer** (ou la fin du blocage) le fait.
 
 ## Fonctions configurable dans jeedom
 
@@ -57,6 +60,7 @@ En associant le plug-in agenda, on peut définir une plage horaire pendant laque
 
 ![](images/Screen10.png)
 
+<a id="codes-temporaires"></a>
 ### Génération d'un code temporaire
 
 Les Codes disposent de la commande "ChangePin" pour définir ou générer un nouveau code, et, si vous le demandez, de la commande "GetPin" pour le relire.
@@ -73,7 +77,9 @@ Les codes aléatoires conservent leurs zéros initiaux (par exemple « 0042 ») 
 
 La commande "GetPin" (type info string) est **optionnelle**. Elle n'existe que si la case « Ajouter une commande info GetPin » est cochée sur l'équipement code (décochée par défaut). Cochée, la commande est créée non visible et non historisée, et publie le code en clair. Décochée, la commande est supprimée : les scénarios qui la lisent ne la trouvent plus.
 
-**Avertissement de sécurité** : cocher GetPin ou appeler ChangePin avec "set" fait apparaître le code en clair dans les logs et les événements du cœur de Jeedom, que le plugin ne contrôle pas. Préférez "rnd4", "rnd6" ou "rnd8", et le bouton « Voir le code » de la page de l'équipement.
+**Avertissement de sécurité** : cocher GetPin ou appeler ChangePin avec "set" fait apparaître le code en clair dans les logs et les événements du cœur de Jeedom, que le plugin ne contrôle pas. Préférez "rnd4", "rnd6" ou "rnd8", et le bouton « Voir le code » de la page de l'équipement. Ce risque est hors du contrôle du plugin : il ne peut pas l'effacer des journaux du cœur.
+
+**Sort d'un scénario qui lisait GetPin** : à la mise à jour du plugin, un équipement qui avait déjà la commande la **garde** (case cochée) et le scénario continue de fonctionner. Si vous décochez la case, la commande est supprimée et le scénario ne la trouve plus : corrigez-le. Un nouveau code n'a pas de GetPin. Pas à pas : [Gérer les codes](securite.md#proc-codes).
 
 Un scenario possible : pour donner accès temporairement a votre habitation a quelqu'un alors que vous n'avez pas accès a Jeedom :  déclenché par un sms, un scenario génère un code temporaire, l'active et renvoi sa valeur par sms. Le scenario désactive ce code au bout de 1 heure.
 Comme il n'est pas possible de créer des nouveaux codes. Au préalable on aura créé un code nommé "temporaire" que l'on aura désactivé.

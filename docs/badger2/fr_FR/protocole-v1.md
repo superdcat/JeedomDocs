@@ -5,7 +5,8 @@ Retour à la [référence technique](reference.md) · [Cartes et sketch v1](cart
 > **Statut : le plugin reçoit la v1 ; la signature, l'appairage et le rejeu sont en service pour les lecteurs
 > appairés ; le sketch est en préparation.** Le plugin sert désormais ce protocole : il valide chaque appel,
 > identifie le lecteur par son `rid`, applique aux `tag` et `pin` les mêmes effets qu'un badge ou un code v0 et
-> répond `ok=1` sans clé d'action. Pour un lecteur **appairé** (action de l'administrateur sur la fiche du
+> répond `ok=1` sans clé d'action. Il sait aussi déchiffrer les identifiants qu'un lecteur lui enverrait dans un événement
+> `enc` (capacité `enc_hs256`, UC 110) ; aucun sketch n'en émet encore. Pour un lecteur **appairé** (action de l'administrateur sur la fiche du
 > lecteur), il vérifie la signature, refuse le rejeu et le plancher de version, et signe ses réponses ; pour un
 > lecteur jamais appairé, rien ne change. Le sketch unifié `Badger2` est non publié. **Vos
 > lecteurs actuels ne sont pas concernés** : ils continuent d'appeler le plugin exactement comme avant
@@ -32,7 +33,8 @@ règles d'évolution.
   sensible ne figure jamais dans l'adresse.
 - L'adresse du lecteur est l'adresse de connexion : il n'y a pas de champ `ip`.
 - **Limite connue** : le trafic reste en HTTP, donc lisible sur le réseau local. La signature protège
-  l'authenticité et le rejeu, pas la confidentialité (chiffrement facultatif : UC 009 et 110 de la feuille de route) ; isolez
+  l'authenticité et le rejeu, pas la confidentialité ; un lecteur qui annonce la capacité `enc_hs256` peut chiffrer ses badges
+  et ses codes (voir « Chiffrement des identifiants »), les autres événements restent lisibles ; isolez
   les lecteurs sur un réseau dédié. Une réponse non signée peut être falsifiée : un lecteur sans secret
   n'annonce la capacité `relay` que si l'installateur a explicitement autorisé les actions non signées
   (désactivé par défaut). Pour la même raison, tant qu'aucun secret n'est configuré, le sketch applique
@@ -88,6 +90,10 @@ Refuser un appel v0 conforme parce que son adresse porte un `v` le casserait : l
    donc pas une authentification. Un lecteur appairé est authentifié par sa signature, et le contrôle de l'adresse
    reste appliqué en plus. Prévoyez une réservation d'adresse (DHCP) pour chaque lecteur. En inclusion, un `rid` inconnu crée un lecteur **inactif** et l'appel qui le
    crée n'a aucun autre effet ; les appels suivants restent sans effet jusqu'à son activation.
+3 bis. (UC 110, événement `enc` ou lecteur qui exige le chiffrement) Déchiffrement et validation du clair, avant la
+   réservation du couple (`boot`, `seq`) : un `enc` indéchiffrable (étiquette fausse, clair invalide, lecteur non appairé) donne 400
+   `err=invalid` sans effet ; un identifiant en clair d'un lecteur dont l'administrateur exige le chiffrement donne 403 `err=auth`
+   (voir « Chiffrement des identifiants »).
 4. Rejeu : 403 `err=replay` (réponse signée).
 5. Fraîcheur : jamais un refus, mais un message non frais n'est pas traité comme un événement direct.
 
@@ -126,7 +132,7 @@ signe.
 | `boot` | entier 0 à 4294967295, persistant, +1 à chaque démarrage | tous les événements | — |
 | `seq` | entier 0 à 4294967295, remis à 0 à chaque démarrage | tous les événements | — |
 | `up` | entier 0 à 4294967295 : secondes depuis le démarrage, à la première émission de l'événement, reprises à l'identique à chaque réémission ; un événement converti en `offline` reçoit un `up` neuf | tous les événements | — |
-| `ev` | `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`hello`, `hb`, `tag`, `pin`, `tagpin`, `key`, `input`, `door`, `ack`, `offline`) | tous les événements | — |
+| `ev` | `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`hello`, `hb`, `tag`, `pin`, `tagpin`, `key`, `input`, `door`, `ack`, `offline`, `enc`) | tous les événements | — |
 | `sig` | `^[0-9a-f]{64}$` ; présent si et seulement si le lecteur a un secret ; jamais journalisé en entier | — | tous les événements |
 | `caps` | 0 à 32 jetons `^[a-z0-9_]{1,16}$` séparés par `,`, 255 caractères au plus ; `caps=` vide permis | `hello` | — |
 | `rst` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`power`, `ext`, `wdt`, `brown`, `sw`, `unk`) | `hello` | — |
@@ -156,6 +162,7 @@ signe.
 | `why` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`sig`, `replay`, `nosecret`, `unknown`, `param`, `busy`, `stale`) | — | `ack` |
 | `oev` | jeton `^[a-z][a-z0-9_]{0,15}$`, liste ouverte (`tag`, `pin`, `tagpin`, `input`, `door`) : événement d'origine | `offline` | — |
 | `age` | entier 0 à 4294967 : secondes écoulées depuis la survenue de l'événement d'origine | `offline` | — |
+| `ct` | `^([0-9a-f]{2}){17,272}$` : 34 à 544 chiffres hexadécimaux minuscules, soit l'étiquette de 16 octets suivie de l'événement chiffré (1 à 256 octets) ; voir « Chiffrement des identifiants » | `enc` | — |
 <!-- fin:tableau-champs -->
 
 Les événements :
@@ -184,7 +191,10 @@ Les événements :
 - `door` : changement d'état de la porte, `open` ou `closed` ;
 - `ack` : accusé d'un ordre reçu du plugin (UC 012, voir « Ordres ») ;
 - `offline` : événement direct (`tag`, `pin`, `tagpin`, `input`, `door`) qui n'a pas pu être délivré à temps, rejoué
-  avec son âge.
+  avec son âge ;
+- `enc` : un événement porteur d'identifiant (`tag`, `pin`, `tagpin`, `key` ou `offline`) **chiffré** dans le champ `ct` (UC 110,
+  capacité `enc_hs256`, voir « Chiffrement des identifiants »). **Sûr par défaut** : un plugin qui ne le connaît pas répond `ok=1` sans
+  rien faire.
 
 **Écart à la spécification initiale** : le contact de porte produit **seulement** l'événement `door`,
 jamais `input`, pour éviter deux événements pour un même contact. L'entrée analogique reste dans `input`,
@@ -192,7 +202,7 @@ avec `st` (état logique) et `val` (lecture brute).
 
 **Champs sensibles** : `raw`, `fac`, `card`, `code`, `key` et leurs copies dans un événement `offline` ne figurent
 jamais dans l'adresse ni, en clair, dans un journal (hors mode de débogage explicite). Un refus nomme le
-champ, jamais sa valeur.
+champ, jamais sa valeur. Le champ `ct` d'un événement `enc` et le clair qu'il contient suivent la même règle.
 
 **Hors du contrat initial** (ajouts compatibles, définis par leur propre UC de la feuille de route) : champs `loc`, `net`, `qmax`, `wfmt`.
 
@@ -202,7 +212,8 @@ Ajouté depuis (compatible, `v=1` inchangé) : champ `port` (UC 005), facultatif
 capacité et clé de réponse `wl`, et l'émission en `offline` d'un passage décidé par le lecteur (UC 011, voir « Mode hors
 ligne et liste blanche ») ; champ `oport` facultatif du `hello`, jeton `srv`, format des ordres du plugin vers le lecteur et
 émission de l'événement `ack` (UC 012, voir « Ordres ») ; jetons informatifs `console` et `status_led` du `hello` (UC 013, voir
-« Capacités du sketch Badger2 ») ; jeton informatif `ota` du `hello` (UC 014, voir « Capacités du sketch Badger2 »).
+« Capacités du sketch Badger2 ») ; jeton informatif `ota` du `hello` (UC 014, voir « Capacités du sketch Badger2 ») ; événement `enc`, champ `ct` et capacité normative
+`enc_hs256` (UC 110, voir « Chiffrement des identifiants »).
 
 **Capacités du sketch Badger2** (UC 008, 009, 010, 011, 012, 013 et 014) : le `hello` d'un lecteur Badger2 annonce des jetons
 **normatifs**, qui autorisent chacun une clé de réponse : `hb` (clé `hb`), `hs256` (clé `sig`, avec un secret),
@@ -235,6 +246,7 @@ réponse dont la capacité n'a pas été annoncée.** Les capacités valent dès
 | `buzz` | `buzz` |
 | `hb` | `hb` |
 | `wl` | `wl` |
+| `enc_hs256` | aucune (le lecteur chiffre ses identifiants, voir « Chiffrement des identifiants ») |
 
 Toute autre capacité est **informative** : affichée, ignorée par le plugin, définie par l'UC de la feuille de
 route qui l'introduit. Un lecteur peut annoncer une capacité que le plugin ne connaît pas encore.
@@ -329,7 +341,7 @@ hexadécimaux). Pas à pas :
 
 Toute autre utilisation du secret, interne au lecteur ou au plugin, signe un message `badger2:<usage>` (ASCII,
 sans `=` ni saut de ligne) : ce n'est jamais une chaîne canonique de requête (qui contient `=`) ni de réponse
-(qui commence par `req=`). Usage réservé : `badger2:appairage`.
+(qui commence par `req=`). Usages réservés : `badger2:appairage` et `badger2:chiffrement` (voir « Chiffrement des identifiants »).
 
 Le lecteur émet ses champs dans l'ordre canonique, `sig` en dernier : le corps privé de `&sig=…` est alors
 la chaîne canonique. Le récepteur, lui, reconstruit la chaîne canonique et n'exige aucun ordre.
@@ -379,6 +391,126 @@ ok=1
 donne `sig=f4950563554fc4707894dde9f3fc8b97516fa14389d55f069a25a361cde1f325`. La réponse est signée
 seulement si la requête l'était. Une chaîne canonique de requête ne contient jamais de saut de ligne :
 les deux domaines de signature sont distincts.
+
+## Chiffrement des identifiants (capacité `enc_hs256`)
+
+Ajout compatible de l'UC 110 (`v=1` inchangé). Le `POST` garde déjà badge et code hors du journal d'accès du serveur
+web ; le chiffrement les cache en plus à qui écoute le réseau local. **Le plugin sait déchiffrer ; le sketch Badger2
+n'émet pas encore d'événement `enc`** (voir « À confirmer »). Le contrat ci-dessous est fixé et exécutable : sa forme
+de référence est `tests/harnais/protocole_v1.py` (`chiffrer`, `dechiffrer`), ses vecteurs sont `v1-hello-chiffre-signe`,
+`v1-enc-tag`, `v1-enc-pin` et `v1-enc-ct-altere`.
+
+**Pas de bibliothèque nouvelle** : tout repose sur HMAC-SHA256, déjà exigé par la signature (capacité `hs256`). Le
+chiffrement est de type « SIV » : l'étiquette d'authentification sert aussi de vecteur d'initialisation, ce qui évite
+toute réutilisation de flux, même quand un événement est converti en `offline` avec le même `boot` et le même `seq`.
+
+- **Capacité `enc_hs256`** (normative, sans clé de réponse, annoncée seulement avec `hs256`) : le lecteur qui l'annonce
+  s'engage à émettre ses identifiants dans un événement `enc`. Sans elle, le plugin n'exige jamais le chiffrement de ce
+  lecteur. Un autre algorithme est une autre capacité **et** un autre événement ; modifier `enc_hs256` impose une v2.
+- **Événement `enc`** : champs communs, `ct` (obligatoire) et `sig`. **Sûr par défaut** : un plugin qui ne le connaît
+  pas répond `ok=1` sans rien faire. Il n'existe que dans un corps v1 : un appel v0 n'est jamais déchiffré.
+- **Ce que le lecteur chiffre** : `tag`, `pin`, `tagpin` et `key`, ainsi que leur conversion en `offline`, dès qu'il a
+  mémorisé « plugin appairé ». Il signe donc l'événement `enc` (chiffrer, puis signer). `hello`, `hb`, `input`, `door` et
+  `ack` ne sont **jamais** chiffrés (le plugin doit pouvoir lire l'annonce du lecteur pour savoir ce qu'il chiffre).
+  Un événement converti en `offline` garde son `boot` et son `seq`, mais son clair change, donc son étiquette : la
+  réémission d'un même événement reste identique octet pour octet.
+
+**Clé de chiffrement** : `K_c` = HMAC-SHA256(`K`, `badger2:chiffrement`), où `K` est la clé de signature (les 32 octets
+décodés du secret du lecteur). L'usage `badger2:chiffrement` est réservé, comme `badger2:appairage`.
+
+**Clair `P`** : un corps au sens de « Encodage du corps », en ASCII imprimable (`0x21` à `0x7E`, ni espace ni octet de
+contrôle), de **1 à 256 octets**, de préférence dans l'ordre canonique. Il porte `ev` (`tag`, `pin`, `tagpin`, `key` ou
+`offline`) et **tous** les champs propres de cet événement (`oev` et `age` compris pour `offline`). Il ne porte jamais un
+champ commun (`v`, `fw`, `board`, `rid`, `boot`, `seq`, `up`), ni `sig`, ni `ct` : les champs communs restent dans l'enveloppe
+signée.
+
+**Chiffrement** (pour un clair `P`, `rid`, `boot` et `seq` étant les valeurs décodées des champs communs de la même
+requête, `||` la concaténation) :
+
+1. étiquette `E` = les 16 premiers octets de HMAC-SHA256(`K_c`, `badger2:chiffrement:iv:<rid>:<boot>:<seq>:` `||` `P`) ;
+2. flux `S_i` = HMAC-SHA256(`K_c`, `badger2:chiffrement:flux:<hex(E)>:<i>`), `i` décimal à partir de 0, `hex(E)` en 32
+   chiffres hexadécimaux minuscules ; le flux est la suite `S_0 || S_1 || …` **tronquée à la longueur de `P`** ;
+3. `ct` = hexadécimal minuscule de `E` `||` (`P` XOR flux), soit 34 à 544 chiffres.
+
+**Déchiffrement et contrôle** (côté plugin). La signature est vérifiée d'abord (étape 3 de l'ordre d'évaluation) ; ensuite le
+plugin recalcule le flux depuis `E`, retrouve `P`, recalcule l'étiquette `E'` et compare `E` et `E'` **en temps constant**
+(`hash_equals`). Il contrôle `P` (ASCII imprimable, 1 à 256 octets), puis reconstitue l'événement (champs communs de l'enveloppe plus
+`P`) et le valide **comme une requête** : motifs, bornes, doublons, noms réservés de la v0, `%` mal formé. Un `sig` ou un `ct` dans `P` est
+refusé (jamais deux déchiffrements). Un échec à l'une de ces étapes est un **appel invalide** : 400 `err=invalid`, réponse non signée,
+aucun effet, aucun compteur d'essais de code. Un `ev` interne hors de la liste ci-dessus (`hello`, événement inconnu) est accepté
+sans aucun effet : seul le `hello` en clair annonce les capacités.
+
+**Réponse et clés d'action** : la réponse à un `enc` ne reprend jamais l'identifiant et ne porte que les clés dont la capacité a
+été annoncée ; rien de plus que pour un appel en clair. Pour les clés d'action (`act`, `led`, `buzz`) et la fraîcheur
+de `act`, un `enc` compte comme **l'événement qu'il chiffre** (`tag`, `pin`, `tagpin`) ; un `offline` chiffré n'appelle aucune clé d'action.
+
+**Ordre d'évaluation** : voir « Ordre d'évaluation (côté plugin) », étape 3 bis.
+
+### Exigence par lecteur et signalement des échecs
+
+- **Exiger le chiffrement** est un choix de l'administrateur, **par lecteur**, jamais en masse et désactivé par défaut (tableau de
+  posture de la page du plugin). Alors un `tag`, `pin`, `tagpin`, `key` ou `offline` (dont l'événement d'origine porte un identifiant)
+  reçu **en clair** est refusé : 403 `err=auth`, réponse non signée, avertissement journalisé sans la valeur. `hello`, `hb`, `input`, `door`
+  et `ack` restent acceptés en clair. L'exigence ne peut être posée que si le lecteur annonce `enc_hs256` **et** que son dernier badge ou
+  code est arrivé chiffré ; elle reste appliquée si le lecteur cesse d'annoncer la capacité (aucune rétrogradation silencieuse : seul
+  l'administrateur la lève). Un refus bloque visiblement la file du lecteur (échec transitoire, comme pour le plancher de version).
+- **Signalement** : trois échecs consécutifs (étiquette fausse ou clair invalide sous signature valide, ou `enc` d'un lecteur non appairé, dont aucune signature n'est vérifiée et qui peut donc être forgé depuis l'adresse enregistrée du lecteur) font
+  signaler le lecteur dans la page du plugin et dans le journal (« vérifier l'appairage »). Une signature fausse (mauvais secret,
+  corruption) **n'est pas comptée** : n'importe quel appareil du réseau peut en fabriquer une ; elle reste un 403 `err=auth` avec son
+  avertissement habituel. Le signalement ne couvre donc **pas** un mauvais secret.
+
+### Sécurité
+
+- La signature couvre `ct` : une altération du chiffré est d'abord une signature fausse (403 `err=auth`) ; l'étiquette ajoute une
+  intégrité de 128 bits **en plus** (chiffrer, puis signer) : un clair altéré ne passe pas, même sous une signature valide.
+- Deux présentations du même badge donnent deux `ct` sans rapport (le `seq` change l'étiquette, donc le flux). Si le triplet (`rid`, `boot`,
+  `seq`) revenait (jeton `bootnp`, nouveau flash), seule l'égalité de deux clairs se verrait, jamais leur contenu.
+- L'anti-rejeu est inchangé : le couple (`boot`, `seq`) est celui de l'enveloppe signée.
+- La **longueur** du clair reste visible (type de l'événement, nombre de chiffres d'un code) ; un bourrage interne pourra la masquer plus
+  tard (ajout compatible). Ni `ct`, ni le clair, ni `K_c` ne figurent dans un journal ou une réponse.
+
+### Exemple travaillé
+
+Avec le secret de test public ci-dessus, le lecteur `TEST-V1-SIGNE` (`boot=6`, `seq=1`) chiffre un badge 26 bits. Clé :
+
+```
+K_c = b8fa89605ce97c741f2b4c0ce7e20355f926ee38a3c75779cc3643275fc4d7d5
+```
+
+Clair `P` (54 octets) :
+
+```
+bits=26&card=16172&ev=tag&fac=122&par=ok&raw=2f47e58
+```
+
+Étiquette : les 16 premiers octets de HMAC-SHA256(`K_c`, `badger2:chiffrement:iv:TEST-V1-SIGNE:6:1:bits=26&card=16172&ev=tag&fac=122&par=ok&raw=2f47e58`) :
+
+```
+E = 300bf90b518005da7ec9b4a331073686
+```
+
+Flux : `S_0` (HMAC-SHA256 de `badger2:chiffrement:flux:300bf90b518005da7ec9b4a331073686:0`) puis `S_1` (même message avec `:1`), tronqué à 54 octets :
+
+```
+S_0 = fd6c4e32845fa8746200261f3382c94a8961f09036e5d8ac38275caa0da5952f
+S_1 = ea414478f956a32c8a4fd88888b3f1b1e2aad1c0c7d776598fea7993d1086d5d
+```
+
+`ct` = `E` suivi de `P` XOR flux (32 + 108 = 140 chiffres) :
+
+```
+300bf90b518005da7ec9b4a3310736869f053a41b96d9e520161547b0eb3ff7bbe53d6f540d8accd5f013acb6e98a41dd86734198b6bcc47ac3db9ffb5819785d5cfe4f8
+```
+
+Chaîne canonique de l'événement `enc` (`ct` entre `boot` et `ev`, ordre des noms) :
+
+```
+board=uno-w5100&boot=6&ct=300bf90b518005da7ec9b4a3310736869f053a41b96d9e520161547b0eb3ff7bbe53d6f540d8accd5f013acb6e98a41dd86734198b6bcc47ac3db9ffb5819785d5cfe4f8&ev=enc&fw=1.0.0&rid=TEST-V1-SIGNE&seq=1&up=40&v=1
+```
+
+dont la signature est `2f1c97580841856b6799304af2322f5e364e4751d762103ac138d602f535f857` (vecteur `v1-enc-tag`). Le vecteur
+`v1-enc-ct-altere` change le dernier chiffre d'un `ct` puis re-signe : la signature est valide, l'étiquette fausse, le plugin répond 400
+`err=invalid`.
 
 ## Anti-rejeu, fraîcheur et événements différés
 
@@ -610,7 +742,7 @@ du plugin vers le lecteur).
 **Gardent `v=1`** (ajouts compatibles) : un champ facultatif ; un type d'événement (un plugin qui
 l'ignore répond `ok=1` et ne fait rien : l'événement doit donc être sûr par défaut) ; une capacité ; une
 clé de réponse (envoyée seulement si la capacité est annoncée) ; une valeur d'énumération ouverte ; un
-algorithme de signature **sous une nouvelle capacité**, fixé à l'appairage ; un vecteur de référence.
+algorithme de signature **ou de chiffrement sous une nouvelle capacité**, fixé à l'appairage ; un vecteur de référence.
 
 **Imposent `v=2`** (liste exhaustive), la v1 restant servie :
 
@@ -626,7 +758,8 @@ algorithme de signature **sous une nouvelle capacité**, fixé à l'appairage ; 
 7. modifier le transport : méthode, type de contenu, route, place des champs, règles d'analyse, ordre
    d'évaluation ;
 8. modifier le format de réponse : lignes, `ok` en tête et son sens, place de `sig` ;
-9. utiliser un nom de paramètre de la v0.
+9. utiliser un nom de paramètre de la v0 ;
+10. modifier le chiffrement d'une capacité existante (`enc_hs256`) : clé `K_c`, étiquette, flux, encodage de `ct`, contenu du clair.
 
 ## Le protocole v0 reste inchangé
 
@@ -656,6 +789,9 @@ Ces points ne sont **pas normatifs** : ils se lèvent à la mesure ou à la rece
   en charge du port par les ESP après une reconnexion Wi-Fi ; le redémarrage logiciel d'une Mega selon son chargeur d'amorçage
   (délai de 2 secondes du chien de garde). **Exposition** : le port d'ordres ne doit jamais être joignable depuis Internet, et
   le canal d'ordres peut être rendu indisponible (503) par un flot de requêtes sans jamais gêner les badges.
+- Chiffrement des identifiants (UC 110) : aucun sketch n'émet encore l'événement `enc` (à réaliser dans une UC dédiée, Mega 2560 ou
+  ESP) ; le coût d'un chiffrement (environ 16 compressions SHA-256 par badge) reste à mesurer au banc ; le jeton `enc_hs256` serait le
+  33e jeton du pire cas de `caps` : il faudra regrouper des jetons avant publication.
 
 ## Vecteurs de référence
 
@@ -663,6 +799,7 @@ Le fichier `.claude/compat/vecteurs-v1.json` du dépôt contient des requêtes e
 sketch et le plugin doivent tous deux reproduire : un cas valide par événement, des requêtes signées
 (avec chaîne canonique et signature calculées), un rejeu, une version inconnue, un champ inconnu, des
 appels invalides, une réponse signée, (UC 011) un `hello` et un `hb` de liste blanche avec leur réponse `wl` signée et (UC 012)
-un `hello` annonçant le serveur d'ordres et un `ack` de refus signé. Ces vecteurs
+un `hello` annonçant le serveur d'ordres et un `ack` de refus signé et (UC 110) un `hello` annonçant `enc_hs256` avec trois
+événements `enc` : un badge, un code et un chiffré altéré. Ces vecteurs
 sont **figés** : on en ajoute, on n'en modifie ni n'en
 retire jamais.

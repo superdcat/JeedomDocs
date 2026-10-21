@@ -29,6 +29,13 @@ Cette page recense les symptômes et les messages que vous pouvez rencontrer, le
 | Autres refus d'un appel v1 | Identifiant, équipement en double, corps invalide, retard | [Autres refus d'un appel v1](#autres-refus-v1) |
 | Mise à jour à distance sans effet | Mot de passe, port, `ota -` | [Mise à jour à distance](#depannage-ota) |
 | « Une migration de données a échoué : consultez le journal » (centre de messages) | Une évolution de données n'a pas pu s'appliquer (un équipement n'a pas pu être enregistré) | [Migration de données en échec](#migration-donnees-echec) |
+| « Lecteur bloqué : appel ignoré » ; « Verrouillé jusqu'à » sur la fiche ; blocage qui revient | Trop de badges inconnus ou de codes faux, ou limite globale atteinte | [Lecteur bloqué](#lecteur-bloque) |
+| « Limite d'essais invalide » ; « Temps de blocage invalide » ; « Lecteur occupé, réessayez » ; « Lecteur introuvable » | Valeur vide, nulle ou hors bornes à la sauvegarde ; deux actions simultanées | [Messages de l'interface](#messages-interface-securite) |
+| « Code refusé » ; « Ce code est déjà utilisé » ; « Code illisible » ; « Impossible de générer un code unique » ; messages « Code non converti », « Plusieurs équipements code portent le même code » | Code hors format, en double, illisible ou hérité d'avant la mise à jour | [Messages sur les codes](#messages-codes) |
+| « Inclusion : limite de … créations atteinte » ; « L'inclusion n'est pas active » ; « Élément introuvable ou déjà traité » | Limite d'inclusion, fenêtre échue, élément déjà traité | [Messages d'inclusion](#messages-inclusion) |
+| « Exiger le chiffrement est impossible… » ; « identifiant en clair » ; « identifiant chiffré indéchiffrable » | Exigence de chiffrement sans lecteur qui le permette ; lecteur qui envoie en clair ou chiffre mal | [Exiger le chiffrement : refus et échecs](#exiger-chiffrement-refuse) |
+| Bandeau jaune « Au moins un lecteur utilise l'ancien protocole » ; bandeau rouge « Le contrôle d'IP d'origine est désactivé » ; « Posture de sécurité indisponible » | Lecteur v0 actif ; option décochée ; tableau de posture illisible | [Bandeaux et posture](#bandeaux-securite) |
+| Autres lignes de la tranche sécurité dans le journal (« verrou … indisponible », « version des données … », « paramètre de version répété », « IP … remplacée »…) | Voir le tableau | [Autres messages du journal](#journal-securite-divers) |
 
 <a id="rien-console"></a>
 ## Rien ne s'affiche à la console série
@@ -66,7 +73,7 @@ Le plugin ne commande pas la porte tout seul : un badge **connu et actif** met �
 
 - **Badge inconnu** : le log écrit « Badge inconnu présenté sur le lecteur … » (niveau Erreur). Enregistrez-le par le mode inclusion, puis activez-le (ou approuvez-le si l'approbation obligatoire est cochée). Un lecteur « En attente d'approbation » ne crée pas de badge.
 - **Badge ou lecteur désactivé** : cochez **Activer** sur l'équipement et sauvegardez.
-- **Lecteur bloqué** : après trop de badges inconnus ou de codes faux, le lecteur ignore **tout** appel, même d'un badge valide, jusqu'à la fin du blocage. Le log écrit « Lecteur bloqué : appel ignoré » (niveau Erreur) avec l'heure de fin. Ouvrez la fiche du lecteur : le bloc **Verrouillage** indique « Verrouillé jusqu'à … » ainsi que le niveau et les essais. Attendez l'heure indiquée, ou cliquez sur **Débloquer** (administrateur). Un blocage qui revient vite ou s'allonge est normal : voir [Comment fonctionne le blocage](fonctionement.md#comment-fonctionne-le-blocage).
+- **Lecteur bloqué** : après trop de badges inconnus ou de codes faux, le lecteur ignore **tout** appel, même d'un badge valide, jusqu'à la fin du blocage. Le log écrit « Lecteur bloqué : appel ignoré » (niveau Erreur) avec l'heure de fin. Ouvrez la fiche du lecteur : le bloc **Verrouillage** indique « Verrouillé jusqu'à … » ainsi que le niveau et les essais. Attendez l'heure indiquée, ou cliquez sur **Débloquer** (administrateur). Un blocage qui revient vite ou s'allonge est normal : voir [Comment fonctionne le blocage](fonctionement.md#comment-fonctionne-le-blocage). Procédure complète : [Lecteur bloqué](#lecteur-bloque).
 - **Aucun scénario** : sans scénario déclenché par `Presentation`, rien ne s'ouvre. Voir [Fonctionnement et utilisation des équipements](fonctionement.md).
 - **Format de badge non reconnu en v1** : seules les trames de 26 et 34 bits sont reconnues. Un badge enrôlé en décimal (sketch `JeedouinoLAN`) ou lu en 24 ou 32 bits est traité comme inconnu.
 - **Premier badge d'un lecteur neuf** : l'appel qui crée un lecteur v1 n'est pas traité ; présentez le badge une seconde fois.
@@ -154,6 +161,7 @@ Ces refus sont écrits au niveau **Avertissement** dans le log `badger2` : ils s
 - « Appel refusé : en-tête de proxy … présent (tunnel ou reverse proxy), adresse de connexion … » : le lecteur doit parler **directement** à Jeedom, sans proxy ni tunnel. Si ce message apparaît alors que c'est un tunnel d'accès distant (cloudflared…) qui amène l'appel, c'est le comportement voulu : ne décochez pas l'option. Ne la décochez que si ce sont vos **lecteurs** qui passent par un reverse proxy.
 - « Appel refusé : adresse d'origine … interdite pour un lecteur (bouclage ou adresse du serveur : tunnel ou proxy installé sur Jeedom ?), lecteur … » : l'appel d'un lecteur **verrouillé** (case « Refuser les appels venant d'une autre IP » cochée) arrive depuis Jeedom lui-même, typiquement via un relais installé sur la machine de Jeedom. Action : décochez la case pour ce lecteur. Un lecteur non verrouillé n'est pas refusé dans ce cas : le log écrit seulement, au niveau Info, « adresse d'origine … interdite (relais sur Jeedom ?), IP déclarée utilisée ».
 - « Appel refusé : lecteur … appelé depuis …, IP autorisée … : activer l'inclusion le temps d'un appel ou corriger l'IP autorisée sur la page du lecteur (une réservation DHCP évite ce refus) » : le lecteur est **verrouillé** et appelle depuis une autre adresse que son IP autorisée (nouveau bail DHCP, lecteur remplacé, ou appareil imposteur). « IP autorisée aucune » signifie que le champ est vide. Action : si l'adresse est légitime, activez le mode inclusion le temps d'un appel du lecteur, ou corrigez le champ « IP autorisée » sur sa fiche ; puis réservez une adresse fixe au lecteur dans votre box. Sinon, ne faites rien : le refus est le comportement voulu.
+- **Docker, NAT** : derrière un NAT ou avec Jeedom sous Docker, l'adresse vue par le plugin peut être celle du NAT et non celle du lecteur : un lecteur verrouillé sur son adresse peut alors être refusé, ou plusieurs lecteurs partager la même adresse. **À confirmer** sur une installation Docker réelle. Voir [Corriger l'IP d'un lecteur](securite.md#proc-ip).
 - « Appel v1 refusé : adresse d'origine … interdite pour un lecteur (bouclage, adresse du serveur ou adresse invalide) » : une adresse de Jeedom lui-même ou invalide ne peut pas être celle d'un lecteur.
 - À la sauvegarde d'un lecteur, « IP autorisée invalide » ou « IP autorisée refusée » : l'adresse saisie n'est pas une IP, ou c'est une adresse de bouclage, non spécifiée ou de Jeedom. Saisissez l'adresse réelle du lecteur ou laissez le champ vide.
 
@@ -202,6 +210,103 @@ En mode debug, le résultat de l'appel est « Refusé : paramètre hors du contr
 
 - **Cause** : une évolution de données du plugin n'a pas pu s'appliquer, par exemple parce qu'un équipement n'a pas pu être enregistré. Le centre de messages affiche « Une migration de données a échoué : consultez le journal ».
 - **Action** : ouvrez le journal badger2 et cherchez la ligne « Migration des données n° … en échec ». Corrigez si possible l'équipement cité, puis désactivez et réactivez le plugin, ou attendez la prochaine mise à jour. Vos équipements restent utilisables en attendant. Le message disparaît quand toutes les migrations sont passées.
+
+<a id="lecteur-bloque"></a>
+## Lecteur bloqué
+
+- **Message** : « Lecteur bloqué : appel ignoré (lecteur …, jusqu'à …) » (niveau Erreur, donc visible par défaut). Sur la fiche du lecteur, le bloc **Verrouillage** affiche « Verrouillé jusqu'à » suivi de la date et de l'heure.
+- **Cause** : le lecteur a atteint sa limite de badges inconnus ou de codes faux consécutifs, ou la limite globale d'échecs cumulés. Pendant le blocage, **tout** appel est ignoré, même celui d'un badge valide. Un appareil du réseau qui envoie de faux appels peut aussi provoquer ce blocage.
+- **Action** : attendez l'heure indiquée, ou cliquez sur **Débloquer** sur la fiche du lecteur (administrateurs seulement). **Désactiver puis réactiver le plugin ne débloque pas** : seul le bouton le fait. Procédure pas à pas : [Débloquer un lecteur](securite.md#proc-debloquer). Si le blocage revient aussitôt, c'est normal tant qu'aucun succès du même type n'a remis le compteur à zéro : voir [Comment fonctionne le blocage](fonctionement.md#comment-fonctionne-le-blocage).
+- Si le journal écrit « enregistrement du blocage illisible, lecteur bloqué pour la durée initiale (« Débloquer » sur la fiche) » : l'état du blocage n'a pas pu être lu, le lecteur est bloqué par précaution pour la durée de départ. Cliquez sur **Débloquer**.
+
+<a id="messages-interface-securite"></a>
+## Messages de l'interface : blocage, adresse, verrous
+
+Ces messages s'affichent en haut de la page en rouge.
+
+| Message | Cause | Action |
+|---|---|---|
+| « Limite d'essais invalide : saisissez un nombre entier supérieur ou égal à 1. » | Limite de badge inconnu ou de code faux vide, nulle, négative ou non numérique, à la sauvegarde de la fiche du lecteur | Saisissez 1 ou plus. Rien n'est enregistré tant que la valeur n'est pas corrigée. |
+| « Temps de blocage invalide : saisissez un nombre entier de minutes, de 1 à 1440. » | Temps de blocage hors bornes | Saisissez un nombre entier de minutes de 1 à 1440. |
+| « Lecteur occupé, réessayez » ; « Inclusion occupée, réessayez » ; « Appairage occupé, réessayez » | Deux actions sur le même élément se sont croisées (deux onglets, deux administrateurs) | Recliquez après quelques secondes. |
+| « Lecteur introuvable » | Le lecteur a été supprimé depuis l'ouverture de la page | Rechargez la page. |
+| « IP autorisée invalide : saisissez l'adresse IPv4 ou IPv6 du lecteur, ou laissez le champ vide. » ; « IP autorisée refusée : une adresse de bouclage (127.0.0.1, ::1), non spécifiée (0.0.0.0, ::) ou du serveur Jeedom n'est jamais celle d'un lecteur. » | Adresse saisie qui n'est pas une IP, ou qui ne peut pas être celle d'un lecteur | Saisissez l'adresse réelle du lecteur, ou laissez le champ vide. |
+
+<a id="messages-inclusion"></a>
+## Messages d'inclusion
+
+| Message | Où | Cause | Action |
+|---|---|---|---|
+| « L'inclusion n'est pas active » | Interface (clic sur Prolonger) | L'inclusion s'est arrêtée à l'échéance ou a été arrêtée | Cliquez sur **Mode inclusion** pour la relancer. |
+| « Élément introuvable ou déjà traité » | Interface (Approuver, Refuser) | L'élément a déjà été approuvé ou refusé (autre onglet, autre administrateur) | Rechargez la page. |
+| « Inclusion : limite de créations atteinte. Les lecteurs et badges inconnus présentés ne sont plus créés jusqu'à la fin de l'inclusion. » | Centre de messages | La limite de créations de la fenêtre est atteinte | Arrêtez l'inclusion et relancez-la, ou relevez la limite (configuration du plugin, bloc Inclusion). |
+| « Inclusion : limite de … créations atteinte, … non créé (appel ignoré) » | Journal, Avertissement | Idem, pour chaque appel qui aurait créé un élément | Idem. |
+| « Inclusion : verrou indisponible, création ignorée (…) » | Journal, Avertissement | Le plugin n'a pas pu poser son verrou de comptage : l'élément n'est pas créé | Recommencez la présentation ; si cela se répète, vérifiez que le dossier temporaire de Jeedom est inscriptible. |
+| « L'inclusion était active : la mise à jour du plugin l'a arrêtée. Elle est désormais limitée dans le temps : relancez-la depuis la page du plugin si besoin. » | Centre de messages | Une inclusion ouverte avant la mise à jour est arrêtée | Relancez-la depuis la page du plugin si besoin. |
+| « Inclusion : création d'équipements par les lecteurs… » | Centre de messages | Notification regroupée : des éléments ont été créés pendant l'inclusion | Vérifiez qu'ils sont tous attendus ; refusez ou supprimez les autres. |
+| Un badge ou un lecteur créé n'ouvre rien | Page du plugin | L'élément est inactif ou « En attente d'approbation » | Activez-le ou approuvez-le : voir [Inclure, approuver ou refuser](securite.md#proc-inclusion). |
+
+<a id="messages-codes"></a>
+## Messages sur les codes
+
+| Message | Cause | Action |
+|---|---|---|
+| « Code refusé : de 1 à 24 chiffres » | Code saisi (formulaire ou `ChangePin` avec `set`) vide, non numérique ou de plus de 24 chiffres | Saisissez de 1 à 24 chiffres. |
+| « Ce code est déjà utilisé » | Un autre équipement code porte déjà ce code | Choisissez un autre code, ou générez-en un avec `rnd6` ou `rnd8`. |
+| « Impossible de générer un code unique : supprimez des codes inutilisés » | `rnd4`, `rnd6` ou `rnd8` n'a pas trouvé de code libre après plusieurs essais (peu de combinaisons à 4 chiffres) | Utilisez un code plus long, ou supprimez les codes inutilisés. |
+| « Code illisible : redéfinissez-le » | Le code enregistré ne peut plus être déchiffré (clé de chiffrement de Jeedom changée ou sauvegarde restaurée sans elle) | Redéfinissez le code. |
+| « Code introuvable » | L'équipement code a été supprimé ou n'est plus un code | Rechargez la page. |
+| « Enregistrement du code impossible » | Le code n'a pas pu être chiffré ou enregistré | Réessayez ; si cela persiste, consultez le journal `badger2`. |
+| Journal : « Code … : code de moins de 4 chiffres, facile à deviner » (Avertissement) | Code très court | Choisissez 4 chiffres ou plus. |
+| Journal : « Recherche du code : … code(s) illisible(s) écarté(s) (clé de chiffrement de Jeedom changée ?) » (Erreur) | Des codes enregistrés ne peuvent pas être déchiffrés : ils ne reconnaissent plus rien | Redéfinissez ces codes. |
+| Centre de messages : « Plusieurs équipements code portent le même code (il reste valable tant qu'il n'est pas changé) : … » | Codes en double hérités d'avant la mise à jour | Donnez un code différent à chacun. |
+| Centre de messages : « Code non converti : redéfinissez-le : … » ; « Code illisible : redéfinissez-le (la clé de chiffrement de Jeedom a-t-elle changé ?) : … » | La mise à jour n'a pas pu convertir ou lire ces codes | Redéfinissez-les. |
+| Centre de messages : « Code vide ou hors du clavier du lecteur à vérifier (un code vide s'ouvre en validant sans rien saisir) : … » | Codes vides hérités | Saisissez un vrai code. |
+| Centre de messages : « La commande GetPin a été conservée : décochez la case « Ajouter une commande info GetPin » si elle ne sert pas. » | Équipement qui avait déjà GetPin avant la mise à jour | Décochez la case si aucun scénario ne lit la commande. |
+
+<a id="exiger-chiffrement-refuse"></a>
+## Exiger le chiffrement : refus et échecs
+
+⚠️ Aucun sketch publié n'envoie encore d'identifiants chiffrés : ces messages ne devraient pas apparaître aujourd'hui en usage normal. Ils concernent le bouton **Exiger le chiffrement pour ce lecteur** du tableau [Posture de sécurité des lecteurs](reference.md#posture-securite).
+
+| Message | Cause | Action |
+|---|---|---|
+| « Exiger le chiffrement est réservé à un lecteur v1 appairé : appairez-le d'abord. » | Lecteur non appairé | [Appairez-le](reference.md#appairage-appairer). |
+| « Exiger le chiffrement est impossible : ce lecteur n'annonce pas le chiffrement de ses identifiants. » | Le lecteur n'annonce pas cette capacité | Rien à faire tant qu'aucun sketch ne l'annonce. |
+| « Exiger le chiffrement est impossible pour l'instant : le dernier badge ou code de ce lecteur est arrivé en clair, l'exiger le couperait. » | Dernier identifiant reçu en clair | Attendez un identifiant chiffré. |
+| « Exiger le chiffrement est impossible pour l'instant : aucun badge ni code chiffré n'a encore été reçu de ce lecteur. » | Aucun identifiant chiffré reçu | Présentez un badge ou saisissez un code sur ce lecteur. |
+| « État du lecteur illisible : ouvrez sa fiche. » | État illisible | Ouvrez la fiche et consultez le journal. |
+| Journal : « Appel v1 refusé : identifiant en clair (événement …) alors que les identifiants chiffrés sont exigés pour le lecteur … » (403) | L'exigence est posée et le lecteur envoie un identifiant en clair | Reflashez le lecteur avec un sketch qui chiffre, ou cliquez sur **Ne plus exiger le chiffrement**. |
+| Journal : « Appel v1 refusé (adresse …, lecteur …) : identifiant chiffré indéchiffrable (…) : sans effet, non compté comme essai de code » (400) | Le contenu chiffré est illisible (signature juste) | Vérifiez l'appairage et la configuration du sketch. |
+| Journal : « Lecteur … : 3 appels chiffrés indéchiffrables de suite : vérifier l'appairage (secret du lecteur et configuration du sketch) » (Erreur) | Échecs répétés | Idem. La page affiche aussi « Échecs de déchiffrement répétés : vérifier l'appairage ». |
+| Journal : « Appel v1 du lecteur … : lecture de l'identifiant chiffré impossible (secret ou calcul inutilisable) » (Erreur) | Le secret ne peut pas servir au déchiffrement | [Régénérez le secret](reference.md#regenerer-secret). |
+
+<a id="bandeaux-securite"></a>
+## Bandeaux et posture de sécurité
+
+- **Bandeau jaune « Au moins un lecteur utilise l'ancien protocole : il peut être usurpé par un appareil du réseau local »** : au moins un lecteur **actif** est en v0. Il liste les lecteurs concernés. Ce n'est pas une panne : voir [Que faire d'un lecteur qui reste en v0 ?](securite.md#lecteur-v0-durable). Il disparaît quand plus aucun lecteur actif n'est en v0.
+- **Bandeau rouge « Le contrôle d'IP d'origine est désactivé : n'importe quel appareil du réseau, ou d'Internet si Jeedom est publié par un tunnel, peut se faire passer pour un lecteur. »** : l'option est décochée dans la configuration du plugin. Recochez-la sauf si vos lecteurs passent par un reverse proxy ou un NAT : voir [Corriger l'IP d'un lecteur et régler le filtrage](securite.md#proc-ip).
+- **« Posture de sécurité indisponible : consultez le journal du plugin »** : le tableau n'a pas pu être calculé. Le journal `badger2` écrit « Posture de sécurité indisponible : … » (Erreur). Rechargez la page ; si cela persiste, signalez le message du journal. Les appels des lecteurs ne sont pas affectés.
+- **Journal « Posture du lecteur … »** (Erreur) : l'état d'un lecteur n'a pas pu être lu ; le tableau affiche « État illisible ». Ouvrez sa fiche.
+
+<a id="journal-securite-divers"></a>
+## Autres messages du journal de la tranche sécurité
+
+Les messages au niveau Avertissement ou Info ne sont écrits que si le niveau de log est monté : voir [Niveau de log](reference.md#niveau-de-log).
+
+| Message | Niveau | Cause | Action |
+|---|---|---|---|
+| « Appel refusé : paramètre de version répété dans le corps de la requête (adresse …) » | Avertissement | L'appel (réponse 400) contient deux fois le paramètre de version : aucun lecteur ne l'émet | Vérifiez qui appelle cette adresse. |
+| « Lecteur … : limite d'essais ou temps de blocage invalide, ramené à 1 » | Avertissement | Une valeur enregistrée est illisible ; le plugin applique 1 | Ouvrez la fiche du lecteur, saisissez des valeurs valides et sauvegardez. |
+| « Lecteur … : verrou anti-bruteforce indisponible, compteur mis à jour sans verrou » | Avertissement | Le verrou de comptage n'a pas pu être posé ; le comptage continue sans lui | Passager en général ; si fréquent, vérifiez que le dossier temporaire de Jeedom est inscriptible. |
+| « Lecteur … : IP autorisée … remplacée par … (inclusion active) » ; « Appel v1 : lecteur … appelé depuis …, adresse enregistrée … remplacée (inclusion active) » | Avertissement | L'inclusion a enregistré une nouvelle adresse pour le lecteur | Normal si vous l'avez voulu (corriger une IP). Sinon, arrêtez l'inclusion et vérifiez l'adresse. |
+| « Lecteur … : IP … remplacée par … (lecteur non verrouillé) » | Info | Un lecteur v0 non verrouillé met son adresse à jour à chaque appel | Normal. |
+| « Lecteur … : IP déclarée … non enregistrée (adresse de bouclage ou du serveur, jamais celle d'un lecteur) » | Avertissement | L'appel annonce une adresse qui ne peut pas être celle d'un lecteur | Vérifiez le sketch et son adresse. |
+| « Lecteur … : IP autorisée … effacée (adresse invalide ou interdite pour un lecteur) » | Avertissement | Une adresse invalide a été retirée de la fiche | Saisissez l'adresse réelle. |
+| « Version des données (n° …) plus récente que ce plugin (n° …) : aucune migration exécutée, version conservée » | Avertissement | Vous êtes revenu à une version antérieure du plugin | Restaurez la sauvegarde Jeedom d'avant la mise à jour : voir [Mettre à jour sans surprise](securite.md#mise-a-jour-sans-surprise). |
+| « Version des données illisible : toutes les migrations sont rejouées (idempotentes) » | Avertissement | Le numéro de version des données est illisible | Rien à faire : les migrations sont rejouées sans effet sur des données à jour. |
+| « Migration des codes : équipement #… non converti (…) » ; « Migration des codes : équipements illisibles (…) » | Erreur | La conversion d'un code n'a pas abouti | Voir [Migration de données en échec](#migration-donnees-echec). |
+| « Import : code de … illisible (ancienne valeur de type inattendu), un code neuf sera généré » | Avertissement | Import depuis Badger : l'ancien code n'a pas pu être repris | Redéfinissez le code de cet équipement. |
 
 ## Une question qui reste sans réponse ?
 

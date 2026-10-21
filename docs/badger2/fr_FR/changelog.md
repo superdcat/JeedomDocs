@@ -26,6 +26,9 @@
 - Évolution : maintenance interne du plugin (code simplifié, éléments inutilisés retirés), sans aucun changement pour vos lecteurs, badges, codes et scénarios ; aucun lecteur n'est à reflasher. <!-- UC108 -->
 - Évolution : les dossiers internes du plugin (analyses, sketches, code interne) ne sont plus lisibles directement depuis un navigateur sous Apache, la page de configuration indique que cette protection dépend du serveur web, et les boutons de téléchargement des sketches d'origine ouvrent désormais leur page sur GitHub. <!-- UC109 -->
 - Documentation : la documentation de la configuration explique la protection des dossiers internes et donne la règle à ajouter sous nginx. <!-- UC109 -->
+- Ajout : lecteurs v1 (sketch Badger2) : le plugin sait déchiffrer les badges et codes d'un lecteur appairé qui les envoie chiffrés, et le tableau « Posture de sécurité des lecteurs » propose, lecteur par lecteur, d'exiger ce chiffrement (désactivé par défaut, proposé seulement une fois un badge ou code chiffré reçu) ; les identifiants envoyés en clair par ce lecteur sont alors refusés. Les lecteurs flashés avec le sketch d'origine ne sont pas concernés. <!-- UC110 -->
+- Documentation : la référence technique décrit la nouvelle colonne « Chiffrement des identifiants » du tableau de posture de sécurité des lecteurs, ses états et quand exiger le chiffrement d'un lecteur. <!-- UC110 -->
+- Documentation : nouvelle page « Sécurité de vos lecteurs » : ce que protège chaque mesure et ce qu'elle ne protège pas (un lecteur flashé avec le sketch d'origine reste usurpable depuis le réseau local), réglages par défaut, ce qui change à la mise à jour, et procédures pas à pas pour débloquer un lecteur, inclure et approuver, gérer les codes, exiger le protocole v1 signé, filtrer par IP et protéger les dossiers du plugin sous Apache et nginx ; le dépannage couvre désormais chaque message de refus. <!-- UC199 -->
 
 # 20/10/2026
 
