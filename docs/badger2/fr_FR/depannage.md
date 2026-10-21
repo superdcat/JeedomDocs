@@ -22,7 +22,8 @@ Cette page recense les symptômes et les messages que vous pouvez rencontrer, le
 | « rétrogradation » | Lecteur appairé reflashé avec un ancien sketch | [Rétrogradation refusée](#retrogradation-refusee) |
 | « Secret absent ou illisible » | Secret perdu côté Jeedom | [Secret perdu](#secret-perdu) |
 | Fonction grisée sur la fiche, capacité inconnue | Capacité non annoncée par le lecteur | [Capacité non annoncée](#capacite-non-annoncee) |
-| Appel refusé : adresse d'origine non locale ou en-tête de proxy | Lecteur hors réseau local, tunnel ou proxy | [Origine refusée](#origine-refusee) |
+| Appel refusé : adresse d'origine non locale, en-tête de proxy, origine interdite, lecteur appelé depuis une autre IP | Lecteur hors réseau local, tunnel ou proxy, lecteur verrouillé sur une autre adresse | [Origine refusée](#origine-refusee) |
+| « Appel v0 refusé : … » (commande inconnue, nom de lecteur invalide, IP déclarée invalide, valeur de badge ou code hors du contrat v0) | Appel d'un lecteur d'origine hors du format émis par les sketchs | [Appel v0 hors format](#appel-v0-hors-format) |
 | Autres refus d'un appel v1 | Identifiant, équipement en double, corps invalide, retard | [Autres refus d'un appel v1](#autres-refus-v1) |
 | Mise à jour à distance sans effet | Mot de passe, port, `ota -` | [Mise à jour à distance](#depannage-ota) |
 
@@ -45,7 +46,7 @@ Contrôlez dans l'ordre :
 
 1. **Réseau du lecteur** : la console affiche « Réseau : adresse … » quand le lecteur a une adresse. « Réseau : lien absent » = câble ou Wi-Fi ; « Réseau : pas d'adresse, nouvel essai dans … » = le DHCP ne répond pas ; « Réseau : aucun module Ethernet détecté » = shield ou module mal enfiché, bibliothèque Ethernet non conforme.
 2. **Adresse de Jeedom** : `config` à la console montre la cible. « Envoi : Jeedom injoignable, nouvel essai dans … » = adresse ou port faux, pare-feu, Jeedom arrêté. Le lecteur parle en **HTTP** : saisissez le port HTTP de Jeedom, pas celui du HTTPS.
-3. **Inclusion** : un lecteur n'est créé que si le **mode inclusion** est actif. Sans lui, le log écrit « Appel v1 refusé : lecteur … inconnu (inclusion désactivée …) » (lecteur v1) ou « Lecteur inconnu detecté : … » (lecteur d'origine). Activez le mode inclusion, redémarrez le lecteur (ou présentez un badge pour un lecteur d'origine) et rechargez la page.
+3. **Inclusion** : un lecteur n'est créé que si le **mode inclusion** est actif. Sans lui, le log écrit « Appel v1 refusé : lecteur … inconnu (inclusion désactivée …) » (lecteur v1) ou « Lecteur inconnu detecté : … » (lecteur d'origine). Activez le mode inclusion, redémarrez le lecteur (ou présentez un badge pour un lecteur d'origine) et rechargez la page. L'inclusion **s'arrête seule** (5 minutes par défaut) : si le bandeau « Inclusion active » a disparu, relancez-la. Si la **limite de créations** de l'inclusion (20 par défaut) est atteinte, le log écrit un avertissement et plus rien n'est créé : arrêtez l'inclusion, relancez-la, ou relevez la limite dans la configuration du plugin. Avec l'**approbation obligatoire**, le lecteur est bien créé mais « En attente d'approbation » : approuvez-le sur la page du plugin.
 4. **Origine** : voir [Origine refusée](#origine-refusee).
 5. **Test** : la commande `test` à la console répond « Jeedom a accepté le battement (ok) » quand tout est bon.
 
@@ -60,9 +61,9 @@ Contrôlez dans l'ordre :
 
 Le plugin ne commande pas la porte tout seul : un badge **connu et actif** met à jour la commande `Presentation` de son équipement, et c'est **un scénario Jeedom** qui ouvre ensuite la porte. Vérifiez :
 
-- **Badge inconnu** : le log écrit « Badge inconnu présenté sur le lecteur … » (niveau Erreur). Enregistrez-le par le mode inclusion, puis activez-le.
+- **Badge inconnu** : le log écrit « Badge inconnu présenté sur le lecteur … » (niveau Erreur). Enregistrez-le par le mode inclusion, puis activez-le (ou approuvez-le si l'approbation obligatoire est cochée). Un lecteur « En attente d'approbation » ne crée pas de badge.
 - **Badge ou lecteur désactivé** : cochez **Activer** sur l'équipement et sauvegardez.
-- **Lecteur bloqué** : après trop de badges inconnus ou de codes faux, le log écrit « Lecteur bloqué » et le lecteur ignore tout pendant le temps de blocage de sa fiche (voir [Fonctionnement](fonctionement.md)).
+- **Lecteur bloqué** : après trop de badges inconnus ou de codes faux, le lecteur ignore **tout** appel, même d'un badge valide, jusqu'à la fin du blocage. Le log écrit « Lecteur bloqué : appel ignoré » (niveau Erreur) avec l'heure de fin. Ouvrez la fiche du lecteur : le bloc **Verrouillage** indique « Verrouillé jusqu'à … » ainsi que le niveau et les essais. Attendez l'heure indiquée, ou cliquez sur **Débloquer** (administrateur). Un blocage qui revient vite ou s'allonge est normal : voir [Comment fonctionne le blocage](fonctionement.md#comment-fonctionne-le-blocage).
 - **Aucun scénario** : sans scénario déclenché par `Presentation`, rien ne s'ouvre. Voir [Fonctionnement et utilisation des équipements](fonctionement.md).
 - **Format de badge non reconnu en v1** : seules les trames de 26 et 34 bits sont reconnues. Un badge enrôlé en décimal (sketch `JeedouinoLAN`) ou lu en 24 ou 32 bits est traité comme inconnu.
 - **Premier badge d'un lecteur neuf** : l'appel qui crée un lecteur v1 n'est pas traité ; présentez le badge une seconde fois.
@@ -75,7 +76,7 @@ Pour voir ce que le plugin reçoit, utilisez le [mode debug](reference.md#mode-d
 ## Le lecteur ne se fait plus entendre après un changement d'adresse
 
 - **Cause** : le plugin mémorise l'adresse du lecteur. Si elle change (nouveau bail DHCP, redémarrage de la box) hors mode inclusion, les appels sont refusés (réponse 403). Le log écrit « Appel v1 refusé : lecteur … appelé depuis …, adresse enregistrée … : activer l'inclusion le temps d'un appel pour enregistrer la nouvelle adresse (une réservation DHCP évite ce refus) » ; la console du lecteur écrit « Envoi : refusé par le plugin (auth) ».
-- **Action** : activez le mode inclusion, faites parler le lecteur (redémarrage ou badge), puis arrêtez l'inclusion : la nouvelle adresse est enregistrée. **Évitez le problème en réservant une adresse fixe au lecteur dans votre box** (réservation DHCP). Un lecteur d'origine met à jour son adresse tout seul.
+- **Action** : activez le mode inclusion, faites parler le lecteur (redémarrage ou badge), puis arrêtez l'inclusion : la nouvelle adresse est enregistrée. Cette acceptation ne vaut que **pendant la fenêtre d'inclusion** : une fois échue, relancez-la. **Évitez le problème en réservant une adresse fixe au lecteur dans votre box** (réservation DHCP). Un lecteur d'origine met à jour son adresse tout seul, sauf si vous avez coché « Refuser les appels venant d'une autre IP » sur sa fiche (voir [Origine refusée](#origine-refusee)).
 
 <a id="version-non-supportee"></a>
 ## « version de protocole non supportée : mettre à jour le plugin »
@@ -125,9 +126,31 @@ Si c'est le **fichier téléchargé** qui est perdu, retéléchargez-le : le sec
 <a id="origine-refusee"></a>
 ## Appel refusé : origine
 
-- « Appel refuse : adresse d'origine non locale … » : le plugin n'accepte que les adresses du réseau local. Un lecteur derrière un VPN ou un routage public est refusé.
-- « Appel refusé : en-tête de proxy … présent (tunnel ou reverse proxy) » : le lecteur doit parler **directement** à Jeedom, sans proxy ni tunnel.
+Ces refus sont écrits au niveau **Avertissement** dans le log `badger2` : ils sont **invisibles au niveau de log par défaut (Erreur)**. Passez le log à Avertissement (ou plus) avant de chercher (voir [Niveau de log](reference.md#niveau-de-log)). Un appel refusé reçoit une réponse 403 et ne déclenche aucun événement.
+
+- « Appel refuse : adresse d'origine non locale … » : le plugin n'accepte que les adresses du réseau local. Un lecteur derrière un VPN ou un routage public est refusé. Si vos lecteurs sont en adressage public sur votre réseau, ou passent par un NAT, voir l'option « Contrôler l'IP d'origine des lecteurs » dans la [configuration](configuration.md#controle-ip-origine).
+- « Appel refusé : en-tête de proxy … présent (tunnel ou reverse proxy), adresse de connexion … » : le lecteur doit parler **directement** à Jeedom, sans proxy ni tunnel. Si ce message apparaît alors que c'est un tunnel d'accès distant (cloudflared…) qui amène l'appel, c'est le comportement voulu : ne décochez pas l'option. Ne la décochez que si ce sont vos **lecteurs** qui passent par un reverse proxy.
+- « Appel refusé : adresse d'origine … interdite pour un lecteur (bouclage ou adresse du serveur : tunnel ou proxy installé sur Jeedom ?), lecteur … » : l'appel d'un lecteur **verrouillé** (case « Refuser les appels venant d'une autre IP » cochée) arrive depuis Jeedom lui-même, typiquement via un relais installé sur la machine de Jeedom. Action : décochez la case pour ce lecteur. Un lecteur non verrouillé n'est pas refusé dans ce cas : le log écrit seulement, au niveau Info, « adresse d'origine … interdite (relais sur Jeedom ?), IP déclarée utilisée ».
+- « Appel refusé : lecteur … appelé depuis …, IP autorisée … : activer l'inclusion le temps d'un appel ou corriger l'IP autorisée sur la page du lecteur (une réservation DHCP évite ce refus) » : le lecteur est **verrouillé** et appelle depuis une autre adresse que son IP autorisée (nouveau bail DHCP, lecteur remplacé, ou appareil imposteur). « IP autorisée aucune » signifie que le champ est vide. Action : si l'adresse est légitime, activez le mode inclusion le temps d'un appel du lecteur, ou corrigez le champ « IP autorisée » sur sa fiche ; puis réservez une adresse fixe au lecteur dans votre box. Sinon, ne faites rien : le refus est le comportement voulu.
 - « Appel v1 refusé : adresse d'origine … interdite pour un lecteur (bouclage, adresse du serveur ou adresse invalide) » : une adresse de Jeedom lui-même ou invalide ne peut pas être celle d'un lecteur.
+- À la sauvegarde d'un lecteur, « IP autorisée invalide » ou « IP autorisée refusée » : l'adresse saisie n'est pas une IP, ou c'est une adresse de bouclage, non spécifiée ou de Jeedom. Saisissez l'adresse réelle du lecteur ou laissez le champ vide.
+
+<a id="appel-v0-hors-format"></a>
+## Appel v0 hors format
+
+Ces refus sont écrits au niveau **Avertissement** dans le log `badger2` : ils sont **invisibles au niveau de log par défaut (Erreur)**. Passez le log à Avertissement (ou plus) avant de chercher (voir [Niveau de log](reference.md#niveau-de-log)).
+
+Un appel de lecteur d'origine (v0) qui sort du format émis par les sketchs est refusé : réponse 403, **aucun effet** (rien n'est créé, aucun compteur ne bouge, aucun scénario ne se déclenche). Tout ce que les sketchs d'origine émettent reste accepté, y compris l'appui sur Entrée seule au clavier.
+
+| Message du log | Cause | Action |
+|---|---|---|
+| « Appel v0 refusé : commande inconnue « … » (lecteur …, adresse …) » | La commande de l'appel n'est pas une de celles des sketchs | Ce n'est pas un lecteur d'origine : vérifiez qui appelle l'adresse. |
+| « Appel v0 refusé : nom de lecteur invalide « … » (adresse …) » | Nom de lecteur avec des caractères interdits et inconnu de Jeedom | Corrigez le nom dans le sketch ; sinon, ne faites rien. |
+| « Appel v0 refusé : IP déclarée invalide « … » (lecteur …, adresse …) » | L'adresse annoncée par l'appel n'est pas une adresse IP | Vérifiez le sketch et son adresse. |
+| « Appel v0 refusé : valeur de badge hors du contrat v0, valeur masquée, visible en mode debug … » | Valeur de badge hors format | Activez le mode debug pour voir la valeur reçue. |
+| « Appel v0 refusé : code hors du contrat v0, valeur masquée, visible en mode debug … » | Code hors format | Idem. Le code n'est jamais écrit dans le log. |
+
+En mode debug, le résultat de l'appel est « Refusé : paramètre hors du contrat v0 (HTTP 403) » (ou « commande inconnue »). Si un lecteur légitime est refusé, ouvrez une demande avec ce résultat.
 
 <a id="autres-refus-v1"></a>
 ## Autres refus d'un appel v1

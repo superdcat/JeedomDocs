@@ -86,6 +86,62 @@ Pour ajouter un nouveau lecteur de badge, il faudra donc suivre la procédure su
 Le nouveau lecteur apparaitra alors dans la liste des lecteurs (un rechargement de la page peut être nécessaire)
 Sélectionnez ce nouveau lecteur pour le configurer (cf. chapitre suivant)
 
+<a id="inclusion"></a>
+#### Section « Inclusion »
+
+Le mode inclusion est une **fenêtre limitée dans le temps** : il s'arrête tout seul à l'échéance, même si vous fermez la page ou si Jeedom redémarre. Tant qu'il est actif, un bandeau de la page du plugin affiche « Inclusion active, fin dans … » (compte à rebours) et le nombre de créations par rapport à la limite, avec deux boutons :
+
+- **Prolonger** : relance l'inclusion pour la même durée. Le compteur de créations **n'est pas remis à zéro**.
+- **Arrêter l'inclusion** : ferme la fenêtre immédiatement.
+
+Chaque création est écrite dans le log et signalée dans le centre de messages (une notification regroupée par inclusion). Les réglages se trouvent dans la configuration du **plugin**, bloc **Inclusion**, avec l'état de l'inclusion et un bouton d'arrêt. La case « Autoriser l'inclusion de devices inconnus » n'existe plus : l'inclusion se démarre uniquement par le bouton **Mode inclusion** de la page du plugin.
+
+| Champ | Défaut | Rôle |
+|---|---|---|
+| Durée de l'inclusion (minutes) | 5 | Durée de la fenêtre, de 1 à 60. |
+| Nombre maximal de créations par inclusion | 20 | De 0 à 1000. Au-delà, les lecteurs et badges inconnus ne sont plus créés jusqu'à la fin de l'inclusion (avertissement dans le log et notification) ; l'inclusion reste ouverte. **0 supprime la limite : à éviter.** |
+| Approbation obligatoire des créations | Désactivée | Voir ci-dessous. |
+
+**Approbation obligatoire** : si vous cochez cette option, chaque lecteur ou badge créé par l'inclusion est marqué « En attente d'approbation » et listé sur la page du plugin. **Approuver** l'active ; **Refuser** le supprime. Un lecteur en attente **ne crée pas de badge**, même à son premier appel : approuvez d'abord le lecteur, puis présentez le badge (enrôlement en deux temps). Sans l'option, un élément créé reste, comme avant, **inactif** jusqu'à ce que vous cochiez **Activer** sur sa fiche.
+
+L'acceptation de la nouvelle adresse IP d'un lecteur « le temps d'un appel en inclusion » ne vaut que pendant la fenêtre.
+
+Une inclusion qui était active avant la mise à jour du plugin est arrêtée par la mise à jour (un message du centre de messages le signale) : relancez-la au besoin.
+
+<a id="blocage-des-lecteurs"></a>
+#### Section « Blocage des lecteurs »
+
+Ces réglages se trouvent aussi sur la page de configuration du **plugin** et valent pour tous les lecteurs. Les limites d'essais et le temps de blocage de départ se règlent lecteur par lecteur (voir [Configuration des lecteurs](#configuration-des-lecteurs)). Une valeur hors bornes est remplacée silencieusement par la valeur par défaut.
+
+| Champ | Défaut | Rôle |
+|---|---|---|
+| Durée maximale de blocage (minutes) | 60 | Plafond du blocage, de 1 à 1440. Après une période calme de cette durée, le blocage repart de sa valeur de départ. |
+| Échecs cumulés avant blocage | 10 | Nombre de badges inconnus et de codes faux cumulés dans la fenêtre, de 1 à 1000, qui bloque le lecteur même si des badges ou codes valides sont passés entre-temps. |
+| Fenêtre des échecs cumulés (minutes) | 10 | Durée pendant laquelle un échec compte dans cette limite, de 1 à 1440. |
+
+**Attention : la valeur 0 désactive la limite globale.** C'est alors la seule protection contre quelqu'un qui détient un badge ou un code valide et qui intercale ses essais entre deux présentations valides : à éviter.
+
+<a id="controle-ip-origine"></a>
+#### Option « Contrôler l'IP d'origine des lecteurs »
+
+Cette option se trouve sur la page de configuration du **plugin** (Plugins > Gestion des plugins > Badger Fork), pas sur la page des équipements. Elle est **activée par défaut** et nous vous recommandons de la laisser ainsi.
+
+Quand elle est activée, le plugin refuse les appels qu'un lecteur relié directement à votre réseau ne peut pas émettre :
+
+- un appel qui vient d'une adresse non locale (Internet, par exemple) ;
+- un appel relayé par un tunnel ou un reverse proxy (le plugin repère les en-têtes que ces relais ajoutent) ;
+- un appel d'un lecteur dont la case « Refuser les appels venant d'une autre IP » est cochée et qui vient d'une autre adresse que son IP autorisée, ou de l'adresse de Jeedom lui-même (voir [Configuration des lecteurs](#configuration-des-lecteurs)).
+
+Cette case par lecteur n'a d'effet que si l'option est activée.
+
+**Quand la décocher** : seulement si vos lecteurs eux-mêmes joignent Jeedom à travers un reverse proxy ou un NAT. Leur adresse d'origine n'est alors pas la leur, et leurs appels seraient refusés.
+
+**Quand ne PAS la décocher** : si Jeedom est publié par un tunnel ou un accès distant (cloudflared, accès distant Jeedom…). Les lecteurs n'empruntent pas ce tunnel : ne désactivez rien, c'est justement ce que l'option bloque.
+
+Tant que l'option est décochée, un bandeau rouge s'affiche : « Le contrôle d'IP d'origine est désactivé : n'importe quel appareil du réseau, ou d'Internet si Jeedom est publié par un tunnel, peut se faire passer pour un lecteur. » Le bandeau apparaît ou disparaît dès que vous cochez ou décochez la case ; sauvegardez ensuite la configuration.
+
+> L'option ne concerne que les lecteurs **v0** (sketch d'origine). Les lecteurs **v1** sont toujours limités à leur IP, option cochée ou non.
+
 ### Configuration des lecteurs
 
 La configuration des lecteurs permet d'ajuster certains paramètres du lecteur. Elle doit être effectuée et sauvegardé après chaque ajout de nouveau lecteur.
@@ -97,13 +153,27 @@ La configuration des lecteurs permet d'ajuster certains paramètres du lecteur. 
 - Activer / Désactiver (un lecteur désactivé sera ignoré par le plug-in).
 - Visible / Invisible (dans jeedom)
 - ID (ce paramètre ne peut pas être changé) Cette ID est composé du mot BADGER et du numéro de lecteur défini dans le sketch Arduino.
-- IP / HostName (ce paramètre ne peut pas être changé) Cette IP est définie par le DHCP de votre réseau.
-- Le model détermine la liste des fonctionnalités du lecteur et les paramètres disponibles pour celui-ci.
-- Le temps de blocage défini le temps (en minutes) pendant lequel jeedom ignorera les commandes provenant de ce lecteur lorsque celui-ci est "bloqué" (voir limite ci-dessous).
-- Le compteur de badge inconnu (ce paramètre ne peut pas être changé) affiche le nombre de badge inconnu présenté successivement. Ce compteur sera réinitialisé par la présentation d'un badge valide si le lecteur n'est pas bloqué.
-- La Limite de badge inconnu défini le nombre maximum de badge inconnu qui peuvent être présenté avant blocage. Si cette limite est atteinte, le lecteur sera bloqué pendant le temps défini ci-dessus.
-- Le compteur de code faux (ce paramètre ne peut pas être changé) affiche le nombre de faux (inconnu) présenté successivement. Ce compteur sera réinitialisé par la présentation d'un code valide si le lecteur n'est pas bloqué.
-- La Limite de code faux défini le nombre maximum de code faux (inconnu) qui peuvent être présenté avant blocage. Si cette limite est atteinte, le lecteur sera bloqué pendant le temps défini ci-dessus.
+- **IP autorisée** : l'adresse d'où viennent les appels de ce lecteur, telle que Jeedom la voit. Elle se renseigne à la création du lecteur et peut être modifiée ici (par exemple après une réservation DHCP). Laissez le champ vide ou saisissez une adresse IPv4 ou IPv6. Ces adresses sont refusées à la sauvegarde, car ce ne sont jamais celles d'un lecteur : `127.0.0.1` (et tout `127.x.x.x`), `::1`, `0.0.0.0`, `::` et l'adresse de Jeedom lui-même. Un lecteur v0 non verrouillé met cette adresse à jour à chaque appel.
+- **Refuser les appels venant d'une autre IP** (décochée par défaut) : hors mode inclusion, un appel de ce lecteur qui vient d'une autre adresse que l'IP autorisée est refusé et écrit dans le log. À réserver à un lecteur à **IP fixe** (réservation DHCP dans votre box) : sinon ses appels seront refusés dès que son adresse changera. Pour accepter une nouvelle adresse, activez le mode inclusion le temps d'un appel du lecteur (redémarrage ou badge), ou corrigez l'IP autorisée à la main. **Ne cochez pas cette case pour un lecteur dont les appels passent par un relais installé sur Jeedom** : ils seraient refusés. Cette case concerne les lecteurs v0 et n'a aucun effet si l'option « Contrôler l'IP d'origine des lecteurs » est décochée dans la configuration du plugin.
+- Le model détermine la liste des fonctionnalités du lecteur et les paramètres disponibles pour celui-ci. Un lecteur JeedouinoLAN, ou qui annonce `model=wiegand2`, reçoit son modèle dès sa création en inclusion (pour `wiegand2`, la commande `PinTryLimit` est créée d'emblée).
+- **Temps de blocage** : durée du **premier** blocage, en minutes (de 1 à 1440). Pendant ce temps, Jeedom ignore tout appel du lecteur. Elle **double à chaque blocage consécutif** (1, 2, 4, 8 minutes…) sans dépasser la durée maximale réglée dans la configuration du plugin (voir [Blocage des lecteurs](#blocage-des-lecteurs)). Un nouveau lecteur démarre à 1 minute.
+- **Limite de badge inconnu** : nombre de badges inconnus consécutifs qui bloque le lecteur (1 ou plus). Un badge connu remet ce nombre à zéro.
+- **Limite de code faux** : nombre de codes faux consécutifs qui bloque le lecteur (1 ou plus). Un code valide remet ce nombre à zéro.
+
+Les deux limites valent **3** pour un lecteur créé après la mise à jour. Un lecteur **déjà existant qui n'avait aucune limite enregistrée reçoit 1**, qui était sa valeur effective jusque-là : son comportement ne change pas. Si vous voulez plus de tolérance (3, par exemple), saisissez-la vous-même sur sa fiche. Une limite que vous aviez réglée (5, par exemple) est conservée.
+
+Une valeur **vide, 0 ou négative** est refusée à la sauvegarde, avec un message d'erreur : « Limite d'essais invalide : saisissez un nombre entier supérieur ou égal à 1. » ou « Temps de blocage invalide : saisissez un nombre entier de minutes, de 1 à 1440. » Rien n'est enregistré tant que la valeur n'est pas corrigée.
+
+Sous ces champs, un bloc **Verrouillage** affiche l'état du lecteur :
+
+| Ligne | Signification |
+|---|---|
+| Verrouillage | « Libre », ou « Verrouillé jusqu'à » suivi de la date et de l'heure de fin du blocage |
+| Niveau | Nombre de blocages consécutifs (0 = aucun) ; il fixe la durée du prochain blocage |
+| Essais de badge / Essais de code | Échecs consécutifs comptés, rapportés à la limite (par exemple 2 / 3) |
+| Échecs récents | Échecs cumulés dans la fenêtre de la limite globale, rapportés à son seuil |
+
+Le bouton **Débloquer** apparaît dès que le lecteur est bloqué ou qu'un compteur n'est pas à zéro. Il remet à zéro les compteurs, le niveau et le blocage, après confirmation. Il est réservé aux administrateurs, et l'action est écrite dans le log (niveau Erreur) avec le nom de l'utilisateur. Désactiver puis réactiver un lecteur remet aussi ses compteurs à zéro.
 
 ### Configuration des badges et entrées analogiques
 
@@ -116,7 +186,7 @@ Les entrées analogiques apparaissent comme des badges.
 - L'objet parent jeedom (optionnel).
 - Activer / Désactiver (un badge désactivé sera ignoré par le plug-in).
 - Visible / Invisible (dans jeedom)
-- Le model est purement informatif. Il sert à mieux les reconnaitre dans l'administration du plugin.
+- Le model est purement informatif. Il sert à mieux les reconnaitre dans l'administration du plugin. Un badge créé en mode inclusion reçoit le modèle « Tag RFID » ; une entrée analogique (Analog1 à Analog5) reçoit « Analog Input ». Les badges déjà créés ne changent pas.
 - La valeur (ce paramètre ne peut pas être changé) affiche l'identifiant lu sur le badge en décimal. Pour les entrées analogique, il indique le numéro de l'entrée utilisée
 
 ### Configuration des codes
@@ -129,6 +199,18 @@ La configuration des codes permet d'ajuster certains paramètres. Elle doit êtr
 - L'objet parent jeedom (optionnel).
 - Activer / Désactiver (un badge désactivé sera ignoré par le plug-in).
 - Visible / Invisible (dans jeedom)
-- La valeur du code secret. La longueur maximum est de 24 chiffres.
+- **Code (masqué)** : le code secret. Il est stocké chiffré et le champ est toujours vide au chargement de la page. Laissez-le vide pour conserver le code actuel. Pour le remplacer, saisissez un nouveau code de 1 à 24 chiffres (4 au moins sont conseillés). Ce code doit être différent de celui de tous les autres équipements code.
+- **Voir le code** : affiche le code actuel. Ce bouton est réservé aux administrateurs, et chaque consultation est écrite dans le log.
+- **Ajouter une commande info GetPin** : case décochée par défaut. Voir « Génération d'un code temporaire » dans le fonctionnement.
 
-Les codes ne sont pas créés par inclusion automatique. Il faut utiliser le bouton "Ajouter" pour créer un nouveau code.
+Les codes ne sont pas créés par inclusion automatique. Il faut utiliser le bouton "Ajouter" pour créer un nouveau code. Un nouvel équipement code reçoit un code de 4 chiffres généré automatiquement : cliquez sur **Voir le code** pour le connaître, ou saisissez le vôtre.
+
+Les lecteurs déjà installés n'ont rien à changer : ils envoient le même code qu'avant.
+
+#### Mise à jour du plugin et codes existants
+
+- La mise à jour chiffre les codes déjà enregistrés, sans les modifier.
+- Les codes en double, ou vides, hérités d'avant la mise à jour sont signalés dans le centre de notifications de Jeedom. Un code vide continue d'ouvrir quand on valide sur le clavier sans rien saisir, comme avant la mise à jour : corrigez-les en saisissant un nouveau code.
+- Un équipement qui avait la commande GetPin la garde, case cochée, et une notification vous invite à la décocher si elle ne vous sert pas.
+- La clé de chiffrement est celle de Jeedom. Elle est incluse dans la sauvegarde complète de Jeedom : conservez cette sauvegarde.
+- **Retour à une version antérieure du plugin** : restaurez d'abord la sauvegarde Jeedom faite avant la mise à jour. Sinon, les codes n'ouvrent plus rien.

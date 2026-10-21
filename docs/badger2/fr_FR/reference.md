@@ -25,6 +25,7 @@ Sur cette page :
 - [Appairage d'un lecteur v1](#appairage)
 - [Configuration du sketch d'un lecteur v1](#configuration-sketch)
 - [Mode debug](#mode-debug)
+- [Inclusion : fenêtre, limite et approbation](#inclusion-reference)
 - [Niveau de log](#niveau-de-log)
 - [Banc de rejeu de compatibilité (contributeurs)](#banc-rejeu)
 - [Limites connues](#limites-connues)
@@ -44,6 +45,8 @@ Ouvrez sa fiche dans **Plugins > Sécurité > Badger Fork** : l'affichage « Pro
 - Le comptage des badges inconnus et des codes faux, le blocage du lecteur, les scénarios existants.
 - Les deux adresses d'appel : l'ancienne `/plugins/badger/…` et la courante `/plugins/badger2/…`.
 - Un appel **sans indication de version** est toujours un appel v0, quelle que soit l'adresse.
+- Tout ce que les sketchs d'origine émettent reste accepté. Un appel hors de ce format est refusé (403, aucun effet) et laisse un avertissement dans le log (voir [Appel v0 hors format](depannage.md#appel-v0-hors-format)).
+- Dans le log `badger2`, les valeurs venues du réseau et les noms de lecteurs ou de badges sont neutralisés : caractères spéciaux remplacés par « ? », longueur limitée avec « ... ». Un nom affiché dans le log peut donc différer légèrement de celui de l'équipement ; les commandes et scénarios gardent le nom exact. Aucun code PIN n'apparaît dans le log.
 
 ### Le relais de compatibilité
 
@@ -281,6 +284,18 @@ Le mode debug s'arrête seul, et efface alors tout ce qu'il avait enregistré, d
 - au redémarrage de Jeedom (il n'est jamais rétabli après un redémarrage).
 
 Chaque activation et chaque arrêt sont notés dans le log du plugin (qui, jusqu'à quand, quel lecteur), sans aucune valeur de badge ou de code.
+
+<a id="inclusion-reference"></a>
+## Inclusion : fenêtre, limite et approbation
+
+- **Fenêtre** : l'inclusion démarre par le bouton **Mode inclusion** de la page du plugin et s'arrête à l'échéance (5 minutes par défaut, 1 à 60), même navigateur fermé ou Jeedom redémarré. **Prolonger** repart pour la même durée sans remettre à zéro le compteur de créations.
+- **Limite** : 20 créations par inclusion par défaut (0 à 1000, 0 = sans limite, à éviter). Au-delà, les lecteurs et badges inconnus ne sont plus créés ; un avertissement est écrit dans le log (niveau Avertissement) et une notification est envoyée.
+- **Traces** : chaque création est journalisée et notifiée dans le centre de messages (une notification regroupée par inclusion).
+- **Approbation** : option « Approbation obligatoire des créations » (désactivée par défaut). Les éléments créés sont « En attente d'approbation » ; **Approuver** les active, **Refuser** les supprime. Un lecteur en attente ne crée pas de badge, même à son premier appel.
+- **Adresse IP** : l'acceptation de la nouvelle adresse d'un lecteur connu « le temps d'un appel en inclusion » ne vaut que pendant la fenêtre.
+- **Mise à jour et import** : une inclusion active avant la mise à jour est arrêtée (message dans le centre de messages) ; l'import depuis Badger d'origine ne rouvre jamais l'inclusion.
+
+Réglages et procédure : [section Inclusion](configuration.md#inclusion).
 
 <a id="niveau-de-log"></a>
 ## Niveau de log

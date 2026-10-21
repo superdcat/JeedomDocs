@@ -135,12 +135,14 @@ Vous allez écouter ce que dit la carte avec la **console série**.
 
 ### 5.2 Faire apparaître le lecteur (l'« inclusion »)
 
-L'**inclusion** est un mode temporaire où Jeedom accepte de créer un nouvel équipement quand un appareil inconnu se présente.
+L'**inclusion** est un mode temporaire où Jeedom accepte de créer un nouvel équipement quand un appareil inconnu se présente. Elle **s'arrête toute seule au bout de 5 minutes** (réglable de 1 à 60 minutes dans la configuration du plugin) et crée au plus 20 équipements.
 
 1. Ouvrez **Plugins > Sécurité > Badger Fork**.
-2. Cliquez sur **Mode inclusion** (la case devient « Arrêter inclusion »).
+2. Cliquez sur **Mode inclusion** : un bandeau « Inclusion active, fin dans … » affiche le compte à rebours. Si le temps manque, cliquez sur **Prolonger**.
 3. Appuyez sur le bouton **reset** de la carte.
 4. Rechargez la page : le lecteur apparaît dans la liste **Lecteurs**, sous son nom (par exemple `BADGER1`).
+
+Si l'option **Approbation obligatoire des créations** est cochée dans la configuration du plugin, le lecteur apparaît « En attente d'approbation » : cliquez sur **Approuver** dans la liste de la page du plugin (voir [la section Inclusion](configuration.md#inclusion)).
 
 > Capture à fournir : `images/tuto-inclusion.png` — doit montrer la page du plugin avec les boutons « Mode inclusion » / « Arrêter inclusion » et un lecteur dans la liste Lecteurs.
 
@@ -171,9 +173,9 @@ Tout le détail (régénérer, rabaisser, ce qui est refusé ensuite) : [appaira
 
 > **À confirmer** (v1 non essayée sur matériel).
 
-1. Dans le plugin, cliquez de nouveau sur **Mode inclusion**.
+1. Dans le plugin, cliquez de nouveau sur **Mode inclusion** (la fenêtre précédente est sans doute échue). Si vous utilisez l'approbation obligatoire, le **lecteur doit déjà être approuvé** : un lecteur en attente ne crée pas de badge.
 2. **Présentez votre badge** devant le lecteur. Jeedom crée un équipement du nom `BADGE` suivi d'un numéro. Rechargez la page : il est dans la liste **Badges**.
-3. Cliquez sur **Arrêter inclusion**.
+3. Cliquez sur **Arrêter l'inclusion** (sinon elle s'arrête seule à l'échéance). Avec l'approbation obligatoire, **approuvez** le badge dans la liste de la page du plugin.
 4. Ouvrez l'équipement du badge, donnez-lui un nom parlant, choisissez un **objet parent**, cochez **Activer** (c'est ce qui **autorise** le badge) et **Sauvegarder la configuration**.
 
 > Capture à fournir : `images/tuto-badge-cree.png` — doit montrer la liste des Badges avec un équipement « BADGE » suivi d'un numéro, et sa fiche avec la case « Activer » cochée.

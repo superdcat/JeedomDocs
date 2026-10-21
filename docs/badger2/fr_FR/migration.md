@@ -25,8 +25,9 @@ prérequis n'est pas rempli, et un encart rappelle l'ordre tant que Badger est e
 ## Étape 1 — Importer la configuration de Badger
 
 Le bouton **Importer la configuration de Badger** reprend tous vos lecteurs, badges et codes, avec
-leurs commandes, leurs noms personnalisés, leur catégorie, leur affichage et le réglage
-« Autoriser l'inclusion de devices inconnus ». Un compteur à côté du bouton indique combien
+leurs commandes, leurs noms personnalisés, leur catégorie et leur affichage. Le réglage
+« Autoriser l'inclusion de devices inconnus » n'est **plus repris** : l'import ne rouvre jamais l'inclusion,
+à lancer vous-même depuis la page du plugin (voir [Inclusion](configuration.md#inclusion)). Un compteur à côté du bouton indique combien
 d'équipements Badger sont encore présents en base.
 
 L'import est **relançable** : les équipements déjà repris ne sont pas dupliqués.
