@@ -60,6 +60,7 @@ Pour chaque mesure : ce qu'elle protège, ce qu'elle **ne** protège **pas**, et
 - **Ce qu'elle protège** : les codes enregistrés sont **chiffrés**, le champ Code est toujours vide au chargement de la page, et seul un administrateur peut afficher un code par « Voir le code » (chaque consultation est écrite dans le journal). Deux équipements code ne peuvent plus porter le même code. Le générateur (`rnd4`, `rnd6`, `rnd8`) produit des codes aléatoires sûrs.
 - **Ce qu'elle ne protège pas** : le code qu'un lecteur v0 envoie reste en clair sur le réseau. Une commande `GetPin` cochée, ou un `ChangePin` avec `set`, écrit le code **en clair dans les journaux et l'historique de Jeedom**, hors de tout contrôle du plugin. Un code vide ou de moins de 4 chiffres reste faible. La clé de chiffrement est celle de Jeedom : sans elle, les codes sont illisibles.
 - **v0 et v1** : le chiffrement dans Jeedom est identique. Pour un lecteur v1 appairé, le code est de plus protégé contre le rejeu par la signature.
+- **Comparaison des codes** : par défaut, un lecteur v0 compare le code tapé comme un nombre quand les deux valeurs en ont l'allure : `42` ouvre un code `0042`, et `1e3` ouvre un code `1000`. L'option par lecteur « Comparer les codes exactement » supprime ces variantes (voir [Comparer les codes exactement](#proc-comparaison-exacte)). Elle est **décochée par défaut** et ne change rien en v1, qui compare déjà exactement.
 - Détail : [Configuration des codes](configuration.md#codes-configuration) et [Génération d'un code temporaire](fonctionement.md#codes-temporaires). Procédure : [Gérer les codes](#proc-codes).
 
 <a id="mesure-inclusion"></a>
@@ -75,6 +76,7 @@ Pour chaque mesure : ce qu'elle protège, ce qu'elle **ne** protège **pas**, et
 
 - **Ce qu'elle protège** : le tableau « Posture de sécurité des lecteurs » dit, lecteur par lecteur, s'il est en v0 filtré, v0 non filtré, v1 non appairé ou v1 signé, ce qu'il risque et quoi faire. Un lecteur appairé et « exigé v1 signé » refuse tout appel v0 ou non signé. Un lecteur v1 appairé dont l'exigence de chiffrement est posée refuse les badges et codes envoyés en clair.
 - **Ce qu'elle ne protège pas** : le tableau lui-même **n'empêche rien**, il informe. Le niveau « v1 non appairé » repose sur ce que le lecteur annonce, non authentifié. Aucune exigence n'est posée par défaut ni en masse.
+- **Colonne « Comparaison des codes »** : pour un lecteur v0, elle affiche « Comparaison exacte » ou « Comparaison souple » selon l'option du lecteur (voir [Comparer les codes exactement](#proc-comparaison-exacte)). Elle reste vide pour un lecteur v1. Quand un lecteur v0 est en comparaison souple et qu'au moins un de vos codes commence par un zéro ou contient une lettre de `a` à `f`, la colonne « Recommandation » ajoute « Activer la comparaison exacte des codes ». Ce n'est qu'un **affichage** : rien n'est activé à votre place.
 - **v0** : jamais exigible, il faut d'abord reflasher. **v1** : appairage, puis exigence.
 - Détail : [Posture de sécurité des lecteurs](reference.md#posture-securite). Procédure : [Exiger le protocole v1 signé](#proc-exiger-v1).
 
@@ -127,6 +129,7 @@ Les réglages communs se trouvent dans **Plugins > Gestion des plugins > Badger 
 | IP autorisée | Fiche du lecteur | Renseignée à la création du lecteur | adresse IPv4 ou IPv6, ou vide | Sert de référence au verrou par IP. |
 | Refuser les appels venant d'une autre IP | Fiche du lecteur | **Décochée** | coché / décoché | Un lecteur à adresse non réservée serait refusé à chaque changement d'adresse. À cocher pour un lecteur à IP fixe. |
 | Ajouter une commande info GetPin | Fiche d'un code | **Décochée** | coché / décoché | La commande publie le code en clair : elle n'existe que si vous la demandez. |
+| Comparer les codes exactement | Fiche du lecteur | **Décochée** (y compris pour un lecteur existant) | coché / décoché | Un lecteur v0 déjà en service continue d'ouvrir comme avant (42 ouvre 0042). À cocher lecteur par lecteur, une fois vérifié que chacun tape son code en entier. Sans effet en v1. |
 | Exiger le protocole v1 signé | Tableau de posture | **Non exigé** | bouton par lecteur | Un lecteur encore en v0 ne fonctionnerait plus : jamais par défaut, jamais en masse. |
 | Exiger le chiffrement des identifiants | Tableau de posture | **Non exigé** | bouton par lecteur | Aucun sketch ne chiffre encore ; même principe que ci-dessus. |
 
@@ -144,6 +147,7 @@ Ce qui se passe quand vous mettez à jour le plugin vers la version qui contient
 - **Éléments existants non touchés** : les lecteurs et badges déjà créés restent actifs, sans « attente d'approbation ». Les modèles déjà affichés ne changent pas.
 - **Blocage d'un lecteur** : désactiver puis réactiver le plugin, ou le mettre à jour, **ne débloque plus** les lecteurs : utilisez le bouton **Débloquer**.
 - **Les 3 boutons de téléchargement des sketchs d'origine** de la configuration du plugin ouvrent désormais leur page sur GitHub (accès à Internet nécessaire).
+- **Comparaison des codes** : aucune mise à jour ne coche « Comparer les codes exactement ». Tous vos lecteurs gardent la comparaison d'origine, et `42` ouvre toujours `0042` tant que vous n'avez rien coché.
 - **Retour à une version antérieure** : restaurez d'abord la **sauvegarde Jeedom faite avant la mise à jour**, sinon les codes (chiffrés) n'ouvrent plus rien. Si vous remontez ensuite de version, un code que vous avez redéfini en clair entre-temps est chiffré à la prochaine sauvegarde de cet équipement.
 - Si une évolution de données échoue, le centre de messages affiche « Une migration de données a échoué : consultez le journal » : voir [Migration de données en échec](depannage.md#migration-donnees-echec).
 
@@ -191,6 +195,29 @@ Si l'inclusion s'arrête avant que vous ayez fini, ou si rien n'est créé, voir
 - Décochée (puis sauvegardée), la commande est **supprimée** : un scénario qui la lisait ne la trouve plus et doit être corrigé. Le formulaire vous prévient avant la suppression.
 - **À la mise à jour**, un équipement qui avait déjà `GetPin` la **garde**, case cochée : un scénario qui la lisait continue de fonctionner. Un message vous invite à la décocher si elle ne sert pas. Un code créé après la mise à jour n'en a pas.
 - Pour retrouver un code sans `GetPin`, utilisez **Voir le code**.
+
+<a id="proc-comparaison-exacte"></a>
+### Comparer les codes exactement (lecteur v0)
+
+Par défaut, un lecteur v0 ouvre aussi avec une **variante** du code : un code `0042` s'ouvre en tapant `42` ou `042`, et un code `1000` en tapant `1e3`. Cette option, **par lecteur**, supprime ces variantes.
+
+- **Décochée (par défaut)** : rien ne change, y compris pour les lecteurs déjà installés. `42` ouvre `0042`, `1e3` ouvre `1000`.
+- **Cochée** : un code n'ouvre que s'il est tapé **à l'identique**, caractère pour caractère. `0042` ouvre `0042` ; `42`, `042` ne l'ouvrent plus ; `1e3` n'ouvre plus `1000`.
+- **Une variante est un code faux** : elle compte dans les essais de code du lecteur et peut donc mener au blocage, exactement comme n'importe quel code faux (voir [Débloquer un lecteur](#proc-debloquer)).
+- **Par lecteur, pas par code** : un même code peut être comparé exactement sur un lecteur et souplement sur un autre.
+- **Sans effet en v1** : un lecteur v1 compare toujours exactement, case cochée ou non.
+
+Pour l'activer :
+
+1. Ouvrez la fiche du lecteur et cochez **Comparer les codes exactement**.
+2. Lisez l'avertissement qui s'affiche : « Les codes tapés sans leurs zéros initiaux (ex. 42 pour 0042) n'ouvriront plus avec ce lecteur ». Si au moins un de vos codes commence par un zéro ou contient une lettre, il ajoute : « Au moins un code commence par un zéro ou contient une lettre : vérifiez qu'il est tapé en entier ». L'avertissement ne montre **jamais** de code, ni une partie de code. Il n'apparaît que lorsque vous cochez la case, pas à l'ouverture d'une fiche déjà cochée.
+3. Sauvegardez. Le changement ne prend effet qu'à la sauvegarde.
+
+Le journal garde la trace du changement, sans aucun code, et au niveau Erreur (donc visible avec le réglage par défaut) : « Lecteur <nom> (#<numéro>) : comparaison exacte des codes activée », ou « … désactivée (comparaison souple) » quand vous décochez.
+
+⚠️ **Sur la porte de production, laissez la case décochée** tant que vous n'avez pas vérifié que **chaque utilisateur tape son code en entier**, zéros initiaux compris. Un utilisateur habitué à taper `42` pour `0042` serait refusé, puis bloqué après quelques essais. **Essayez d'abord l'option sur un autre lecteur**, avec un code de test, avant de l'étendre. Pour revenir en arrière, décochez et sauvegardez.
+
+Pour savoir quels lecteurs sont concernés, voir la colonne « Comparaison des codes » du tableau de [Posture de sécurité par lecteur](#mesure-posture).
 
 Détail : [Configuration des codes](configuration.md#codes-configuration) et [Génération d'un code temporaire](fonctionement.md#codes-temporaires). Messages d'erreur : [Messages sur les codes](depannage.md#messages-codes).
 

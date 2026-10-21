@@ -29,6 +29,8 @@
 - Ajout : lecteurs v1 (sketch Badger2) : le plugin sait déchiffrer les badges et codes d'un lecteur appairé qui les envoie chiffrés, et le tableau « Posture de sécurité des lecteurs » propose, lecteur par lecteur, d'exiger ce chiffrement (désactivé par défaut, proposé seulement une fois un badge ou code chiffré reçu) ; les identifiants envoyés en clair par ce lecteur sont alors refusés. Les lecteurs flashés avec le sketch d'origine ne sont pas concernés. <!-- UC110 -->
 - Documentation : la référence technique décrit la nouvelle colonne « Chiffrement des identifiants » du tableau de posture de sécurité des lecteurs, ses états et quand exiger le chiffrement d'un lecteur. <!-- UC110 -->
 - Documentation : nouvelle page « Sécurité de vos lecteurs » : ce que protège chaque mesure et ce qu'elle ne protège pas (un lecteur flashé avec le sketch d'origine reste usurpable depuis le réseau local), réglages par défaut, ce qui change à la mise à jour, et procédures pas à pas pour débloquer un lecteur, inclure et approuver, gérer les codes, exiger le protocole v1 signé, filtrer par IP et protéger les dossiers du plugin sous Apache et nginx ; le dépannage couvre désormais chaque message de refus. <!-- UC199 -->
+- Ajout : chaque lecteur dispose d'une option « Comparer les codes exactement » (décochée par défaut, rien ne change) : cochée, un code tapé sur ce lecteur n'ouvre plus que s'il est tapé à l'identique (42 n'ouvre plus 0042), et le tableau de posture indique l'état de l'option pour chaque lecteur v0. <!-- UC111 -->
+- Documentation : la page Sécurité explique l'option « Comparer les codes exactement » : son effet, comment l'activer sans risque et ce qu'en montre le tableau de posture. <!-- UC111 -->
 
 # 20/10/2026
 
