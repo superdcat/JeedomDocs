@@ -23,6 +23,7 @@ Sur cette page :
 - [Protocole des lecteurs et versions](#protocole-versions)
 - [Version, firmware et capacités de chaque lecteur](#fiche-lecteur)
 - [Appairage d'un lecteur v1](#appairage)
+- [Posture de sécurité des lecteurs](#posture-securite)
 - [Configuration du sketch d'un lecteur v1](#configuration-sketch)
 - [Mode debug](#mode-debug)
 - [Inclusion : fenêtre, limite et approbation](#inclusion-reference)
@@ -105,6 +106,8 @@ L'appairage est **facultatif**. Un lecteur jamais appairé, dont tous les lecteu
 
 ### Où le trouver
 
+Depuis la page du plugin, le tableau [Posture de sécurité des lecteurs](#posture-securite) propose aussi un bouton **Appairer ce lecteur** pour chaque lecteur v1 non appairé.
+
 Dans la fiche du lecteur, le bloc **Version minimale** indique :
 
 - « aucune (lecteur non appairé) » : tous les appels sont acceptés comme avant ;
@@ -165,6 +168,70 @@ Régénérez aussi le secret :
 **Rabaisser à v0** supprime l'appairage et le secret. Les appels v0 ou non signés au nom du lecteur sont de nouveau acceptés. Le lecteur redevient « jamais appairé ».
 
 ⚠️ Tout appareil du réseau peut alors se faire passer pour ce lecteur. Réservez cette action à un lecteur reflashé avec un ancien sketch.
+
+<a id="posture-securite"></a>
+## Posture de sécurité des lecteurs
+
+Tous les lecteurs d'un parc ne sont pas protégés de la même façon. La page du plugin (**Plugins > Sécurité > Badger Fork**) affiche, sous la liste des équipements, le tableau **Posture de sécurité des lecteurs** : pour chaque lecteur, où il en est, ce qu'il risque et quoi faire. Ce tableau **n'empêche rien** : il n'a aucun effet sur les appels des lecteurs. Un lecteur d'origine (v0) continue de fonctionner comme avant, qu'il apparaisse dans ce tableau ou non.
+
+### Les colonnes du tableau
+
+| Colonne | Contenu |
+|---|---|
+| Lecteur | Nom du lecteur. |
+| Niveau | Protection actuelle (voir ci-dessous). |
+| Version minimale exigée | « v1 » (avec sa date) si le lecteur est appairé, « Aucune » sinon. C'est le plancher posé par l'[appairage](#appairage). |
+| Exiger le protocole v1 signé | État (« Exigé » ou « Non exigé ») et bouton, ou raison pour laquelle l'exigence est indisponible. |
+| Firmware, Carte | Ce que le lecteur a annoncé (voir [fiche du lecteur](#fiche-lecteur)). |
+| Dernière activité | Date du dernier appel enregistré. |
+| Recommandation | Ce qu'il reste à faire. |
+
+### Les niveaux
+
+| Niveau | Signification |
+|---|---|
+| **v0 filtré par IP** | Lecteur d'origine, qui ne s'authentifie pas. Seul le filtre d'adresse d'origine le protège : un appareil du réseau local peut encore se faire passer pour lui. |
+| **v0 non filtré** | Même chose, mais le contrôle d'adresse d'origine est désactivé : n'importe quel appareil du réseau (ou d'Internet si Jeedom est publié par un tunnel) peut se faire passer pour un lecteur. |
+| **v1 non appairé** | Le lecteur s'est annoncé en v1, mais aucun secret n'est posé. Ce niveau est **déclaratif** : il repose sur l'annonce du lecteur, qui n'est pas authentifiée. Il ne protège pas encore. |
+| **v1 signé** | Lecteur appairé : seuls les appels signés avec son secret sont acceptés. |
+| **État illisible** | Le plugin n'a pas pu lire l'état du lecteur. Ouvrez sa fiche ; la cause est écrite dans le log du plugin. |
+
+Pour un lecteur v0, le niveau est suivi de **IP verrouillée** ou **IP non verrouillée** : le lecteur est-il déjà lié à son adresse IP (voir [Origine refusée](depannage.md#origine-refusee)).
+
+Sous le niveau, une **mention** peut apparaître :
+
+- « Appels v1 non signés reçus sous ce nom » (lecteur v0 ou non appairé) : si vous avez reflashé le lecteur avec le sketch v1, redémarrez-le pour qu'il s'annonce ; sinon, c'est une tentative d'usurpation.
+- « aucun appel signé enregistré » (lecteur appairé) : aucun appel signé n'a été reçu depuis l'appairage. Le secret n'a peut-être pas été reporté sur le lecteur.
+- « Appels v0 refusés récemment sous ce nom » (lecteur appairé) : si vous avez reflashé le lecteur avec un ancien sketch, rabaissez-le à v0 ; sinon, c'est une tentative d'usurpation, n'y touchez pas. Un appareil du réseau peut provoquer ce refus sans s'authentifier : c'est une information, pas une panne.
+
+### Les recommandations
+
+| Recommandation | Quand |
+|---|---|
+| Reflasher avec le sketch v1 | Lecteur v0. Voir [Cartes et sketch v1](cartes-et-sketch-v1.md). |
+| Appairer ce lecteur | Lecteur v1 non appairé. |
+| Aucun appel signé enregistré : … téléchargez la configuration du sketch depuis sa fiche | Lecteur appairé qui n'a encore émis aucun appel signé. |
+| Régénérer le secret (fiche du lecteur) | Lecteur appairé dont le secret est absent ou illisible (voir [Régénérer le secret](#regenerer-secret)). |
+| Aucune action | Lecteur v1 signé et en ordre. |
+| Ouvrir la fiche du lecteur | État illisible. |
+
+### Le bandeau d'avertissement
+
+Tant qu'au moins un lecteur **actif** est en v0 (filtré ou non), un bandeau jaune en haut de la page rappelle que ces lecteurs peuvent être usurpés par un appareil du réseau local. Il cite les lecteurs concernés et, si le contrôle d'adresse d'origine est désactivé, le précise. Il disparaît quand plus aucun lecteur actif n'est en v0. Un lecteur désactivé ou en attente d'approbation n'est pas compté. Le bandeau n'empêche rien.
+
+### Exiger le protocole v1 signé
+
+« Exiger le protocole v1 signé » **est** l'appairage : le bouton **Appairer ce lecteur** de la colonne pose le secret et la version minimale v1 (voir [Appairer un lecteur](#appairage-appairer)). Après l'avoir utilisé, les appels v0 ou non signés au nom de ce lecteur sont refusés.
+
+- **Jamais par défaut ni en masse** : aucun lecteur n'est exigé tant que vous ne l'avez pas décidé, et il n'existe aucun bouton « tout exiger ».
+- Le bouton n'est proposé qu'à un **lecteur v1 actif**, non encore appairé.
+- Sur un lecteur v0, l'action est **refusée avec un message** (voir [Exiger le protocole v1 signé refusé](depannage.md#exiger-v1-refuse)) : l'accepter couperait le lecteur.
+- Une confirmation avertit : un lecteur encore flashé en v0 ne fonctionnera plus. Un **secret est généré** : tant qu'il n'est pas reporté sur le lecteur (configuration du sketch, depuis la fiche du lecteur qui s'ouvre), tous ses appels sont refusés.
+- Pour un lecteur exigé, la colonne affiche « Exigé » et un bouton **Rabaisser à v0**. D'un clic (après confirmation), il supprime le secret et les appels v0 sont de nouveau acceptés : voir [Rabaisser à v0](#rabaisser-v0). À réserver à un lecteur reflashé avec un ancien sketch.
+
+### Dernière activité
+
+La colonne indique la date du dernier appel enregistré. Elle est tenue **depuis la mise à jour du plugin ou le dernier vidage du cache** de Jeedom : juste après l'un ou l'autre, un lecteur qui fonctionne peut afficher « Aucun appel enregistré (depuis la mise à jour du plugin ou le dernier vidage du cache) » jusqu'à son prochain appel. Un lecteur sans appel depuis plus de 30 jours est signalé « inactif depuis plus de 30 jours ». Son niveau reste celui de son dernier appel connu.
 
 <a id="configuration-sketch"></a>
 ## Configuration du sketch d'un lecteur v1
@@ -326,6 +393,8 @@ Avant chaque publication du plugin, un banc **rejoue sur une vraie installation 
 - **Pas de nouvelle tentative automatique côté plugin** : c'est le lecteur qui réémet un événement non acquitté ; le plugin n'a aucun service tiers à interroger.
 - **Pas de démon ni de dépendance** : le plugin est entièrement en PHP.
 - **Chiffrement facultatif des badges et des codes** : non réalisé.
+- **Exigence retirable par un utilisateur non administrateur** : un utilisateur Jeedom non administrateur peut retirer une clé de configuration du plugin par l'API du core et lever ainsi l'exigence v1 d'un lecteur appairé. Ne donnez pas de clé d'API ni de compte à des personnes non fiables.
+- **Retour en v0 détecté après un appel seulement** : le tableau de posture ne voit qu'un appel reçu. Un lecteur appairé reflashé avec un ancien sketch n'est signalé qu'après son premier appel refusé.
 
 ---
 

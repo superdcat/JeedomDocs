@@ -173,7 +173,7 @@ Sous ces champs, un bloc **Verrouillage** affiche l'état du lecteur :
 | Essais de badge / Essais de code | Échecs consécutifs comptés, rapportés à la limite (par exemple 2 / 3) |
 | Échecs récents | Échecs cumulés dans la fenêtre de la limite globale, rapportés à son seuil |
 
-Le bouton **Débloquer** apparaît dès que le lecteur est bloqué ou qu'un compteur n'est pas à zéro. Il remet à zéro les compteurs, le niveau et le blocage, après confirmation. Il est réservé aux administrateurs, et l'action est écrite dans le log (niveau Erreur) avec le nom de l'utilisateur. Désactiver puis réactiver un lecteur remet aussi ses compteurs à zéro.
+Le bouton **Débloquer** apparaît dès que le lecteur est bloqué ou qu'un compteur n'est pas à zéro. Il remet à zéro les compteurs, le niveau et le blocage, après confirmation. Il est réservé aux administrateurs, et l'action est écrite dans le log (niveau Erreur) avec le nom de l'utilisateur. Désactiver puis réactiver un lecteur depuis sa fiche remet aussi ses compteurs à zéro. En revanche, désactiver puis réactiver le plugin entier, ou le mettre à jour, ne débloque pas les lecteurs : compteurs, niveau et blocage sont conservés. Pour débloquer un lecteur, utilisez le bouton **Débloquer**.
 
 ### Configuration des badges et entrées analogiques
 
@@ -213,4 +213,11 @@ Les lecteurs déjà installés n'ont rien à changer : ils envoient le même cod
 - Les codes en double, ou vides, hérités d'avant la mise à jour sont signalés dans le centre de notifications de Jeedom. Un code vide continue d'ouvrir quand on valide sur le clavier sans rien saisir, comme avant la mise à jour : corrigez-les en saisissant un nouveau code.
 - Un équipement qui avait la commande GetPin la garde, case cochée, et une notification vous invite à la décocher si elle ne vous sert pas.
 - La clé de chiffrement est celle de Jeedom. Elle est incluse dans la sauvegarde complète de Jeedom : conservez cette sauvegarde.
-- **Retour à une version antérieure du plugin** : restaurez d'abord la sauvegarde Jeedom faite avant la mise à jour. Sinon, les codes n'ouvrent plus rien.
+- **Retour à une version antérieure du plugin** : restaurez d'abord la sauvegarde Jeedom faite avant la mise à jour. Sinon, les codes n'ouvrent plus rien. Un code saisi pendant que l'ancienne version était installée n'est chiffré qu'à la prochaine sauvegarde de cet équipement, après la remontée de version.
+
+#### Évolutions de données à chaque mise à jour
+
+- À chaque mise à jour du plugin (ou à son activation, si la mise à jour a été faite plugin désactivé), le plugin applique ses évolutions de données : chiffrement des codes, puis limites de blocage par défaut des lecteurs. Chacune est appliquée une seule fois, dans l'ordre. Désactiver puis réactiver le plugin ne les rejoue pas.
+- Si l'une échoue, le centre de messages affiche « Une migration de données a échoué : consultez le journal ». Le journal du plugin (badger2) nomme la migration en cause.
+- Une migration en échec est retentée automatiquement à la mise à jour ou à la réactivation suivante. Entre-temps, vos équipements restent utilisables.
+- Le message disparaît dès que toutes les migrations sont passées.

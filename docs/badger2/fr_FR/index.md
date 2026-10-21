@@ -11,7 +11,7 @@ Le plugin n'a **ni dépendance ni démon** : il est entièrement en PHP. Il s'in
 | Vous êtes… | Allez à… |
 |---|---|
 | **Débutant** : vous n'avez jamais flashé une carte Arduino ni câblé un lecteur de badges | [Débuter pas à pas](debuter.md) : un tutoriel en 8 étapes, de l'achat du matériel à la première porte ouverte |
-| **Utilisateur averti ou contributeur** : vous cherchez un détail (cartes, capacités, appairage, protocole, mode debug, compatibilité) | [Référence technique](reference.md) |
+| **Utilisateur averti ou contributeur** : vous cherchez un détail (cartes, capacités, appairage, posture de sécurité des lecteurs, protocole, mode debug, compatibilité) | [Référence technique](reference.md) |
 | **En panne** | [Dépannage détaillé](depannage.md) |
 | **Vous utilisez déjà l'ancien plugin Badger** | [Procédure de migration](migration.md) |
 
@@ -28,4 +28,4 @@ Le plugin n'a **ni dépendance ni démon** : il est entièrement en PHP. Il s'in
 
 ## Où sont passées les sections de l'ancienne page d'accueil ?
 
-Elles sont toutes dans la [référence technique](reference.md) : [mode debug](reference.md#mode-debug), [version, firmware et capacités](reference.md#fiche-lecteur), [appairage](reference.md#appairage) et [configuration du sketch d'un lecteur v1](reference.md#configuration-sketch).
+Elles sont toutes dans la [référence technique](reference.md) : [mode debug](reference.md#mode-debug), [version, firmware et capacités](reference.md#fiche-lecteur), [appairage](reference.md#appairage), [posture de sécurité des lecteurs](reference.md#posture-securite) et [configuration du sketch d'un lecteur v1](reference.md#configuration-sketch).

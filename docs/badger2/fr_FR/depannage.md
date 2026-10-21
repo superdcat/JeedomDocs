@@ -21,11 +21,14 @@ Cette page recense les symptômes et les messages que vous pouvez rencontrer, le
 | « rejeu » | Compteur du lecteur remis à zéro, appel rejoué | [Rejeu refusé](#rejeu-refuse) |
 | « rétrogradation » | Lecteur appairé reflashé avec un ancien sketch | [Rétrogradation refusée](#retrogradation-refusee) |
 | « Secret absent ou illisible » | Secret perdu côté Jeedom | [Secret perdu](#secret-perdu) |
+| « Exiger le protocole v1 signé est refusé / impossible / État du lecteur illisible » (tableau de posture) | Lecteur v0, dernier appel en v0, lecteur désactivé ou en attente, état illisible | [Exiger le protocole v1 signé refusé](#exiger-v1-refuse) |
+| « Aucun appel enregistré (depuis la mise à jour du plugin ou le dernier vidage du cache) » | Marqueur d'activité vide après une mise à jour ou un vidage du cache | [Aucun appel enregistré](#aucun-appel-enregistre) |
 | Fonction grisée sur la fiche, capacité inconnue | Capacité non annoncée par le lecteur | [Capacité non annoncée](#capacite-non-annoncee) |
 | Appel refusé : adresse d'origine non locale, en-tête de proxy, origine interdite, lecteur appelé depuis une autre IP | Lecteur hors réseau local, tunnel ou proxy, lecteur verrouillé sur une autre adresse | [Origine refusée](#origine-refusee) |
 | « Appel v0 refusé : … » (commande inconnue, nom de lecteur invalide, IP déclarée invalide, valeur de badge ou code hors du contrat v0) | Appel d'un lecteur d'origine hors du format émis par les sketchs | [Appel v0 hors format](#appel-v0-hors-format) |
 | Autres refus d'un appel v1 | Identifiant, équipement en double, corps invalide, retard | [Autres refus d'un appel v1](#autres-refus-v1) |
 | Mise à jour à distance sans effet | Mot de passe, port, `ota -` | [Mise à jour à distance](#depannage-ota) |
+| « Une migration de données a échoué : consultez le journal » (centre de messages) | Une évolution de données n'a pas pu s'appliquer (un équipement n'a pas pu être enregistré) | [Migration de données en échec](#migration-donnees-echec) |
 
 <a id="rien-console"></a>
 ## Rien ne s'affiche à la console série
@@ -115,6 +118,25 @@ Pour voir ce que le plugin reçoit, utilisez le [mode debug](reference.md#mode-d
 
 Si c'est le **fichier téléchargé** qui est perdu, retéléchargez-le : le secret ne change pas. Le secret n'est jamais affiché à l'écran.
 
+<a id="exiger-v1-refuse"></a>
+## « Exiger le protocole v1 signé » refusé
+
+Ces messages s'affichent quand vous cliquez sur **Appairer ce lecteur** dans le tableau [Posture de sécurité des lecteurs](reference.md#posture-securite). Aucun appel du lecteur n'est affecté.
+
+| Message | Cause | Action |
+|---|---|---|
+| « … refusé pour ce lecteur : il n'a jamais utilisé le protocole v1 (sketch d'origine) et l'exiger le couperait. Reflashez-le d'abord avec le sketch v1. » | Lecteur d'origine (v0), jamais annoncé en v1. | Reflashez-le avec le sketch v1 (Mega 2560 ou ESP), redémarrez-le pour qu'il s'annonce, puis appairez-le. |
+| « … refusé pour ce lecteur : son dernier appel est en protocole v0 et l'exiger le couperait. Reflashez-le d'abord avec le sketch v1. » | Lecteur déjà annoncé en v1, mais dont le dernier appel est en v0 (reflashé avec un ancien sketch). | Reflashez-le avec le sketch v1 et attendez un appel en v1. |
+| « Exiger le protocole v1 signé est impossible pour un lecteur désactivé ou en attente d'approbation : activez-le ou approuvez-le d'abord. » | Lecteur inactif. | Activez-le, ou approuvez-le (voir [Inclusion](reference.md#inclusion-reference)), puis recommencez. |
+| « État du lecteur illisible : ouvrez sa fiche. » | Le plugin n'a pas pu lire l'état du lecteur. | Ouvrez sa fiche ; consultez le log `badger2` (voir [Niveau de log](reference.md#niveau-de-log)). |
+
+<a id="aucun-appel-enregistre"></a>
+## « Aucun appel enregistré »
+
+- **Message** : dans le tableau de posture, colonne **Dernière activité** : « Aucun appel enregistré (depuis la mise à jour du plugin ou le dernier vidage du cache) ».
+- **Cause** : la date du dernier appel est tenue par Jeedom depuis la mise à jour du plugin ou le dernier vidage du cache. Tant que le lecteur n'a pas rappelé, elle est vide. Un lecteur éteint, débranché ou sans réseau donne le même affichage.
+- **Action** : présentez un badge ou attendez le prochain appel du lecteur. Si rien ne s'affiche après un appel, voir [Le lecteur n'apparaît pas dans Jeedom](#lecteur-absent).
+
 <a id="capacite-non-annoncee"></a>
 ## Capacité non annoncée ou inconnue
 
@@ -174,6 +196,12 @@ En mode debug, le résultat de l'appel est « Refusé : paramètre hors du contr
 - **Mot de passe refusé** : le port est refermé 10 secondes après un refus.
 - **Après `ota -`** : la mise à jour à distance est désactivée immédiatement ; pour la réactiver, `ota mdp` puis un redémarrage. Si `ota -` répond par un refus d'écriture, rien n'est effacé et la mise à jour à distance **reste active** : vérifiez avec `ota`.
 - **Lecteur injoignable après la mise à jour** : une configuration réseau fausse dans le binaire en est la cause ; reflashez par câble USB.
+
+<a id="migration-donnees-echec"></a>
+## Migration de données en échec
+
+- **Cause** : une évolution de données du plugin n'a pas pu s'appliquer, par exemple parce qu'un équipement n'a pas pu être enregistré. Le centre de messages affiche « Une migration de données a échoué : consultez le journal ».
+- **Action** : ouvrez le journal badger2 et cherchez la ligne « Migration des données n° … en échec ». Corrigez si possible l'équipement cité, puis désactivez et réactivez le plugin, ou attendez la prochaine mise à jour. Vos équipements restent utilisables en attendant. Le message disparaît quand toutes les migrations sont passées.
 
 ## Une question qui reste sans réponse ?
 
