@@ -4,6 +4,10 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 20/11/2026
+
+- Correctif : l'image de la carte ne reste plus figée sur un ancien nettoyage quand le robot met plus de quelques secondes à envoyer sa carte (carte volumineuse ou connexion lente) ; un échec de lecture est désormais signalé, et le rapport de diagnostic indique l'âge de la dernière carte réellement lue <!-- UC18 -->
+
 # 13/10/2026
 
 - Ajout : mode « Ne pas déranger » pilotable depuis Jeedom quand le robot le gère : état activé ou non, heures de début et de fin de la plage, et trois actions « Activer », « Désactiver » et « Définir la plage » (début et fin au format HH:MM, utilisable en scénario) ; l'affichage reprend ce que le robot a réellement enregistré <!-- UC54 -->

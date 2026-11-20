@@ -4,6 +4,10 @@
 >
 >Si no hay información sobre la actualización, es porque esta se refiere únicamente a una actualización de documentación, de traducción o de texto.
 
+# 20/11/2026
+
+- Corrección: la imagen del mapa ya no se queda congelada en una limpieza antigua cuando el robot tarda más de unos segundos en enviar su mapa (mapa voluminoso o conexión lenta); ahora se indica un fallo de lectura y el informe de diagnóstico muestra la antigüedad del último mapa realmente leído <!-- UC18 -->
+
 # 13/10/2026
 
 - Añadido: modo « No molestar » controlable desde Jeedom cuando el robot lo admite: activado o no, horas de inicio y de fin de la franja, y tres acciones « Activar », « Desactivar » y « Definir la franja » (inicio y fin en formato HH:MM, utilizable en escenarios); la visualización muestra lo que el robot ha guardado realmente <!-- UC54 -->

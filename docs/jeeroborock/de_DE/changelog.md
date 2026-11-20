@@ -5,6 +5,10 @@
 >Wenn zu einer Aktualisierung keine Information angegeben ist, betrifft diese ausschließlich eine
 >Aktualisierung der Dokumentation, der Übersetzung oder von Texten.
 
+# 20.11.2026
+
+- Korrektur: das Kartenbild bleibt nicht mehr auf einer alten Reinigung stehen, wenn der Roboter mehr als ein paar Sekunden zum Senden seiner Karte braucht (große Karte oder langsame Verbindung); ein fehlgeschlagenes Lesen wird nun gemeldet, und der Diagnosebericht zeigt das Alter der zuletzt tatsächlich gelesenen Karte <!-- UC18 -->
+
 # 13.10.2026
 
 - Neu: Modus „Nicht stören“ aus Jeedom steuerbar, wenn der Roboter ihn unterstützt: aktiviert oder nicht, Beginn und Ende des Zeitfensters sowie drei Aktionen „Aktivieren“, „Deaktivieren“ und „Zeitfenster festlegen“ (Beginn und Ende im Format HH:MM, in Szenarien nutzbar); angezeigt wird, was der Roboter tatsächlich gespeichert hat <!-- UC54 -->

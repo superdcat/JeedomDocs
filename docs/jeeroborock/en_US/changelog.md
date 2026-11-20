@@ -5,6 +5,10 @@
 >If there is no information about an update, it means that update only concerns documentation,
 >translation or text changes.
 
+# 11/20/2026
+
+- Fix: the map image no longer stays frozen on an old cleaning when the robot takes more than a few seconds to send its map (large map or slow connection); a failed read is now reported, and the diagnostic report shows the age of the last map actually read <!-- UC18 -->
+
 # 10/13/2026
 
 - Added: "Do not disturb" mode controllable from Jeedom when the robot supports it: enabled or not, start and end times of the time window, and three actions "Enable", "Disable" and "Set the time window" (start and end in HH:MM format, usable in scenarios); the display shows what the robot actually saved <!-- UC54 -->
