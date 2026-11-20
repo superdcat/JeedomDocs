@@ -8,6 +8,8 @@
 
 - **Health**: disabled cameras are no longer taken into account on the Health page (an offline
   disabled camera no longer puts the plugin in error).
+- **Logs**: the "more than 30 messages in the window" message of the alarm polling is now logged at
+  debug level (normal behaviour when the refresh interval is long; no alarm is lost).
 
 # 1.0
 

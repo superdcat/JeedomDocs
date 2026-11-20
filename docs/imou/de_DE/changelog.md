@@ -8,6 +8,8 @@
 
 - **Gesundheit**: Deaktivierte Kameras werden auf der Gesundheitsseite nicht mehr berücksichtigt
   (eine deaktivierte, offline befindliche Kamera versetzt das Plugin nicht mehr in einen Fehlerzustand).
+- **Logs**: Die Meldung „mehr als 30 Nachrichten im Zeitfenster“ der Alarmabfrage wird nun auf
+  Debug-Ebene protokolliert (normales Verhalten bei langem Aktualisierungsintervall; kein Alarm geht verloren).
 
 # 1.0
 

@@ -8,6 +8,8 @@
 
 - **Santé** : les caméras désactivées ne sont plus prises en compte dans la page Santé (une caméra
   désactivée hors ligne ne fait plus passer le plugin en erreur).
+- **Logs** : le message « plus de 30 messages sur la fenêtre » du relevé des alarmes passe en niveau
+  debug (fonctionnement normal quand l'intervalle de rafraîchissement est long ; aucune alarme perdue).
 
 # 1.0
 

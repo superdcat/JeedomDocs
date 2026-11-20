@@ -8,6 +8,8 @@
 
 - **Salud**: las cámaras desactivadas ya no se tienen en cuenta en la página Salud (una cámara
   desactivada fuera de línea ya no pone el plugin en error).
+- **Logs**: el mensaje «más de 30 mensajes en la ventana» de la consulta de alarmas pasa al nivel
+  debug (funcionamiento normal cuando el intervalo de actualización es largo; no se pierde ninguna alarma).
 
 # 1.0
 
