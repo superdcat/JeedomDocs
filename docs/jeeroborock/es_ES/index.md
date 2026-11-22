@@ -115,7 +115,7 @@ El plugin no elimina por sí mismo una orden ya creada.
 
 | Capacidad | Órdenes afectadas | Condición de aparición |
 |---|---|---|
-| Consumibles de la estación | « Desgaste restante del filtro de la estación », « Desgaste restante del cepillo de limpieza », « Desgaste restante de la bolsa de polvo » y, salvo la bolsa, su acción « Reiniciar… » | La estación posee el equipamiento (lavado de la mopa para el filtro, cepillo de limpieza, vaciado automático para la bolsa) **y** el robot notifica el contador. Se releen aproximadamente cada hora, o con « Actualizar » |
+| Consumibles de la estación | « Desgaste restante del filtro de la estación », « Desgaste restante del cepillo de limpieza » y su acción « Reiniciar… » | La estación posee el equipamiento (lavado de la mopa para el filtro, cepillo de limpieza) **y** el robot notifica el contador. Se releen aproximadamente cada hora, o con « Actualizar » |
 | Depósitos y mopa | « Depósito de agua limpia vacío », « Depósito de agua sucia lleno o ausente », « Mopa instalada » | Depósitos: la estación lava las mopas. Mopa: el robot declara gestionar el modo de agua. Se crean en la siguiente relectura del estado |
 | Bloqueo infantil | « Bloqueo infantil », « Activar… », « Desactivar… » | El robot declara gestionar este ajuste. Se crean en la siguiente relectura del estado |
 | No molestar | Información, inicio, fin, tres acciones | El robot responde a la lectura del modo. Se relee cada minuto; con « Actualizar », de inmediato |
@@ -168,19 +168,22 @@ El desgaste de los consumibles detectados por tu robot (cepillo principal, cepil
 sensores, rodillo de fregado) se publica en porcentaje restante, cada uno con una acción « Reiniciar… »
 a utilizar tras una sustitución física. Esta acción pide confirmación antes de ejecutarse.
 
-Según el equipamiento de tu estación, y si el robot notifica el contador, aparecen tres desgastes
+Según el equipamiento de tu estación, y si el robot notifica el contador, aparecen dos desgastes
 adicionales, también en porcentaje restante:
 
 - « Desgaste restante del filtro de la estación »: estaciones que lavan la mopa;
 - « Desgaste restante del cepillo de limpieza »: estaciones que lo tienen (en la práctica, algunas
-  estaciones de gama alta);
-- « Desgaste restante de la bolsa de polvo »: estaciones con vaciado automático.
+  estaciones de gama alta).
 
 Sin estación, o con una estación básica, estas órdenes no aparecen. El filtro de la estación y el
 cepillo de limpieza tienen cada uno una acción « Reiniciar el filtro de la estación » o « Reiniciar el
-cepillo de limpieza », con confirmación, como las demás. La bolsa de polvo no tiene reinicio en el
-plugin (solo lectura): si la pones a cero en otro lugar (aplicación Roborock), el valor la sigue en la
-siguiente relectura.
+cepillo de limpieza », con confirmación, como las demás.
+
+La **bolsa de polvo** no tiene desgaste: el robot no indica su llenado, solo el número total de vaciados
+desde su puesta en marcha, que nada pone a cero al cambiar la bolsa. Una bolsa llena la señala la estación,
+en « Error de la base », como en la aplicación Roborock. Las versiones anteriores del plugin mostraban
+un « Desgaste restante de la bolsa de polvo » que caía a 0 % tras unos 90 vaciados, fuera cual fuera el
+estado real de la bolsa: esta orden se elimina con la actualización.
 
 Estos valores se releen aproximadamente una vez por hora, de inmediato con la orden « Actualizar », y
 tras un reinicio. Los porcentajes pueden diferir ligeramente de los de la aplicación Roborock.
@@ -1293,8 +1296,8 @@ resincronizar o cerrar por completo la aplicación.
   Roborock S7 incluido: el plugin crea las órdenes que el robot declara o a las que responde, sin
   haber podido verificar su efecto real en cada equipo. Una orden aceptada puede ser rechazada por el robot;
   entonces se señala (ver Resolución de problemas).
-- El desgaste de la **bolsa de polvo** de la estación es de solo lectura: el plugin no tiene ninguna acción para
-  reiniciarlo. Los porcentajes de los consumibles pueden diferir ligeramente de los de la aplicación.
+- El plugin no indica el desgaste de la **bolsa de polvo** de la estación (ver « Estación de carga,
+  consumibles y mantenimiento »). Los porcentajes de los consumibles pueden diferir ligeramente de los de la aplicación.
 - Los ajustes del aparato (bloqueo infantil, no molestar, horas valle, volumen, modos de la
   estación) **no se envían** al plugin por notificación: un cambio hecho desde la aplicación Roborock o el
   botón del robot solo aparece en Jeedom en la siguiente relectura (aproximadamente un minuto, o « Actualizar »).

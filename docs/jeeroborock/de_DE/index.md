@@ -133,7 +133,7 @@ Das Plugin löscht von sich aus keinen bereits erstellten Befehl.
 
 | Fähigkeit | Betroffene Befehle | Bedingung für das Erscheinen |
 |---|---|---|
-| Verbrauchsmaterialien der Station | „Verbleibende Lebensdauer Stationsfilter“, „Verbleibende Lebensdauer Reinigungsbürste“, „Verbleibende Lebensdauer Staubbeutel“ und, außer beim Staubbeutel, ihre Aktion „Zurücksetzen…“ | Die Station besitzt die Ausstattung (Mopp-Wäsche für den Filter, Reinigungsbürste, automatische Entleerung für den Staubbeutel) **und** der Roboter meldet den Zähler. Etwa stündlich neu ausgelesen, oder bei „Aktualisieren“ |
+| Verbrauchsmaterialien der Station | „Verbleibende Lebensdauer Stationsfilter“, „Verbleibende Lebensdauer Reinigungsbürste“ und ihre Aktion „Zurücksetzen…“ | Die Station besitzt die Ausstattung (Mopp-Wäsche für den Filter, Reinigungsbürste) **und** der Roboter meldet den Zähler. Etwa stündlich neu ausgelesen, oder bei „Aktualisieren“ |
 | Tanks und Wischmopp | „Frischwassertank leer“, „Schmutzwassertank voll oder fehlt“, „Wischmopp eingesetzt“ | Tank: Die Station wäscht die Wischmopps. Wischmopp: Der Roboter meldet, den Wassermodus zu unterstützen. Beim nächsten Auslesen des Status erstellt |
 | Kindersicherung | „Kindersicherung“, „Kindersicherung aktivieren“, „Kindersicherung deaktivieren“ | Der Roboter meldet, diese Einstellung zu unterstützen. Beim nächsten Auslesen des Status erstellt |
 | Nicht stören | Information, Beginn, Ende, drei Aktionen | Der Roboter antwortet auf das Auslesen des Modus. Jede Minute neu ausgelesen; bei „Aktualisieren“ sofort |
@@ -187,18 +187,23 @@ Filter, Sensoren, Wischwalze) wird als verbleibender Prozentsatz veröffentlicht
 Aktion „Zurücksetzen…“, die nach einem physischen Austausch zu verwenden ist. Diese Aktion verlangt
 eine Bestätigung vor der Ausführung.
 
-Je nach Ausstattung Ihrer Station und sofern der Roboter den Zähler meldet, erscheinen drei zusätzliche
+Je nach Ausstattung Ihrer Station und sofern der Roboter den Zähler meldet, erscheinen zwei zusätzliche
 Verschleißanzeigen, ebenfalls als verbleibender Prozentsatz:
 
 - „Verbleibende Lebensdauer Stationsfilter“: Stationen, die den Wischmopp waschen;
 - „Verbleibende Lebensdauer Reinigungsbürste“: Stationen, die eine besitzen (in der Praxis einige
-  Stationen der Oberklasse);
-- „Verbleibende Lebensdauer Staubbeutel“: Stationen mit automatischer Entleerung.
+  Stationen der Oberklasse).
 
 Ohne Station oder mit einer einfachen Station erscheinen diese Befehle nicht. Der Stationsfilter und die
 Reinigungsbürste haben jeweils eine Aktion „Stationsfilter zurücksetzen“ bzw. „Reinigungsbürste
-zurücksetzen“, mit Bestätigung, wie die anderen. Der Staubbeutel hat im Plugin kein Zurücksetzen
-(schreibgeschützt): Setzen Sie ihn anderswo zurück (Roborock-App), folgt der Wert beim nächsten Auslesen.
+zurücksetzen“, mit Bestätigung, wie die anderen.
+
+Der **Staubbeutel** hat keine Verschleißanzeige: Der Roboter meldet nicht seinen Füllstand, sondern nur die
+Gesamtzahl der Entleerungen seit der Inbetriebnahme, die beim Beutelwechsel durch nichts zurückgesetzt
+wird. Ein voller Beutel wird von der Station gemeldet, unter „Stationsfehler“, wie in der Roborock-App.
+Frühere Versionen des Plugins zeigten eine „Verbleibende Lebensdauer Staubbeutel“, die nach etwa
+90 Entleerungen auf 0 % fiel, unabhängig vom tatsächlichen Zustand des Beutels: Dieser Befehl wird bei der
+Aktualisierung entfernt.
 
 Diese Werte werden etwa einmal pro Stunde neu ausgelesen, sofort mit dem Befehl „Aktualisieren“ und nach
 einem Zurücksetzen. Die Prozentwerte können leicht von denen der Roborock-App abweichen.
@@ -1466,8 +1471,8 @@ dem Smartphone, die App neu synchronisieren oder vollständig schließen.
   die der Roboter meldet oder auf die er antwortet, ohne deren tatsächliche Wirkung auf jeder Hardware
   prüfen zu können. Ein akzeptierter Befehl kann vom Roboter abgelehnt werden; dies wird dann gemeldet
   (siehe Fehlerbehebung).
-- Die Verschleißanzeige des **Staubbeutels** der Station ist schreibgeschützt: Das Plugin hat keine Aktion,
-  um sie zurückzusetzen. Die Prozentwerte der Verbrauchsmaterialien können leicht von denen der App
+- Das Plugin liefert keine Verschleißanzeige für den **Staubbeutel** der Station (siehe
+  „Dockingstation, Verbrauchsmaterial und Wartung“). Die Prozentwerte der Verbrauchsmaterialien können leicht von denen der App
   abweichen.
 - Die Einstellungen des Geräts (Kindersicherung, Nicht stören, Nebentarifzeiten, Lautstärke, Modi der
   Station) werden dem Plugin **nicht gepusht**: Eine Änderung in der Roborock-App oder über die Taste des

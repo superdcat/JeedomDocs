@@ -4,6 +4,10 @@
 >
 >Si no hay información sobre la actualización, es porque esta se refiere únicamente a una actualización de documentación, de traducción o de texto.
 
+# 22/11/2026
+
+- Corrección: se elimina el desgaste de la bolsa de polvo de la estación, que caía a 0 % (« a cambiar ») tras unos 90 vaciados incluso con una bolsa nueva: el robot solo indica el número total de vaciados, que nada pone a cero. La orden se borra con la actualización; una bolsa llena sigue señalándose en « Error de la base », como en la aplicación Roborock <!-- UC51 -->
+
 # 20/11/2026
 
 - Corrección: la imagen del mapa ya no se queda congelada en una limpieza antigua cuando el robot tarda más de unos segundos en enviar su mapa (mapa voluminoso o conexión lenta); ahora se indica un fallo de lectura y el informe de diagnóstico muestra la antigüedad del último mapa realmente leído <!-- UC18 -->

@@ -4,6 +4,10 @@
 >
 >S'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
+# 22/11/2026
+
+- Correctif : l'usure du sac à poussière de la station, qui tombait à 0 % (« à changer ») au bout d'environ 90 vidages même avec un sac neuf, est retirée : le robot ne fournit que le nombre total de vidages, que rien ne remet à zéro. La commande est supprimée à la mise à jour ; un sac plein reste signalé par « Erreur station », comme dans l'application Roborock <!-- UC51 -->
+
 # 20/11/2026
 
 - Correctif : l'image de la carte ne reste plus figée sur un ancien nettoyage quand le robot met plus de quelques secondes à envoyer sa carte (carte volumineuse ou connexion lente) ; un échec de lecture est désormais signalé, et le rapport de diagnostic indique l'âge de la dernière carte réellement lue <!-- UC18 -->

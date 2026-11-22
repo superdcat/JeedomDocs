@@ -5,6 +5,10 @@
 >If there is no information about an update, it means that update only concerns documentation,
 >translation or text changes.
 
+# 11/22/2026
+
+- Fix: the dock's dust bag wear, which dropped to 0% ("to replace") after about 90 emptyings even with a new bag, is removed: the robot only reports the total number of emptyings, which nothing resets. The command is deleted on update; a full bag is still reported by "Dock error", as in the Roborock app <!-- UC51 -->
+
 # 11/20/2026
 
 - Fix: the map image no longer stays frozen on an old cleaning when the robot takes more than a few seconds to send its map (large map or slow connection); a failed read is now reported, and the diagnostic report shows the age of the last map actually read <!-- UC18 -->

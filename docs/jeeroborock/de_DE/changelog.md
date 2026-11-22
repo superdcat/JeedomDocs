@@ -5,6 +5,10 @@
 >Wenn zu einer Aktualisierung keine Information angegeben ist, betrifft diese ausschließlich eine
 >Aktualisierung der Dokumentation, der Übersetzung oder von Texten.
 
+# 22.11.2026
+
+- Korrektur: Die Verschleißanzeige des Staubbeutels der Station, die nach etwa 90 Entleerungen auch mit einem neuen Beutel auf 0 % („zu ersetzen“) fiel, wurde entfernt: Der Roboter meldet nur die Gesamtzahl der Entleerungen, die durch nichts zurückgesetzt wird. Der Befehl wird bei der Aktualisierung gelöscht; ein voller Beutel wird weiterhin über „Stationsfehler“ gemeldet, wie in der Roborock-App <!-- UC51 -->
+
 # 20.11.2026
 
 - Korrektur: das Kartenbild bleibt nicht mehr auf einer alten Reinigung stehen, wenn der Roboter mehr als ein paar Sekunden zum Senden seiner Karte braucht (große Karte oder langsame Verbindung); ein fehlgeschlagenes Lesen wird nun gemeldet, und der Diagnosebericht zeigt das Alter der zuletzt tatsächlich gelesenen Karte <!-- UC18 -->

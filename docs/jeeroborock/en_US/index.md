@@ -120,7 +120,7 @@ The plugin never deletes a command it has already created.
 
 | Capability | Commands concerned | Condition for appearing |
 |---|---|---|
-| Dock consumables | "Station filter wear remaining", "Cleaning brush wear remaining", "Dust bag wear remaining" and, except for the bag, their "Reset…" action | The dock has the equipment (mop washing for the filter, cleaning brush, automatic emptying for the bag) **and** the robot reports the counter. Re-read about every hour, or on "Refresh" |
+| Dock consumables | "Station filter wear remaining", "Cleaning brush wear remaining" and their "Reset…" action | The dock has the equipment (mop washing for the filter, cleaning brush) **and** the robot reports the counter. Re-read about every hour, or on "Refresh" |
 | Tanks and mop | "Clean water tank empty", "Dirty water tank full or missing", "Mop installed" | Tank and dirty-water bin: the dock washes the mops. Mop: the robot reports that it handles the water mode. Created at the next status re-read |
 | Child lock | "Child lock", "Enable…", "Disable…" | The robot reports that it handles this setting. Created at the next status re-read |
 | Do Not Disturb | Information, start, end, three actions | The robot answers the mode read. Re-read every minute; immediately on "Refresh" |
@@ -171,17 +171,21 @@ The wear of the consumables detected by your robot (main brush, side brush, filt
 roller) is published as a percentage remaining, each with a "Reset…" action to use after a physical
 replacement. This action requires confirmation before it runs.
 
-Depending on your dock's equipment, and if the robot reports the counter, three additional wear values
+Depending on your dock's equipment, and if the robot reports the counter, two additional wear values
 appear, also as a percentage remaining:
 
 - "Station filter wear remaining": docks that wash the mop;
-- "Cleaning brush wear remaining": docks that have one (in practice, some high-end docks);
-- "Dust bag wear remaining": docks with automatic emptying.
+- "Cleaning brush wear remaining": docks that have one (in practice, some high-end docks).
 
 With no dock, or with a basic dock, these commands do not appear. The station filter and the cleaning
 brush each have a "Reset the station filter" or "Reset the cleaning brush" action, with confirmation, like
-the others. The dust bag has no reset in the plugin (read-only): if you reset it elsewhere (Roborock app),
-the value follows at the next re-read.
+the others.
+
+The **dust bag** has no wear value: the robot does not report how full it is, only the total number of
+emptyings since it was first used, which nothing resets when the bag is changed. A full bag is reported by
+the dock, in "Dock error", as in the Roborock app. Earlier versions of the plugin showed a "Dust bag
+wear remaining" that dropped to 0% after about 90 emptyings, whatever the actual state of the bag: this
+command is removed on update.
 
 These values are re-read about once an hour, immediately with the "Refresh" command, and after a reset.
 The percentages may differ slightly from those of the Roborock app.
@@ -1351,8 +1355,8 @@ state" on the timeline) and, on mobile, resynchronize or fully close the app.
   creates the commands that the robot reports or answers, without having been able to verify their actual
   effect on each hardware. An accepted order may be refused by the robot; this is then reported (see
   Troubleshooting).
-- The wear of the dock's **dust bag** is read-only: the plugin has no action to reset it. Consumable
-  percentages may differ slightly from those of the app.
+- The plugin does not report the wear of the dock's **dust bag** (see "Dock, consumables and
+  maintenance"). Consumable percentages may differ slightly from those of the app.
 - Device settings (child lock, Do Not Disturb, off-peak hours, volume, dock modes) are **not pushed** to
   the plugin: a change made from the Roborock app or the robot's button only shows up in Jeedom at the
   next re-read (about a minute, or "Refresh").

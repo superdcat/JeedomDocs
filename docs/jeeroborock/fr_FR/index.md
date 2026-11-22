@@ -124,7 +124,7 @@ Le plugin ne supprime pas de lui-même une commande déjà créée.
 
 | Capacité | Commandes concernées | Condition d'apparition |
 |---|---|---|
-| Consommables de la station | « Usure filtre station », « Usure brosse de nettoyage », « Usure sac à poussière » et, sauf pour le sac, leur action « Réinitialiser… » | La station possède l'équipement (lavage de la serpillière pour le filtre, brosse de nettoyage, vidage automatique pour le sac) **et** le robot remonte le compteur. Relus environ toutes les heures, ou à « Rafraîchir » |
+| Consommables de la station | « Usure filtre station », « Usure brosse de nettoyage » et leur action « Réinitialiser… » | La station possède l'équipement (lavage de la serpillière pour le filtre, brosse de nettoyage) **et** le robot remonte le compteur. Relus environ toutes les heures, ou à « Rafraîchir » |
 | Bacs et serpillière | « Réservoir d'eau propre vide », « Bac d'eau sale plein ou absent », « Serpillière installée » | Réservoir et bac : la station lave les serpillières. Serpillière : le robot déclare gérer le mode eau. Créées à la relecture suivante de l'état |
 | Verrou enfant | « Verrou enfant », « Activer… », « Désactiver… » | Le robot déclare gérer ce réglage. Créées à la relecture suivante de l'état |
 | Ne pas déranger | Information, début, fin, trois actions | Le robot répond à la lecture du mode. Relu toutes les minutes ; à « Rafraîchir » immédiatement |
@@ -176,19 +176,22 @@ L'usure des consommables détectés par votre robot (brosse principale, brosse l
 rouleau de serpillière) est publiée en pourcentage restant, chacune avec une action « Réinitialiser… » à
 utiliser après un remplacement physique. Cette action demande une confirmation avant de s'exécuter.
 
-Selon l'équipement de votre station, et si le robot remonte le compteur, trois usures supplémentaires
+Selon l'équipement de votre station, et si le robot remonte le compteur, deux usures supplémentaires
 apparaissent, elles aussi en pourcentage restant :
 
 - « Usure filtre station » : stations qui lavent la serpillière ;
 - « Usure brosse de nettoyage » : stations qui en possèdent une (en pratique, certaines stations haut de
-  gamme) ;
-- « Usure sac à poussière » : stations à vidage automatique.
+  gamme).
 
 Sans station, ou avec une station basique, ces commandes n'apparaissent pas. Le filtre de la station et la
 brosse de nettoyage ont chacun une action « Réinitialiser le filtre station » ou « Réinitialiser la brosse
-de nettoyage », avec confirmation, comme les autres. Le sac à poussière n'a pas de réinitialisation dans le
-plugin (lecture seule) : si vous le remettez à zéro ailleurs (application Roborock), la valeur suit à la
-relecture suivante.
+de nettoyage », avec confirmation, comme les autres.
+
+Le **sac à poussière** n'a pas d'usure : le robot ne fournit pas son remplissage, seulement le nombre total
+de vidages depuis sa mise en service, que rien ne remet à zéro au changement du sac. Un sac plein est
+signalé par la station, dans « Erreur station », comme dans l'application Roborock. Les versions
+précédentes du plugin affichaient une « Usure sac à poussière » tombée à 0 % au bout d'environ
+90 vidages, quel que soit l'état réel du sac : cette commande est supprimée à la mise à jour.
 
 Ces valeurs sont relues environ une fois par heure, immédiatement avec la commande « Rafraîchir », et après
 une réinitialisation. Les pourcentages peuvent différer légèrement de ceux de l'application Roborock.
@@ -1310,8 +1313,8 @@ resynchroniser ou fermer complètement l'application.
   Roborock S7 compris : le plugin crée les commandes que le robot déclare ou auxquelles il répond, sans
   avoir pu vérifier leur effet réel sur chaque matériel. Un ordre accepté peut être refusé par le robot ;
   c'est alors signalé (voir Dépannage).
-- L'usure du **sac à poussière** de la station est en lecture seule : le plugin n'a pas d'action pour la
-  réinitialiser. Les pourcentages des consommables peuvent différer légèrement de ceux de l'application.
+- Le plugin ne donne pas l'usure du **sac à poussière** de la station (voir « Station d'accueil,
+  consommables et entretien »). Les pourcentages des consommables peuvent différer légèrement de ceux de l'application.
 - Les réglages de l'appareil (verrou enfant, ne pas déranger, heures creuses, volume, modes de la
   station) ne sont **pas poussés** au plugin : un changement fait depuis l'application Roborock ou la
   touche du robot n'apparaît dans Jeedom qu'à la relecture suivante (environ une minute, ou « Rafraîchir »).
